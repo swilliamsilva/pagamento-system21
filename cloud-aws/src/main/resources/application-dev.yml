@@ -1,0 +1,6 @@
+aws:
+  region: us-east-1
+  s3:
+    endpoint: http://localhost:4566
+  sns:
+    endpoint: http://localhost:4566

@@ -1,0 +1,6 @@
+aws:
+  region: us-east-1
+  s3:
+    endpoint: https://s3.amazonaws.com
+  sns:
+    endpoint: https://sns.amazonaws.com
