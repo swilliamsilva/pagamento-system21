@@ -1,0 +1,8 @@
+# Spring Boot Configuration
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pagamento
+    username: user
+    password: pass
