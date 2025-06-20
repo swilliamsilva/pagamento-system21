@@ -4,7 +4,7 @@ Este documento apresenta a arquitetura de integração com serviços AWS dentro 
 
 ---
 
-## 🎯 Objetivo
+## Objetivo
 
 * Armazenamento de arquivos (S3)
 * Notificações assíncronas (SNS)
@@ -12,7 +12,7 @@ Este documento apresenta a arquitetura de integração com serviços AWS dentro 
 
 ---
 
-## ☁️ Serviços AWS Utilizados
+## Serviços AWS Utilizados
 
 | Serviço | Finalidade                                                |
 | ------- | --------------------------------------------------------- |
@@ -22,7 +22,7 @@ Este documento apresenta a arquitetura de integração com serviços AWS dentro 
 
 ---
 
-## ⚙️ Arquivos e Classes
+##  Arquivos e Classes
 
 | Caminho                                                                      | Descrição                           |
 | ---------------------------------------------------------------------------- | ----------------------------------- |
@@ -34,7 +34,7 @@ Este documento apresenta a arquitetura de integração com serviços AWS dentro 
 
 ---
 
-## 🔐 Configuração de Credenciais
+##  Configuração de Credenciais
 
 ```yaml
 # application-prod.yml
@@ -62,7 +62,7 @@ public AwsCredentialsProvider localAwsCredentialsProvider() {
 
 ---
 
-## 🧪 Testando com LocalStack
+##  Testando com LocalStack
 
 ```yaml
 # application-dev.yml
@@ -82,7 +82,7 @@ docker run -d -p 4566:4566 localstack/localstack
 
 ---
 
-## 📦 Exemplos de Uso
+## Exemplos de Uso
 
 ### Upload S3
 
@@ -98,7 +98,7 @@ snsService.publishMessage("arn:aws:sns:us-east-1:123456789:pagamento-notify", "B
 
 ---
 
-## 📄 Considerações
+## Considerações
 
 * Use variáveis de ambiente para dados sensíveis
 * Configure buckets SNS/S3 com políticas mínimas de permissão

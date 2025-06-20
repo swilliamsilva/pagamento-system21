@@ -4,7 +4,7 @@ Este documento descreve o fluxo de dados e a interação entre os microserviços
 
 ---
 
-## 🌐 Visão Geral dos Serviços
+##  Visão Geral dos Serviços
 
 | Serviço           | Descrição                                                 |
 | ----------------- | --------------------------------------------------------- |
@@ -19,7 +19,7 @@ Este documento descreve o fluxo de dados e a interação entre os microserviços
 
 ---
 
-## 🔄 Fluxo de Pagamento
+##  Fluxo de Pagamento
 
 ### 1. Requisição inicial
 
@@ -43,7 +43,7 @@ graph TD
 
 ---
 
-## 📤 Mensageria Assíncrona (Kafka/SNS)
+##  Mensageria Assíncrona (Kafka/SNS)
 
 ```mermaid
 graph TD
@@ -56,7 +56,7 @@ graph TD
 
 ---
 
-## 📦 Armazenamento
+##  Armazenamento
 
 ```mermaid
 graph TD
@@ -65,7 +65,7 @@ graph TD
 
 ---
 
-## 🔐 Segurança
+##  Segurança
 
 * Todos os endpoints passam pelo `api-gateway`, que valida o token JWT
 * O token é emitido pelo `auth-service`
@@ -73,7 +73,7 @@ graph TD
 
 ---
 
-## 🩺 Observabilidade
+##  Observabilidade
 
 * Tracing com `TracingConfig`
 * Métricas com `MetricsConfig`
@@ -82,7 +82,7 @@ graph TD
 
 ---
 
-## ✅ Testabilidade
+##  Testabilidade
 
 * Testes unitários por camada
 * Testes de integração para serviços críticos
@@ -90,7 +90,7 @@ graph TD
 
 ---
 
-## 📌 Observações
+##  Observações
 
 * Toda comunicação entre serviços ocorre via REST ou eventos (Kafka)
 * O `payment-service` centraliza as decisões de roteamento

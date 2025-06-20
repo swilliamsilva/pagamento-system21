@@ -4,7 +4,7 @@ Este documento descreve os mecanismos de monitoramento, rastreamento e métricas
 
 ---
 
-## 🎯 Objetivo
+##  Objetivo
 
 Garantir visibilidade completa da execução dos serviços através de:
 
@@ -15,7 +15,7 @@ Garantir visibilidade completa da execução dos serviços através de:
 
 ---
 
-## 📦 Componentes Envolvidos
+##  Componentes Envolvidos
 
 | Componente                   | Finalidade                                    |
 | ---------------------------- | --------------------------------------------- |
@@ -28,15 +28,15 @@ Garantir visibilidade completa da execução dos serviços através de:
 
 ---
 
-## 📈 Métricas
+##  Métricas
 
-### 🔧 Ferramentas
+###  Ferramentas
 
 * **Micrometer**: biblioteca de métricas no Spring Boot
 * **Prometheus**: coleta e armazenamento das métricas
 * **Grafana**: dashboards para visualização
 
-### 📊 Exemplos de Métricas
+###  Exemplos de Métricas
 
 | Métrica                              | Descrição                          |
 | ------------------------------------ | ---------------------------------- |
@@ -47,7 +47,7 @@ Garantir visibilidade completa da execução dos serviços através de:
 
 ---
 
-## 🔍 Tracing (Rastreamento)
+##  Tracing (Rastreamento)
 
 ### Tecnologias
 
@@ -68,7 +68,7 @@ traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
 
 ---
 
-## 🩺 Health Checks
+##  Health Checks
 
 Expostos via **Spring Boot Actuator**:
 
@@ -81,7 +81,7 @@ Expostos via **Spring Boot Actuator**:
 
 ---
 
-## 🚀 Configurações Sugeridas
+##  Configurações Sugeridas
 
 ```yaml
 management:
@@ -97,7 +97,7 @@ management:
 
 ---
 
-## ✅ Boas Práticas
+##  Boas Práticas
 
 * TraceId nos logs: `log.info("traceId={}", traceId)`
 * Cada serviço define health indicators próprios
@@ -106,7 +106,7 @@ management:
 
 ---
 
-## 📁 Referências
+##  Referências
 
 * `common/observability/LoggingAspect.java`
 * `common/observability/TracingConfig.java`

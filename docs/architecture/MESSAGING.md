@@ -4,7 +4,7 @@ Este documento descreve a estratégia de comunicação assíncrona entre os serv
 
 ---
 
-## 🎯 Objetivo
+##  Objetivo
 
 Garantir integração desacoplada entre microserviços com:
 
@@ -14,7 +14,7 @@ Garantir integração desacoplada entre microserviços com:
 
 ---
 
-## 📦 Componentes
+##  Componentes
 
 | Componente                     | Descrição                                  |
 | ------------------------------ | ------------------------------------------ |
@@ -27,7 +27,7 @@ Garantir integração desacoplada entre microserviços com:
 
 ---
 
-## 🔄 Fluxo de Eventos
+##  Fluxo de Eventos
 
 ### Exemplo: Fluxo de Pagamento Boleto
 
@@ -39,7 +39,7 @@ Garantir integração desacoplada entre microserviços com:
 
 ---
 
-## ☁️ Integração com AWS SNS
+##  Integração com AWS SNS
 
 Utilizado principalmente para notificações externas ou integração com outros domínios.
 
@@ -51,14 +51,14 @@ snsService.publishMessage("arn:aws:sns:us-east-1:123456789:pagamento-notify", "B
 
 ---
 
-## 🧪 Testes e Diagnóstico
+##  Testes e Diagnóstico
 
 * Utilize o `kafka-console-consumer.sh` e `kafka-console-producer.sh` para testes locais
 * Simule falhas e verifique o comportamento (ex: dead-letter topics)
 
 ---
 
-## 📜 Tópicos Kafka Utilizados
+##  Tópicos Kafka Utilizados
 
 | Tópico              | Finalidade                         |
 | ------------------- | ---------------------------------- |
@@ -72,7 +72,7 @@ Todos os nomes estão definidos em `KafkaTopics.java` para evitar hardcoded.
 
 ---
 
-## 🔐 Segurança
+##  Segurança
 
 * Autenticação via credenciais de acesso para AWS SNS (definidas no `AwsCredentialsConfig.java`)
 * Para Kafka, recomenda-se:
@@ -83,7 +83,7 @@ Todos os nomes estão definidos em `KafkaTopics.java` para evitar hardcoded.
 
 ---
 
-## 📁 Localização dos Arquivos
+##  Localização dos Arquivos
 
 ```
 common/src/main/java/com/pagamento/common/messaging/KafkaProducerConfig.java
@@ -95,7 +95,7 @@ cloud-aws/src/main/java/com/pagamento/aws/sns/SnsService.java
 
 ---
 
-## ✅ Boas Práticas
+##  Boas Práticas
 
 * Sempre definir partições para escalabilidade
 * Separar tópicos por domínio

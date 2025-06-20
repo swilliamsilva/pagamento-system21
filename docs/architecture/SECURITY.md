@@ -4,7 +4,7 @@ Este documento descreve a estratégia de segurança aplicada no sistema distribu
 
 ---
 
-## 🔐 Mecanismo de Autenticação
+##  Mecanismo de Autenticação
 
 ### 1. Fluxo de Login (JWT)
 
@@ -28,7 +28,7 @@ Este documento descreve a estratégia de segurança aplicada no sistema distribu
 
 ---
 
-## 🧾 Estrutura do JWT
+##  Estrutura do JWT
 
 ```json
 {
@@ -45,7 +45,7 @@ Este documento descreve a estratégia de segurança aplicada no sistema distribu
 
 ---
 
-## 🛡️ Camadas de Segurança
+##  Camadas de Segurança
 
 | Camada                | Proteção                                               |
 | --------------------- | ------------------------------------------------------ |
@@ -57,7 +57,7 @@ Este documento descreve a estratégia de segurança aplicada no sistema distribu
 
 ---
 
-## 📁 Arquivos e Configurações Relevantes
+##  Arquivos e Configurações Relevantes
 
 * `SecurityConfig.java` → Configuração do filtro de autenticação
 * `JwtTokenProvider.java` → Geração e validação do token
@@ -66,7 +66,7 @@ Este documento descreve a estratégia de segurança aplicada no sistema distribu
 
 ---
 
-## 🧪 Testes de Segurança
+##  Testes de Segurança
 
 1. Login válido → deve retornar JWT
 2. Token inválido → deve retornar 401
@@ -76,7 +76,7 @@ Este documento descreve a estratégia de segurança aplicada no sistema distribu
 
 ---
 
-## ✅ Boas Práticas
+##  Boas Práticas
 
 * Segredos externos em Vault (não comitados no Git)
 * Rotação periódica de chaves JWT
@@ -86,7 +86,7 @@ Este documento descreve a estratégia de segurança aplicada no sistema distribu
 
 ---
 
-## 📌 Exemplos de Headers
+##  Exemplos de Headers
 
 ```http
 POST /auth/login
