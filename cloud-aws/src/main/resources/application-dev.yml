@@ -4,3 +4,6 @@ aws:
     endpoint: http://localhost:4566
   sns:
     endpoint: http://localhost:4566
+jwt:
+  secret: ${jwt.secret}
+  expiration: ${jwt.expiration}

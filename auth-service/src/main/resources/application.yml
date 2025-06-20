@@ -1,8 +1,15 @@
-# Spring Boot Configuration
 spring:
   application:
-    name: payment-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/pagamento
-    username: user
-    password: pass
+    name: auth-service
+
+  cloud:
+    vault:
+      uri: http://localhost:8200
+      token: root # ou melhor, use um token seguro via env
+      kv:
+        enabled: true
+        backend: secret
+        default-context: pagamento/auth-service
+jwt:
+  secret: ${jwt.secret}
+  expiration: ${jwt.expiration}

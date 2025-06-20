@@ -1,5 +1,7 @@
 package com.pagamento.boleto.domain.ports;
 
+import com.pagamento.boleto.domain.model.Boleto;
+
 public interface AsaasGatewayPort {
-    // Define port operations
+    void registrar(Boleto boleto);
 }

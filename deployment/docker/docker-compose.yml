@@ -1,19 +1,32 @@
 version: '3.8'
 services:
+
   api-gateway:
     build:
       context: .
       dockerfile: deployment/docker/Dockerfile-gateway
     ports:
       - "8080:8080"
+    depends_on:
+      - auth-service
+      - payment-service
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      
+
   auth-service:
     build:
       context: .
       dockerfile: deployment/docker/Dockerfile-auth
+    ports:
+      - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      
-  # Add other services similarly
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile-payment
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker

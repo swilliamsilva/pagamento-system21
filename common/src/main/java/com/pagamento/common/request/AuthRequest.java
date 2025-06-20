@@ -1,1 +1,31 @@
-// TODO: Implement AuthRequest.java
+/* ========================================================
+# Classe: AuthRequest
+# Módulo: common - request
+# Projeto: pagamento-system21
+# Autor: William Silva
+# Descrição: Representa os dados da requisição de login.
+# ======================================================== */
+
+package com.pagamento.common.request;
+
+public record AuthRequest(
+    String username,
+    String password
+) {}
+
+/**
+ * 
+ *  Testando
+
+Com a aplicação auth-service rodando, você pode fazer:
+ * POST /api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "senha123"
+}
+
+ * 
+ * */
+ */

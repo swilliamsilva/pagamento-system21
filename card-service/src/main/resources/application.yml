@@ -1,8 +1,30 @@
 # Spring Boot Configuration
+# ============================
+# Arquivo: application.yml
+# Serviço: card-service
+# Projeto: pagamento-system21
+# ============================
+
 spring:
   application:
-    name: payment-service
-  datasource:
+    name: card-service
+  main:
+    banner-mode: off
+  jackson:
+    serialization:
+      indent-output: true
+
+server:
+  port: 8084  # Ajuste conforme necessário
+
+logging:
+  level:
+    root: INFO
+
+datasource:
     url: jdbc:postgresql://localhost:5432/pagamento
     username: user
     password: pass
+jwt:
+  secret: ${jwt.secret}
+  expiration: ${jwt.expiration}

@@ -13,7 +13,22 @@ spec:
         app: auth-service
     spec:
       containers:
-      - name: auth-service
-        image: pagamento/auth-service:latest
-        ports:
-        - containerPort: 8080
+        - name: auth-service
+          image: pagamento/auth-service:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: docker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081

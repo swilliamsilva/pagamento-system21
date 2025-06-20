@@ -1,8 +1,6 @@
-# Spring Boot Configuration
-spring:
-  application:
-    name: payment-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/pagamento
-    username: user
-    password: pass
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pagamento-config
+data:
+  SPRING_PROFILES_ACTIVE: docker

@@ -1,7 +1,9 @@
 package com.pagamento.common.dto;
 
+import java.math.BigDecimal;
+
 public record PaymentDTO(
-    String id,
-    String value,
-    // TODO: Add more fields
+    String idTransacao,
+    String tipoPagamento, // PIX, BOLETO, CARTAO
+    BigDecimal valor
 ) {}

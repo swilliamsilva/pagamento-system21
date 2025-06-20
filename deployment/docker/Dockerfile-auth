@@ -1,5 +1,10 @@
-# Dockerfile for auth
+# Dockerfile-auth
 FROM eclipse-temurin:21-jdk-alpine
-VOLUME /tmp
-COPY target/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+
+WORKDIR /app
+
+COPY auth-service/target/auth-service.jar app.jar
+
+EXPOSE 8081
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

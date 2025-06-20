@@ -1,3 +1,11 @@
+/* ========================================================
+# Classe: PaymentApplication
+# Módulo: payment-service
+# Projeto: pagamento-system21
+# Autor: William Silva
+# Descrição: Classe principal do serviço de orquestração de pagamentos.
+# ======================================================== */
+
 package com.pagamento.payment;
 
 import org.springframework.boot.SpringApplication;

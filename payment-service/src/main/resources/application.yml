@@ -6,3 +6,12 @@ spring:
     url: jdbc:postgresql://localhost:5432/pagamento
     username: user
     password: pass
+
+
+server:
+  port: 8082
+  
+jwt:
+    secret: ${jwt.secret}
+    expiration: ${jwt.expiration}
+

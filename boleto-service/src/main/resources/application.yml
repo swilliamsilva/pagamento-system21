@@ -1,8 +1,33 @@
 # Spring Boot Configuration
+# ============================
+# Arquivo: application.yml
+# Serviço: boleto-service
+# Projeto: pagamento-system21
+# ============================
+
 spring:
   application:
-    name: payment-service
-  datasource:
+    name: boleto-service
+  main:
+    banner-mode: off
+  jackson:
+    serialization:
+      indent-output: true
+
+server:
+  port: 8082  # Altere conforme necessário
+
+# Para logs de inicialização simples
+logging:
+  level:
+    root: INFO
+
+datasource:
     url: jdbc:postgresql://localhost:5432/pagamento
     username: user
     password: pass
+
+jwt:
+  secret: ${jwt.secret}
+  expiration: ${jwt.expiration}
+

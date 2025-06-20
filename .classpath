@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="api-gateway/src/main/java"/>
+	<classpathentry kind="src" path="auth-service/src/main/java"/>
+	<classpathentry kind="src" path="boleto-service/src/main/java"/>
+	<classpathentry excluding="com/pagamento/card/repository/cassandra/" kind="src" path="card-service/src/main/java"/>
+	<classpathentry kind="src" path="card-service/src/main/java/com/pagamento/card/repository/cassandra"/>
+	<classpathentry kind="src" path="cloud-aws/src/main/java"/>
+	<classpathentry excluding="com/pagamento/common/response/|com/pagamento/common/request/|com/pagamento/common/mapper/" kind="src" path="common/src/main/java"/>
+	<classpathentry kind="src" path="common/src/main/java/com/pagamento/common/mapper"/>
+	<classpathentry kind="src" path="common/src/main/java/com/pagamento/common/request"/>
+	<classpathentry kind="src" path="common/src/main/java/com/pagamento/common/response"/>
+	<classpathentry kind="src" path="payment-service/src/main/java"/>
+	<classpathentry excluding="com/pagamento/pix/repository/dynamo/" kind="src" path="pix-service/src/main/java"/>
+	<classpathentry kind="src" path="pix-service/src/main/java/com/pagamento/pix/repository/dynamo"/>
+	<classpathentry kind="src" path="tests/auth-service"/>
+	<classpathentry kind="src" path="tests/boleto-service/domain"/>
+	<classpathentry kind="src" path="tests/boleto-service/infrastructure"/>
+	<classpathentry kind="src" path="tests/gateway"/>
+	<classpathentry kind="src" path="tests/payment-service"/>
+	<classpathentry kind="output" path="api-gateway/target/classes"/>
+</classpath>

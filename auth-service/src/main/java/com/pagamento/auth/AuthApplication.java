@@ -1,3 +1,13 @@
+/* ========================================================
+# Classe: AuthApplication
+# Módulo: auth-service
+# Projeto: pagamento-system21
+# Autor: William Silva
+# Contato: williamsilva.codigo@gmail.com
+# Website: simuleagora.com
+# Descrição: Inicializa o serviço de autenticação JWT.
+# ======================================================== */
+
 package com.pagamento.auth;
 
 import org.springframework.boot.SpringApplication;

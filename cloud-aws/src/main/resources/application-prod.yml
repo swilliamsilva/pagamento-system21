@@ -4,3 +4,6 @@ aws:
     endpoint: https://s3.amazonaws.com
   sns:
     endpoint: https://sns.amazonaws.com
+jwt:
+  secret: ${jwt.secret}
+  expiration: ${jwt.expiration}
