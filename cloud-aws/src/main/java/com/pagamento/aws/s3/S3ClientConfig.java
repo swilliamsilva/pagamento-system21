@@ -21,6 +21,13 @@ public class S3ClientConfig {
     @Bean
     public S3Client s3Client(AwsCredentialsProvider credentialsProvider) {
         S3Client.Builder builder = S3Client.builder()
+        		/*
+        		 * 
+        		 * 
+        		 * S3Client.Builder cannot be resolved to a type
+        		 * 
+        		 * ****/
+        		
             .region(Region.of(region))
             .credentialsProvider(credentialsProvider);
         

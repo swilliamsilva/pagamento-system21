@@ -11,8 +11,20 @@ package com.pagamento.boleto.infrastructure.adapters.gateway;
 import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.ports.AsaasGatewayPort;
 import org.springframework.stereotype.Component;
-
+/**
+ * 
+ * The import org.springframework cannot be resolved
+ * 
+ * 
+ * **/
 @Component
+
+/*
+ * Component cannot be resolved to a type
+ * 
+ * 
+ * 
+ * ***/
 public class AsaasGatewayAdapter implements AsaasGatewayPort {
 
     @Override

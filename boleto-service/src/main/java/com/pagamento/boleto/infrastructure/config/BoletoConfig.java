@@ -14,15 +14,55 @@ import com.pagamento.boleto.domain.ports.NotificacaoPort;
 import com.pagamento.boleto.domain.service.BoletoService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+/**
+ * The import org.springframework cannot be resolved
+ * 
+ * The import org.springframework cannot be resolved
+ * 
+ * 
+ * 
+ * **/
+
+
 
 @Configuration
+/***
+ * 
+ * 
+ * Configuration cannot be resolved to a type
+ * 
+ * */
+
 public class BoletoConfig {
 
     @Bean
+    /**
+     * 
+     * 
+     * Bean cannot be resolved to a type
+     * 
+     * **/
+    
     public BoletoService boletoService(
         BoletoRepositoryPort repository,
         AsaasGatewayPort gateway,
+        
+        /**
+         * 
+         * AsaasGatewayPort cannot be resolved to a type
+         * 
+         * **/
+        
         NotificacaoPort notificacao
+        
+        /**
+         * 
+         * 
+         * 
+         * 
+         * 
+         * **/
+        
     ) {
         return new BoletoService(repository, gateway, notificacao);
     }

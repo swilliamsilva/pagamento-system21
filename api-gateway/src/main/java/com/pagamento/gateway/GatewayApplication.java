@@ -14,6 +14,17 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
+ * 
+ * The import org.springframework cannot be resolved
+ * 
+ * The import org.springframework cannot be resolved
+ * 
+ * **/
+
+
+
+
+/**
  * Esta é a classe principal que inicializa o módulo API Gateway
  * do projeto pagamento-system21.
  *
@@ -24,6 +35,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * estruturado como um ponto de orquestração/rest proxy.
  */
 @SpringBootApplication
+
+/**
+ * 
+ * 
+ * SpringBootApplication cannot be resolved to a type
+ * 
+ * 
+ * **/
+
+
 public class GatewayApplication {
 
     /**
@@ -36,5 +57,15 @@ public class GatewayApplication {
      */
     public static void main(String[] args) {
         SpringApplication.run(GatewayApplication.class, args);
+        
+        /**
+         * 
+         * 
+         * 
+         * SpringApplication cannot be resolved
+         * 
+         * 
+         * **/
+        
     }
 }

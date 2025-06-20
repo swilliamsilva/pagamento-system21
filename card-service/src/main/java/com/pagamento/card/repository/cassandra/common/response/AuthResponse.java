@@ -16,4 +16,10 @@ package com.pagamento.common.response;
  *   "token": "Bearer eyJhbGciOiJIUzI1NiIsIn..."
  * }
  */
-public record AuthResponse(String token) {}
+public record AuthResponse(String token) {
+
+	public AuthResponse(String token2, String string) {
+		
+		
+		// TODO Auto-generated constructor stub
+	}}

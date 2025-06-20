@@ -6,17 +6,67 @@ package com.pagamento.boleto.infrastructure.adapters.repository;
 import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.ports.BoletoRepositoryPort;
 import org.springframework.stereotype.Component;
+/**
+ * 
+ * 
+ * The import org.springframework cannot be resolved
+ * 
+ * 
+ * **/
+
 
 import java.util.*;
 
 @Component
-public class BoletoRepositoryAdapter implements BoletoRepositoryPort {
+/**
+ * 
+ * 
+ * Component cannot be resolved to a type
+ * 
+ * **/
 
+public class BoletoRepositoryAdapter implements BoletoRepositoryPort {
+/**
+ * 
+ * 
+ * The type BoletoRepositoryAdapter must implement the inherited
+ *  abstract method BoletoRepositoryPort.salvar(Boleto)
+ * 
+ * 
+ * **/
     private final Map<String, Boleto> fakeDatabase = new HashMap<>();
+    
+    /**
+     * 
+     * 
+     * Multiple markers at this line
+	- Boleto cannot be resolved to a type
+	- Cannot infer type arguments for HashMap<>
+     * 
+     * **/
 
     @Override
     public Optional<Boleto> findById(String id) {
+    	
+    	/**
+    	 * 
+    	 * 
+    	 * Multiple markers at this line
+	- implements com.pagamento.boleto.domain.ports.BoletoRepositoryPort.findById
+	- Boleto cannot be resolved to a type
+    	 * 
+    	 * **/
+    	
+    	
         return Optional.ofNullable(fakeDatabase.get(id));
+        
+        /**
+         * 
+         * Boleto cannot be resolved to a type
+         * 
+         * 
+         * **/
+        
     }
 
     @Override

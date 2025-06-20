@@ -11,7 +11,23 @@ package com.pagamento.common.request;
 public record AuthRequest(
     String username,
     String password
-) {}
+) {
+
+	public Object password() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String username() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Object password1() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}
 
 /**
  * 

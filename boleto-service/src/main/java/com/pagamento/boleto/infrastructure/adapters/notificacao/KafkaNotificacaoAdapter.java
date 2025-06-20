@@ -10,13 +10,26 @@ package com.pagamento.boleto.infrastructure.adapters.notificacao;
 
 import com.pagamento.boleto.domain.ports.NotificacaoPort;
 import org.springframework.stereotype.Component;
-
+/**
+ * 
+ * 
+ * The import org.springframework cannot be resolved
+ * 
+ * **/
 @Component
+
+/*
+ * Component cannot be resolved to a type
+ * 
+ * 
+ * 
+ * ***/
+
 public class KafkaNotificacaoAdapter implements NotificacaoPort {
 
     @Override
     public void enviarNotificacao(String mensagem) {
-        System.out.println("📢 Enviando notificação Kafka: " + mensagem);
+        System.out.println("Enviando notificação Kafka: " + mensagem);
         // Aqui você poderia usar KafkaTemplate ou qualquer lib real de mensageria
     }
 }

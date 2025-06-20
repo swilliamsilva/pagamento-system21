@@ -20,6 +20,15 @@ public class SnsClientConfig {
     @Bean
     public SnsClient snsClient(AwsCredentialsProvider credentialsProvider) {
         SnsClient.Builder builder = SnsClient.builder()
+        		
+        		/**
+        		 * 
+        		 * 
+        		 * SnsClient.Builder cannot be resolved to a type
+        		 * 
+        		 * 
+        		 * **/
+        		
             .region(Region.of(region))
             .credentialsProvider(credentialsProvider);
         

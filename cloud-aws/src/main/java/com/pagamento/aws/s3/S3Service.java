@@ -33,11 +33,27 @@ public class S3Service {
 
     public byte[] downloadFile(String bucketName, String key) {
         GetObjectResponse objectResponse = s3Client.getObject(GetObjectRequest.builder()
+        		/**
+        		 * 
+        		 * 
+        		 * Type mismatch: cannot convert from
+        		 *  ResponseInputStream<GetObjectResponse> to GetObjectResponse
+        		 * 
+        		 * **/
+        		
                 .bucket(bucketName)
                 .key(key)
                 .build());
         
         ResponseBytes<GetObjectResponse> bytes = objectResponse.readResponseBytes();
+/**
+ * 
+ * 
+ * The method readResponseBytes() is undefined for the type GetObjectResponse
+ * 
+ * 
+ * **/
+        
         return bytes.asByteArray();
     }
 
