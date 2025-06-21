@@ -14,15 +14,13 @@
 
     <properties>
         <java.version>21</java.version>
-        <micrometer.tracing.version>1.2.1</micrometer.tracing.version>
-        <resilience4j.version>2.1.0</resilience4j.version>
-        <aspectj.version>1.9.20</aspectj.version>
+        <resilience4j.version>2.2.0</resilience4j.version> <!-- Atualizado para 2.2.0 -->
         <spring-cloud.version>2023.0.1</spring-cloud.version>
+        <!-- Removido aspectj.version (gerenciado pelo Spring Boot) -->
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Spring Cloud BOM -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -31,7 +29,7 @@
                 <scope>import</scope>
             </dependency>
             
-            <!-- Resilience4J BOM -->
+            <!-- Adicionado BOM do Resilience4j para versionamento correto -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
                 <artifactId>resilience4j-bom</artifactId>
@@ -48,28 +46,24 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
-        
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aop</artifactId> <!-- Necessário para Resilience4j -->
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- AWS SDK -->
+        <!-- AWS SDK (otimizado com gerenciamento de versão) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3</artifactId>
+            <artifactId>bom</artifactId>
             <version>2.25.0</version>
+            <type>pom</type>
+            <scope>import</scope>
         </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>sns</artifactId>
-            <version>2.25.0</version>
-        </dependency>
+       
 
         <!-- Kafka -->
         <dependency>
@@ -95,69 +89,77 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
         </dependency>
-        
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
-        
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-tracing</artifactId>
         </dependency>
-        
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-tracing-bridge-brave</artifactId>
         </dependency>
 
-        <!-- AspectJ -->
+        <!-- Resilience4j (configuração otimizada) -->
         <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjweaver</artifactId>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId> <!-- Já inclui circuitbreaker/timelimiter/retry -->
         </dependency>
+        
+        <!-- Removidas dependências redundantes:
+             resilience4j-circuitbreaker
+             resilience4j-timelimiter
+             resilience4j-retry
+        -->
 
-        <!-- Resilience4j -->
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-spring-boot3</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-circuitbreaker</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-timelimiter</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-retry</artifactId>
-        </dependency>
-        
-        <!-- Spring Cloud Starter (para integração) -->
+        <!-- Spring Cloud Circuit Breaker -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
         </dependency>
+
+        <!-- Cassandra -->
         <dependency>
-    <groupId>com.datastax.oss</groupId>
-    <artifactId>java-driver-core</artifactId>
-    <version>4.17.0</version> <!-- ou a versão mais recente estável -->
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-cassandra</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-cassandra</artifactId> <!-- Já inclui o driver -->
+        </dependency>
+        
+        <!-- MongoDB -->
+    <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-sync</artifactId>
+        <version>4.11.1</version>
+    </dependency>
+
+    <!-- AWS DynamoDB -->
+    <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>dynamodb</artifactId>
+        <version>2.25.0</version>
+    </dependency>
+
+    <!-- Spring Data Redis -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    
+    <dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>dynamodb</artifactId>
+    <version>2.25.0</version> <!-- Mantenha consistente com outras dependências AWS -->
 </dependency>
 
-        
-        
+<!-- Spring Boot Actuator -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+        <!-- Removido java-driver-core (redundante) -->
     </dependencies>
-
-    <build>
+<build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -168,7 +170,7 @@
                     <target>${java.version}</target>
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
-                        <arg>-parameters</arg>
+                        <arg>-parameters</arg> <!-- Habilita parâmetros nomeados (útil para frameworks) -->
                     </compilerArgs>
                 </configuration>
             </plugin>
@@ -176,6 +178,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- Versão omitida: assumindo que está herdada do spring-boot-starter-parent -->
                 <configuration>
                     <excludes>
                         <exclude>
@@ -187,4 +190,4 @@
             </plugin>
         </plugins>
     </build>
-</project>
+    </project>

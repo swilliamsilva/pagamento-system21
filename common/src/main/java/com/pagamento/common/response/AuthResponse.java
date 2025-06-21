@@ -1,21 +1,14 @@
-/* ========================================================
-# Classe: AuthResponse
-# Módulo: common - response
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Representa a resposta de autenticação.
-# ======================================================== */
 
+// ==========================
+// DTO: AuthResponse.java
+// ==========================
 package com.pagamento.common.response;
 
 /**
- * Retorno padrão de autenticação contendo o token JWT e o perfil do usuário.
+ * Resposta da API de autenticação com token e perfil de acesso.
  *
- * Exemplo de resposta:
- * {
- *   "token": "Bearer eyJhbGciOiJIUzI1NiIsIn...",
- *   "role": "admin"
- * }
+ * @param token Token JWT no formato "Bearer ..."
+ * @param role Perfil do usuário autenticado
  */
 public record AuthResponse(
     String token,

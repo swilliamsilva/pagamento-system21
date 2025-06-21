@@ -1,3 +1,15 @@
+
+// ==========================
+// DTO: AuthRequest.java
+// ==========================
 package com.pagamento.common.request;
 
-public record AuthRequest(String username, String password) {}
+import jakarta.validation.constraints.NotBlank;
+
+/**
+ * Requisição de autenticação com credenciais básicas.
+ */
+public record AuthRequest(
+    @NotBlank String username,
+    @NotBlank String password
+) {}

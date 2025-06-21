@@ -1,21 +1,18 @@
-/* ========================================================
-# Classe: User
-# Módulo: common
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Representa um usuário do sistema.
-# ======================================================== */
-
+// ==========================
+// MODEL: User.java
+// ==========================
 package com.pagamento.common.model;
 
-public class User {
+/**
+ * Representa um usuário do sistema.
+ * Contém informações essenciais como ID, nome, e-mail e documento pessoal.
+ */
+public class User implements Identifiable {
     private String id;
     private String nome;
     private String email;
     private String documento;
 
-    // Getters e Setters (Java 21 ainda exige com POJO clássico)
-    
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
