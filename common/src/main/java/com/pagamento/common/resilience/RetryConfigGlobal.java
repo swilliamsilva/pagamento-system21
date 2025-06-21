@@ -11,7 +11,7 @@ import java.time.Duration;
  */
 @Configuration
 public class RetryConfigGlobal {
-
+git 
     @Bean
     public RetryConfigCustomizer defaultRetryCustomizer() {
         return RetryConfigCustomizer.of("default", builder -> builder
