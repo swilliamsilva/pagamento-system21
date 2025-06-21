@@ -1,4 +1,6 @@
-package com.pagamento.common.dto;
+package com.pagamento.common.response;
+
+
 /***
  * Orquestrador do pagamento
  * 

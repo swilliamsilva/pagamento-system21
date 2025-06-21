@@ -7,8 +7,8 @@ package com.pagamento.common.mapper;
 
 
 import com.pagamento.common.dto.PaymentDTO;
-import com.pagamento.common.dto.PaymentRequest;
-import com.pagamento.common.dto.PaymentResponse;
+import com.pagamento.common.request.PaymentRequest;
+import com.pagamento.common.response.PaymentResponse;
 import com.pagamento.common.model.Payment;
 
 import java.util.Date;

@@ -3,8 +3,8 @@
 // ==========================
 package com.pagamento.common.controller;
 
-import com.pagamento.common.dto.PaymentRequest;
-import com.pagamento.common.dto.PaymentResponse;
+import com.pagamento.common.request.PaymentRequest;
+import com.pagamento.common.response.PaymentResponse;
 import com.pagamento.common.mapper.PaymentMapper;
 import com.pagamento.common.model.Payment;
 import jakarta.validation.Valid;

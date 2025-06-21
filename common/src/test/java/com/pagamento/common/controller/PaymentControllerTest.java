@@ -1,36 +1,30 @@
-// ==========================
-// TEST: PaymentControllerTest.java
-// ==========================
+// PaymentControllerTest.java
 package com.pagamento.common.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pagamento.common.dto.PaymentRequest;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.math.BigDecimal;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pagamento.common.request.PaymentRequest;
 
 @WebMvcTest(PaymentController.class)
 public class PaymentControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
 
     @Test
     public void deveAceitarPagamentoValido() throws Exception {
         PaymentRequest request = new PaymentRequest("user123", "PIX", new BigDecimal("150.00"));
 
         mockMvc.perform(post("/api/pagamentos")
-                .contentType("application/json")
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.idTransacao").exists())
@@ -43,7 +37,7 @@ public class PaymentControllerTest {
         PaymentRequest request = new PaymentRequest("user123", "PIX", null);
 
         mockMvc.perform(post("/api/pagamentos")
-                .contentType("application/json")
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
