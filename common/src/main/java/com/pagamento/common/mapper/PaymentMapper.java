@@ -1,54 +1,75 @@
 package com.pagamento.common.mapper;
-/***
- * Orquestrador de pagamento
- * 
- * 
- */
 
-
-import com.pagamento.common.dto.PaymentDTO;
+import com.pagamento.common.model.Payment;
 import com.pagamento.common.request.PaymentRequest;
 import com.pagamento.common.response.PaymentResponse;
-import com.pagamento.common.model.Payment;
 
-import java.util.Date;
+import jakarta.validation.Valid;
+
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
+import org.springframework.stereotype.Component;
 
-/**
- * Mapper para conversão entre modelos de pagamento.
- */
+@Component
 public class PaymentMapper {
 
-    public static Payment toEntity(PaymentRequest request) {
-        if (request == null) return null;
-
+    public Payment toEntity(String userId, String paymentType, BigDecimal amount) {
         Payment payment = new Payment();
-        payment.setTransactionId(UUID.randomUUID().toString());
-        payment.setUserId(request.userId());
-        payment.setPaymentType(request.tipoPagamento());
-        payment.setAmount(request.valor());
-        payment.setCreatedAt(new Date());
+        payment.setTransactionId(generateTransactionId());
+        payment.setUserId(userId);
+        payment.setPaymentType(paymentType);
+        payment.setAmount(validateAmount(amount));
+        payment.setCreatedAt(Instant.now());
         return payment;
     }
 
-    public static PaymentDTO toDto(Payment entity) {
+    public Payment toSimpleOutput(Payment entity) {
         if (entity == null) return null;
-
-        return new PaymentDTO(
-            entity.getTransactionId(),
-            entity.getPaymentType(),
-            entity.getAmount()
-        );
+        
+        Payment output = new Payment();
+        output.setTransactionId(entity.getTransactionId());
+        output.setPaymentType(entity.getPaymentType());
+        output.setAmount(entity.getAmount());
+        return output;
     }
 
-    public static PaymentResponse toResponse(Payment entity) {
+    public Payment toApiResponse(Payment entity, String status) {
         if (entity == null) return null;
-
-        return new PaymentResponse(
-            entity.getTransactionId(),
-            "APROVADO", // ou pendente, etc. — pode vir do status real depois
-            entity.getAmount(),
-            entity.getPaymentType()
-        );
+        
+        Payment response = new Payment();
+        response.setTransactionId(entity.getTransactionId());
+        response.setStatus(status);
+        response.setAmount(entity.getAmount());
+        response.setPaymentType(entity.getPaymentType());
+        return response;
     }
+
+    public Payment toApiResponse(Payment entity) {
+        return toApiResponse(entity, "PROCESSANDO");
+    }
+
+    private String generateTransactionId() {
+        return "TX-" + UUID.randomUUID().toString().replace("-", "").toUpperCase();
+    }
+
+    private BigDecimal validateAmount(BigDecimal amount) {
+        if (amount == null) {
+            throw new IllegalArgumentException("Valor do pagamento não pode ser nulo");
+        }
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Valor do pagamento deve ser positivo");
+        }
+        return amount;
+    }
+
+	public static Payment toEntity(@Valid PaymentRequest request) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public static PaymentResponse toResponse(Payment entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

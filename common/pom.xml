@@ -159,6 +159,19 @@
             <artifactId>api-gateway</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <!-- Kafka -->
+    <dependency>
+        <groupId>org.springframework.kafka</groupId>
+        <artifactId>spring-kafka</artifactId>
+    </dependency>
+    
+    <!-- Configuração -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-configuration-processor</artifactId>
+        <optional>true</optional>
+    </dependency>
+        
     </dependencies>
 
     <build>

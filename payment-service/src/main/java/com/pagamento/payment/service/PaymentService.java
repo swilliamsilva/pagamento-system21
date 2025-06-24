@@ -1,28 +1,80 @@
-/* ========================================================
-# Classe: PaymentService
-# Módulo: payment-service
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Lógica de orquestração de pagamento (simulada).
-# ======================================================== */
-
 package com.pagamento.payment.service;
 
+import com.pagamento.common.messaging.PaymentEvent;
 import com.pagamento.common.request.PaymentRequest;
 import com.pagamento.common.response.PaymentResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.pagamento.payment.dto.mapper.PaymentMapper;
+import com.pagamento.payment.model.Payment;
+import com.pagamento.payment.port.output.PaymentRepositoryPort;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
+
+@Slf4j
 @Service
 public class PaymentService {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private final PaymentRepositoryPort repository;
+    private final PaymentMapper mapper;
+    private final KafkaTemplate<String, PaymentEvent> kafkaTemplate;
+    private final RestTemplate restTemplate;
 
+    public PaymentService(
+        PaymentRepositoryPort repository,
+        PaymentMapper mapper,
+        KafkaTemplate<String, PaymentEvent> kafkaTemplate,
+        RestTemplate restTemplate
+    ) {
+        this.repository = repository;
+        this.mapper = mapper;
+        this.kafkaTemplate = kafkaTemplate;
+        this.restTemplate = restTemplate;
+    }
+
+    @Transactional
+    @CircuitBreaker(name = "paymentService", fallbackMethod = "fallbackProcessarPagamento")
     public PaymentResponse processarPagamento(PaymentRequest request) {
-        log.info(" Orquestrando pagamento do tipo: {}", request.tipo());
+        Payment payment = mapper.toEntity(request);
+        Payment savedPayment = repository.salvar(payment);
+        
+        try {
+            if("PIX".equals(request.tipo())) {
+                restTemplate.postForEntity("http://pix-service/api/pix", request, Void.class);
+            } else if("BOLETO".equals(request.tipo())) {
+                restTemplate.postForEntity("http://boleto-service/api/boleto", request, Void.class);
+            }
+        } catch (Exception e) {
+            log.error("Falha ao integrar com serviço de {}", request.tipo(), e);
+            throw new RuntimeException("Falha na integração com gateway de pagamento");
+        }
+        
+        // Corrigido: Usando novo padrão de construção
+        PaymentEvent event = new PaymentEvent(
+            savedPayment.getId(),
+            savedPayment.getTipo(),
+            savedPayment.getValor(),
+            Instant.now()
+        );
+                
+        kafkaTemplate.send("pagamento-processado", event);
+        
+        return mapper.toResponse(savedPayment);
+    }
 
-        // Simulação do fluxo: decidir rota (boleto, pix, cartão) futuramente
-        return new PaymentResponse("Pagamento processado com sucesso: " + request.tipo(), null, null, null);
+    private PaymentResponse fallbackProcessarPagamento(PaymentRequest request, Throwable t) {
+        log.error("Fallback ativado para pagamento: {}", request.tipo(), t);
+        
+        // Corrigido: Usando novo padrão de construção
+        return new PaymentResponse(
+            "Serviço temporariamente indisponível", 
+            null, 
+            null, 
+            null
+        );
     }
 }

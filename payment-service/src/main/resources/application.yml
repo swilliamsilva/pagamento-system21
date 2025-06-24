@@ -1,17 +1,47 @@
-# Spring Boot Configuration
 spring:
   application:
     name: payment-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/pagamento
-    username: user
-    password: pass
-
+  data:
+    mongodb:
+      host: ${MONGO_HOST:localhost}
+      port: ${MONGO_PORT:27017}
+      database: pagamento
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  transaction:
+    timeout: 30s
 
 server:
   port: 8082
-  
-jwt:
-    secret: ${jwt.secret}
-    expiration: ${jwt.expiration}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentService:
+        register-health-indicator: true
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 10
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        wait-duration-in-open-state: 10s
+
+features:
+  flags:
+    novo-metodo-pagamento: true
+    asaas-integration: false
+    pix-instantaneo: true
