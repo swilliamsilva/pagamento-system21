@@ -77,4 +77,9 @@ public class PaymentService {
             null
         );
     }
+    
+ 
+    public interface PaymentServiceImpl {
+        PaymentResponse process(PaymentRequest request);
+    }
 }
