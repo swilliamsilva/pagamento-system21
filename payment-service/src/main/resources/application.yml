@@ -1,17 +1,77 @@
-# Spring Boot Configuration
+server:
+  port: 8082
+
 spring:
   application:
     name: payment-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/pagamento
-    username: user
-    password: pass
+  data:
+    mongodb:
+      host: ${MONGO_HOST:localhost}
+      port: ${MONGO_PORT:27017}
+      database: pagamento
+      username: ${db.username}  # Credencial do Vault
+      password: ${db.password}  # Credencial do Vault
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  transaction:
+    timeout: 30s
+  cloud:
+    vault:
+      uri: ${VAULT_URL:http://localhost:8200}
+      token: ${APP_VAULT_TOKEN}  # Token gerado pelo initializer
+      kv:
+        enabled: true
+        backend: secret
+        application-name: pagamento
+      fail-fast: true  # Falha se não conectar ao Vault
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      discovery:
+        prefer-ip-address: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
 
-server:
-  port: 8082
-  
-jwt:
-    secret: ${jwt.secret}
-    expiration: ${jwt.expiration}
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentService:
+        register-health-indicator: true
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 10
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        wait-duration-in-open-state: 10s
+        event-consumer-buffer-size: 20
+
+features:
+  flags:
+    novo-metodo-pagamento: true
+    asaas-integration: false
+    pix-instantaneo: true
+
+# Configuração para inicialização do Vault
+vault:
+  url: ${VAULT_URL:http://localhost:8200}  # Usado pelo initializer
+  unseal-key: ${VAULT_UNSEAL_KEY}          # Chave de unseal
+  root-token: ${VAULT_ROOT_TOKEN}           # Token root temporário
+
+logging:
+  level:
+    com.pagamento.payment.config: DEBUG     # Logs detalhados para inicialização

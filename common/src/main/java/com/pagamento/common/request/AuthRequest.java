@@ -1,31 +1,15 @@
-/* ========================================================
-# Classe: AuthRequest
-# Módulo: common - request
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Representa os dados da requisição de login.
-# ======================================================== */
 
+// ==========================
+// DTO: AuthRequest.java
+// ==========================
 package com.pagamento.common.request;
 
-public record AuthRequest(
-    String username,
-    String password
-) {}
+import jakarta.validation.constraints.NotBlank;
 
 /**
- * 
- *  Testando
-
-Com a aplicação auth-service rodando, você pode fazer:
- * POST /api/auth/login
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "senha123"
-}
-
- * 
- * */
+ * Requisição de autenticação com credenciais básicas.
  */
+public record AuthRequest(
+    @NotBlank String username,
+    @NotBlank String password
+) {}

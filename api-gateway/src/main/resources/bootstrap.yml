@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    config:
+      enabled: true
+      uri: http://config-server:8888
+    discovery:
+      enabled: true
+      health-indicator:
+        enabled: true

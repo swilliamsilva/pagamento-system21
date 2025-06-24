@@ -1,9 +1,18 @@
 package com.pagamento.common.dto;
 
+
+import lombok.Builder;
+import lombok.Getter;
 import java.math.BigDecimal;
 
-public record PaymentDTO(
-    String idTransacao,
-    String tipoPagamento, // PIX, BOLETO, CARTAO
-    BigDecimal valor
-) {}
+@Getter
+@Builder
+public class PaymentDTO {
+    private String transactionId;
+    private String paymentType;
+    private BigDecimal amount;
+	public static Object builder() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}

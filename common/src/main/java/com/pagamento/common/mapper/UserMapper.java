@@ -1,8 +1,14 @@
+// ==========================
+// MAPPER: UserMapper.java
+// ==========================
 package com.pagamento.common.mapper;
 
 import com.pagamento.common.dto.UserDTO;
 import com.pagamento.common.model.User;
 
+/**
+ * Converte entidades User ↔ DTO.
+ */
 public class UserMapper {
 
     public static UserDTO toDTO(User user) {

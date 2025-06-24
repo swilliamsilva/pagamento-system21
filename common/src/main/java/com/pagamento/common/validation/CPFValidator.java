@@ -1,13 +1,20 @@
+
+// ==========================
+// VALIDATOR: CPFValidator.java
+// ==========================
 package com.pagamento.common.validation;
 
-/**
- * Utilitário simples para validação de CPF.
- */
-public class CPFValidator {
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
-    public static boolean isValid(String cpf) {
-        if (cpf == null || cpf.length() != 11 || cpf.matches("(\\d)\\1{10}"))
-            return false;
+/**
+ * Validador de CPF com base em algoritmo de verificação.
+ */
+public class CPFValidator implements ConstraintValidator<ValidCPF, String> {
+
+    @Override
+    public boolean isValid(String cpf, ConstraintValidatorContext context) {
+        if (cpf == null || cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) return false;
 
         try {
             int sum = 0, weight = 10;

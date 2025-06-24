@@ -1,0 +1,40 @@
+pipeline {
+    agent none
+    
+    stages {
+        stage('Test') {
+            parallel {
+                stage('Unit Tests') {
+                    agent {
+                        docker {
+                            image 'maven:3.8-openjdk-17'
+                            args '-v $HOME/.m2:/root/.m2'
+                        }
+                    }
+                    steps {
+                        sh 'mvn test jacoco:report'
+                    }
+                }
+                
+                stage('Integration Tests') {
+                    agent {
+                        docker {
+                            image 'maven:3.8-openjdk-17'
+                            args '-v $HOME/.m2:/root/.m2'
+                        }
+                    }
+                    environment {
+                        SPRING_CASSANDRA_CONTACT_POINTS = "cassandra"
+                        SPRING_KAFKA_BOOTSTRAP_SERVERS = "kafka:9092"
+                    }
+                    steps {
+                        sh '''
+                            docker-compose up -d
+                            mvn verify -DskipUnitTests=true failsafe:integration-test
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}

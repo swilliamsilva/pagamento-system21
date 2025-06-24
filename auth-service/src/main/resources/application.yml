@@ -1,15 +1,39 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: auth-service
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: password
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  profiles:
+    active: dev
 
-  cloud:
-    vault:
-      uri: http://localhost:8200
-      token: root # ou melhor, use um token seguro via env
-      kv:
-        enabled: true
-        backend: secret
-        default-context: pagamento/auth-service
 jwt:
-  secret: ${jwt.secret}
-  expiration: ${jwt.expiration}
+  secret: ${JWT_SECRET:mySecretKey123!@#}
+  expiration: 3600000 # 1 hora
+
+---
+spring:
+  profiles: prod
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authdb
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+
+# Configuração do DynamoDB para produção
+aws:
+  dynamodb:
+    endpoint: ${DYNAMODB_ENDPOINT:https://dynamodb.us-east-1.amazonaws.com}
+    region: ${AWS_REGION:us-east-1}

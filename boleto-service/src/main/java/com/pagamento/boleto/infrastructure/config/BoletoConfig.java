@@ -1,69 +1,49 @@
-/* ========================================================
-# Classe: BoletoConfig
-# Módulo: boleto-service (Configuração)
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Bean de injeção do serviço de domínio com adapters.
-# ======================================================== */
-
 package com.pagamento.boleto.infrastructure.config;
 
 import com.pagamento.boleto.domain.ports.AsaasGatewayPort;
 import com.pagamento.boleto.domain.ports.BoletoRepositoryPort;
 import com.pagamento.boleto.domain.ports.NotificacaoPort;
+import com.pagamento.boleto.domain.service.BoletoCalculos;
+import com.pagamento.boleto.domain.model.BoletoFactory;
 import com.pagamento.boleto.domain.service.BoletoService;
+import com.pagamento.boleto.domain.service.BoletoValidation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-/**
- * The import org.springframework cannot be resolved
- * 
- * The import org.springframework cannot be resolved
- * 
- * 
- * 
- * **/
-
-
 
 @Configuration
-/***
- * 
- * 
- * Configuration cannot be resolved to a type
- * 
- * */
-
 public class BoletoConfig {
 
     @Bean
-    /**
-     * 
-     * 
-     * Bean cannot be resolved to a type
-     * 
-     * **/
-    
     public BoletoService boletoService(
         BoletoRepositoryPort repository,
-        AsaasGatewayPort gateway,
-        
-        /**
-         * 
-         * AsaasGatewayPort cannot be resolved to a type
-         * 
-         * **/
-        
-        NotificacaoPort notificacao
-        
-        /**
-         * 
-         * 
-         * 
-         * 
-         * 
-         * **/
-        
+        AsaasGatewayPort asaasGateway,
+        NotificacaoPort notificacaoPort,
+        BoletoValidation validation,
+        BoletoCalculos calculos,
+        BoletoFactory factory
     ) {
-        return new BoletoService(repository, gateway, notificacao);
+        return new BoletoService(
+            repository, 
+            asaasGateway, 
+            notificacaoPort,
+            validation,
+            calculos,
+            factory
+        );
+    }
+    
+    @Bean
+    public BoletoValidation boletoValidation() {
+        return new BoletoValidation();
+    }
+    
+    @Bean
+    public BoletoCalculos boletoCalculos() {
+        return new BoletoCalculos();
+    }
+    
+    @Bean
+    public BoletoFactory boletoFactory(BoletoCalculos calculos) {
+        return new BoletoFactory(calculos);
     }
 }

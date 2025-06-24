@@ -1,26 +1,27 @@
-package tests.paymentservice;
+package com.pagamento.payment;
 
-import com.pagamento.payment.PaymentApplication;
 import com.pagamento.payment.model.Payment;
 import com.pagamento.payment.repository.mongo.PaymentMongoRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = PaymentApplication.class)
+@DataMongoTest
 class PaymentServiceIntegrationTest {
 
     @Autowired
     private PaymentMongoRepository repository;
 
     @Test
-    void deveSalvarEPersistirPagamento() {
-        Payment pagamento = new Payment("123", 100.0, "pix");
+    void devePersistirPagamentoNoMongoDB() {
+        Payment pagamento = new Payment();
+        pagamento.setTipo("PIX");
+        pagamento.setValor(150.0);
+        
         Payment salvo = repository.save(pagamento);
-
+        
         assertThat(salvo.getId()).isNotNull();
-        assertThat(salvo.getValor()).isEqualTo(100.0);
+        assertThat(repository.findById(salvo.getId())).isPresent();
     }
 }

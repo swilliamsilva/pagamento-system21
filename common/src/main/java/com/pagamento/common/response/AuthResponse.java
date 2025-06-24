@@ -1,19 +1,16 @@
-/* ========================================================
-# Classe: AuthResponse
-# Módulo: common - response
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Retorno com token após autenticação com JWT.
-# ======================================================== */
 
+// ==========================
+// DTO: AuthResponse.java
+// ==========================
 package com.pagamento.common.response;
 
 /**
- * Retorno padrão de autenticação contendo o token JWT.
+ * Resposta da API de autenticação com token e perfil de acesso.
  *
- * Exemplo de resposta:
- * {
- *   "token": "Bearer eyJhbGciOiJIUzI1NiIsIn..."
- * }
+ * @param token Token JWT no formato "Bearer ..."
+ * @param role Perfil do usuário autenticado
  */
-public record AuthResponse(String token) {}
+public record AuthResponse(
+    String token,
+    String role
+) {}

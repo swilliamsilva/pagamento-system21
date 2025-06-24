@@ -1,0 +1,4 @@
+asaas:
+  api:
+    base-url: https://sandbox.asaas.com/api
+    key: ${ASAAS_API_KEY:sua_chave_aqui}
