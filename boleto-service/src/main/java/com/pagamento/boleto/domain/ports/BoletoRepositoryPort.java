@@ -1,42 +1,22 @@
 package com.pagamento.boleto.domain.ports;
 
+import com.pagamento.boleto.domain.model.Boleto;
+import com.pagamento.boleto.domain.model.BoletoStatus;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import com.pagamento.boleto.domain.model.Boleto;
-
-/**
- * 
- * The import com.pagamento.boleto.domain.model cannot be resolved
- * 
- * **/
-
-
 public interface BoletoRepositoryPort {
-    void salvar(Boleto boleto);
-
-	Optional<Boleto> findById(String id);
+    Boleto salvar(Boleto boleto);
+    Optional<Boleto> buscarPorId(String id);
+    Boleto atualizar(Boleto boleto);
+    List<Boleto> buscarTodos();
+    void deletarPorId(String id);
+    List<Boleto> buscarPorStatus(BoletoStatus status);
+   
+    
+    
+    List<Boleto> buscarVencidos(LocalDate dataAtual);
 	
-	/**
-	 * 
-	 * 
-	 * 
-	 * 
-	 * **/
-	
-
-	Boleto save(Boleto boleto);
-
-	List<Boleto> findAll();
-	
-	
-	/**
-	 * 
-	 * Boleto cannot be resolved to a type
-	 * 
-	 * 
-	 * 
-	 * **/
-
-	void deleteById(String id);
 }

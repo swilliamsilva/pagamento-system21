@@ -20,9 +20,9 @@ public class PaymentService {
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     public PaymentResponse processarPagamento(PaymentRequest request) {
-        log.info("🔁 Orquestrando pagamento do tipo: {}", request.tipo());
+        log.info(" Orquestrando pagamento do tipo: {}", request.tipo());
 
         // Simulação do fluxo: decidir rota (boleto, pix, cartão) futuramente
-        return new PaymentResponse("Pagamento processado com sucesso: " + request.tipo());
+        return new PaymentResponse("Pagamento processado com sucesso: " + request.tipo(), null, null, null);
     }
 }

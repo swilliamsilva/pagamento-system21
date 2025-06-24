@@ -1,87 +1,57 @@
-// src/main/java/com/pagamento/boleto/infrastructure/adapters/repository/BoletoRepositoryAdapter.java
-// Para persistência real, você poderá usar Mongo ou PostgreSQL e adaptar para um JpaRepository ou MongoRepository real.
-
 package com.pagamento.boleto.infrastructure.adapters.repository;
 
 import com.pagamento.boleto.domain.model.Boleto;
+import com.pagamento.boleto.domain.model.BoletoStatus;
 import com.pagamento.boleto.domain.ports.BoletoRepositoryPort;
+import com.pagamento.boleto.infrastructure.adapters.repository.jpa.BoletoJpaRepository;
 import org.springframework.stereotype.Component;
-/**
- * 
- * 
- * The import org.springframework cannot be resolved
- * 
- * 
- * **/
 
-
-import java.util.*;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 @Component
-/**
- * 
- * 
- * Component cannot be resolved to a type
- * 
- * **/
-
 public class BoletoRepositoryAdapter implements BoletoRepositoryPort {
-/**
- * 
- * 
- * The type BoletoRepositoryAdapter must implement the inherited
- *  abstract method BoletoRepositoryPort.salvar(Boleto)
- * 
- * 
- * **/
-    private final Map<String, Boleto> fakeDatabase = new HashMap<>();
-    
-    /**
-     * 
-     * 
-     * Multiple markers at this line
-	- Boleto cannot be resolved to a type
-	- Cannot infer type arguments for HashMap<>
-     * 
-     * **/
+	
 
-    @Override
-    public Optional<Boleto> findById(String id) {
-    	
-    	/**
-    	 * 
-    	 * 
-    	 * Multiple markers at this line
-	- implements com.pagamento.boleto.domain.ports.BoletoRepositoryPort.findById
-	- Boleto cannot be resolved to a type
-    	 * 
-    	 * **/
-    	
-    	
-        return Optional.ofNullable(fakeDatabase.get(id));
-        
-        /**
-         * 
-         * Boleto cannot be resolved to a type
-         * 
-         * 
-         * **/
-        
+    private final BoletoJpaRepository boletoJpaRepository;
+
+    public BoletoRepositoryAdapter(BoletoJpaRepository boletoJpaRepository) {
+        this.boletoJpaRepository = boletoJpaRepository;
     }
 
     @Override
-    public Boleto save(Boleto boleto) {
-        fakeDatabase.put(boleto.getId(), boleto);
-        return boleto;
+    public Boleto salvar(Boleto boleto) {
+        return boletoJpaRepository.save(boleto);
     }
 
     @Override
-    public List<Boleto> findAll() {
-        return new ArrayList<>(fakeDatabase.values());
+    public Optional<Boleto> buscarPorId(String id) {
+        return boletoJpaRepository.findById(id);
     }
 
     @Override
-    public void deleteById(String id) {
-        fakeDatabase.remove(id);
+    public Boleto atualizar(Boleto boleto) {
+        return boletoJpaRepository.save(boleto);
+    }
+
+    @Override
+    public List<Boleto> buscarTodos() {
+        return boletoJpaRepository.findAll();
+    }
+
+    @Override
+    public void deletarPorId(String id) {
+        boletoJpaRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Boleto> buscarPorStatus(BoletoStatus status) {
+        return boletoJpaRepository.findByStatus(status);
+    }
+
+    @Override
+    public List<Boleto> buscarVencidos(LocalDate dataAtual) {
+        return boletoJpaRepository.findByDataVencimentoBeforeAndStatusNot(dataAtual, BoletoStatus.PAGO);
     }
 }

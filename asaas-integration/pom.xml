@@ -3,10 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    
     <groupId>com.pagamento</groupId>
     <artifactId>asaas-integration</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <name>Asaas Integration</name>
+    <description>Módulo de integração com o gateway de pagamento Asaas</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -18,6 +21,9 @@
     <properties>
         <java.version>21</java.version>
         <spring-cloud.version>2023.0.1</spring-cloud.version>
+        <!-- Adicionadas versões para dependências de teste -->
+        <okhttp.version>4.12.0</okhttp.version>
+        <reactor-test.version>3.6.4</reactor-test.version>
     </properties>
 
     <dependencyManagement>
@@ -33,28 +39,67 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Módulo interno -->
+        <!-- Spring WebFlux para WebClient (recomendado para integrações) -->
         <dependency>
-            <groupId>com.pagamento</groupId>
-            <artifactId>common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
-
+        
         <!-- Spring Cloud Vault -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-vault-config</artifactId>
         </dependency>
-
-        <!-- Spring Boot Starters -->
+        
+        <!-- Dependência para serialização JSON -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
+        
+        <!-- Testes -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        
+        <!-- Dependência para testes reativos -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <version>${reactor-test.version}</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- MockWebServer para testes de integração -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <version>${okhttp.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Plugin para build de bibliotecas (não aplicações) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            
+            <!-- Plugin para executar testes -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.2</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

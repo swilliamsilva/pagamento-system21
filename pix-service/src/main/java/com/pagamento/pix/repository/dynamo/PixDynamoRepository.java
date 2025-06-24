@@ -1,15 +1,20 @@
-// src/main/java/com/pagamento/pix/repository/dynamo/PixDynamoRepository.java
+/* ========================================================
+# Interface: PixDynamoRepository
+# Módulo: pix-service
+# Projeto: pagamento-system21
+# Autor: William Silva
+# Descrição: Repositório Spring Data para persistência de transações Pix no DynamoDB.
+# ======================================================== */
+
 package com.pagamento.pix.repository.dynamo;
 
 import com.pagamento.pix.model.Pix;
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
-import org.springframework.stereotype.Repository;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
+@EnableScan  // Necessário para permitir varredura (scan) de tabelas no Dynamo
 @Repository
-@EnableScan
 public interface PixDynamoRepository extends CrudRepository<Pix, String> {
-    // Consultas customizadas podem ser adicionadas se necessário
+    // Adicione métodos customizados aqui se necessário, como findByChaveDestino, etc.
 }
-// Nota: Certifique-se de que o Pix esteja anotado com @DynamoDBTable(tableName = "pix").
-// TODO: Implement PixDynamoRepository.java

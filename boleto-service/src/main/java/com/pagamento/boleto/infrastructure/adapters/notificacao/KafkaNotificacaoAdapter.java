@@ -8,28 +8,74 @@
 
 package com.pagamento.boleto.infrastructure.adapters.notificacao;
 
+import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.ports.NotificacaoPort;
+import com.pagamento.boleto.infrastructure.config.KafkaConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-/**
- * 
- * 
- * The import org.springframework cannot be resolved
- * 
- * **/
+
 @Component
+public abstract class KafkaNotificacaoAdapter implements NotificacaoPort {
 
-/*
- * Component cannot be resolved to a type
- * 
- * 
- * 
- * ***/
-
-public class KafkaNotificacaoAdapter implements NotificacaoPort {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaNotificacaoAdapter.class);
+    
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    
+    public KafkaNotificacaoAdapter(KafkaTemplate<String, String> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     @Override
-    public void enviarNotificacao(String mensagem) {
-        System.out.println("Enviando notificação Kafka: " + mensagem);
-        // Aqui você poderia usar KafkaTemplate ou qualquer lib real de mensageria
+    public void notificarEmissao(Boleto boleto) {
+        String mensagem = String.format(
+            "Boleto emitido: ID %s, Valor R$%.2f, Vencimento %s", 
+            boleto.getId(), 
+            boleto.getValor(), 
+            boleto.getDataVencimento()
+        );
+        enviarMensagem(KafkaConfig.TOPICO_EMISSAO_BOLETO, mensagem);
+    }
+
+    @Override
+    public void notificarPagamento(Boleto boleto) {
+        String mensagem = String.format(
+            "Boleto pago: ID %s, Valor R$%.2f, Data Pagamento %s", 
+            boleto.getId(), 
+            boleto.getValor(), 
+            boleto.getDataPagamento()
+        );
+        enviarMensagem(KafkaConfig.TOPICO_PAGAMENTO_BOLETO, mensagem);
+    }
+
+    @Override
+    public void notificarCancelamento(Boleto boleto) {
+        String mensagem = String.format(
+            "Boleto cancelado: ID %s, Motivo: %s", 
+            boleto.getId(), 
+            boleto.getMotivoCancelamento()
+        );
+        enviarMensagem(KafkaConfig.TOPICO_CANCELAMENTO_BOLETO, mensagem);
+    }
+
+    @Override
+    public void notificarReemissao(Boleto original, Boleto reemissao) {
+        String mensagem = String.format(
+            "Boleto reemitido: Original ID %s, Novo ID %s", 
+            original.getId(), 
+            reemissao.getId()
+        );
+        enviarMensagem(KafkaConfig.TOPICO_REEMISSAO_BOLETO, mensagem);
+    }
+    
+    private void enviarMensagem(String topico, String mensagem) {
+        try {
+            kafkaTemplate.send(topico, mensagem);
+            logger.info("Mensagem enviada para o tópico {}: {}", topico, mensagem);
+        } catch (Exception e) {
+            logger.error("Falha ao enviar mensagem para o Kafka. Tópico: {}, Mensagem: {}", topico, mensagem, e);
+            throw new KafkaNotificacaoException("Erro ao enviar mensagem para Kafka", e);
+        }
     }
 }

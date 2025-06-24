@@ -17,4 +17,9 @@ public record PaymentRequest(
     String userId,
     String tipoPagamento,
     BigDecimal valor
-) {}
+) {
+
+	public Object tipo() {
+		// TODO Auto-generated method stub
+		return null;
+	}}

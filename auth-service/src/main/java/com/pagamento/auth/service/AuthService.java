@@ -1,33 +1,37 @@
-/* ========================================================
-# Classe: AuthService
-# Módulo: auth-service
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Serviço de autenticação com geração de JWT.
-# ======================================================== */
-
 package com.pagamento.auth.service;
 
+import com.pagamento.auth.dto.AuthRequestDTO;
+import com.pagamento.auth.dto.AuthResponseDTO;
+import com.pagamento.auth.model.User;
+import com.pagamento.auth.repository.UserRepository;
 import com.pagamento.auth.security.JwtTokenProvider;
-import com.pagamento.common.request.AuthRequest;
-import com.pagamento.common.response.AuthResponse;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
+    private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(JwtTokenProvider jwtTokenProvider) {
+    public AuthService(UserRepository userRepository, 
+                      JwtTokenProvider jwtTokenProvider,
+                      PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public AuthResponse authenticate(AuthRequest request) {
-        if ("admin".equals(request.username()) && "123456".equals(request.password())) {
-            String token = jwtTokenProvider.generateToken(request.username());
-            return new AuthResponse("Bearer " + token, "admin");
+    public AuthResponseDTO authenticate(AuthRequestDTO request) {
+        User user = userRepository.findByUsername(request.username())
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new RuntimeException("Credenciais inválidas");
         }
-
-        throw new RuntimeException("Credenciais inválidas");
+        
+        String token = jwtTokenProvider.generateToken(user.getUsername());
+        return new AuthResponseDTO("Bearer " + token, user.getRole());
     }
 }

@@ -8,15 +8,15 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import org.springframework.stereotype.Service;
+
 import java.time.Duration;
-import java.util.Map;
 
 @Service
 public class S3Service {
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
-    
+
     public S3Service(S3Client s3Client, S3Presigner s3Presigner) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
@@ -32,29 +32,13 @@ public class S3Service {
     }
 
     public byte[] downloadFile(String bucketName, String key) {
-        GetObjectResponse objectResponse = s3Client.getObject(GetObjectRequest.builder()
-        		/**
-        		 * 
-        		 * 
-        		 * Type mismatch: cannot convert from
-        		 *  ResponseInputStream<GetObjectResponse> to GetObjectResponse
-        		 * 
-        		 * **/
-        		
+        GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
-                .build());
-        
-        ResponseBytes<GetObjectResponse> bytes = objectResponse.readResponseBytes();
-/**
- * 
- * 
- * The method readResponseBytes() is undefined for the type GetObjectResponse
- * 
- * 
- * **/
-        
-        return bytes.asByteArray();
+                .build();
+
+        ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(request);
+        return objectBytes.asByteArray();
     }
 
     public String generatePresignedUrl(String bucketName, String key, Duration expiration) {

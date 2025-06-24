@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.SnsClientBuilder;
+
 import java.net.URI;
 
 @Configuration
@@ -19,23 +21,14 @@ public class SnsClientConfig {
 
     @Bean
     public SnsClient snsClient(AwsCredentialsProvider credentialsProvider) {
-        SnsClient.Builder builder = SnsClient.builder()
-        		
-        		/**
-        		 * 
-        		 * 
-        		 * SnsClient.Builder cannot be resolved to a type
-        		 * 
-        		 * 
-        		 * **/
-        		
-            .region(Region.of(region))
-            .credentialsProvider(credentialsProvider);
-        
+        SnsClientBuilder builder = SnsClient.builder()
+                .region(Region.of(region))
+                .credentialsProvider(credentialsProvider);
+
         if (snsEndpoint != null && !snsEndpoint.isEmpty()) {
             builder.endpointOverride(URI.create(snsEndpoint));
         }
-        
+
         return builder.build();
     }
 }

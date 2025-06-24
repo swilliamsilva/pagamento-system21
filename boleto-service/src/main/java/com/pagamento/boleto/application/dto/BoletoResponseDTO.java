@@ -1,15 +1,22 @@
-/* ========================================================
-# Classe: BoletoResponseDTO
-# Módulo: boleto-service
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: DTO de resposta após geração de boleto.
-# ======================================================== */
-
 package com.pagamento.boleto.application.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 public record BoletoResponseDTO(
+    String id,
+    String pagador,
+    String beneficiario,
+    BigDecimal valor,
+    LocalDate dataEmissao,
+    LocalDate dataVencimento,
+    String status,
     String codigoBarras,
-    Double valor,
-    String status
+    String linhaDigitavel,
+    String qrCode,
+    String documento,
+    String instrucoes,
+    String localPagamento,
+    String boletoOriginalId,
+    int numeroReemissoes
 ) {}

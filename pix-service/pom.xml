@@ -20,6 +20,13 @@
         <rest-assured.version>5.4.0</rest-assured.version>
         <mockito.version>5.11.0</mockito.version>
     </properties>
+    <repositories>
+        <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     
     <dependencyManagement>
         <dependencies>
@@ -128,6 +135,33 @@
             <version>${rest-assured.version}</version>
             <scope>test</scope>
         </dependency>
+        
+        <!-- DynamoDB com Spring Data -->
+        <dependency>
+           <groupId>com.github.derjust</groupId>
+    <artifactId>spring-data-dynamodb</artifactId>
+    <version>5.1.0</version>
+</dependency> 
+
+<dependency>
+    <groupId>com.amazonaws</groupId>
+    <artifactId>aws-java-sdk-dynamodb</artifactId>
+    <version>1.12.713</version>
+</dependency>
+
+<!-- Suporte ao processamento de configs -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+    <optional>true</optional>
+</dependency>
+
+<!-- Serialização JSON -->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+</dependency>
+               
     </dependencies>
 
     <build>
