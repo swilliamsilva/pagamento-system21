@@ -1,0 +1,35 @@
+name: CI Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    container: maven:3.8-openjdk-17
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run unit tests
+        run: mvn test jacoco:report
+
+  integration-test:
+    runs-on: ubuntu-latest
+    services:
+      cassandra:
+        image: cassandra:4.0
+        ports:
+          - 9042:9042
+      kafka:
+        image: confluentinc/cp-kafka:7.0.0
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_LISTENERS: PLAINTEXT://:9092
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+    container: maven:3.8-openjdk-17
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run integration tests
+        run: mvn verify -DskipUnitTests=true failsafe:integration-test
+        env:
+          SPRING_CASSANDRA_CONTACT_POINTS: localhost
+          SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092

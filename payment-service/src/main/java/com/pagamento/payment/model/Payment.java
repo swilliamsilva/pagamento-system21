@@ -3,6 +3,8 @@ package com.pagamento.payment.model;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.pagamento.payment.enums.PaymentType;
+
 public class Payment {
     private String transactionId;
     private String userId;
@@ -98,6 +100,16 @@ public class Payment {
 	}
 
 	public Object getData() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String getIdTransacao() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Enum<PaymentType> getTipoPagamento() {
 		// TODO Auto-generated method stub
 		return null;
 	}

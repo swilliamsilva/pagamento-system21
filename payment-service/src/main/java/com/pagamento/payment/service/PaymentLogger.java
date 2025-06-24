@@ -48,7 +48,9 @@ public final class PaymentLogger {
         Map<String, String> previousContext = MDC.getCopyOfContextMap();
         
         try {
-            MDC.setContextMap(context);
+            if (context != null) {
+                MDC.setContextMap(context);
+            }
             loggingAction.run();
         } finally {
             if (previousContext != null) {

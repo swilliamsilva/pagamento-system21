@@ -1,0 +1,25 @@
+stages:
+  - test
+
+unit-test:
+  stage: test
+  image: maven:3.8-openjdk-17
+  script:
+    - mvn test jacoco:report
+  artifacts:
+    paths:
+      - target/site/jacoco/
+
+integration-test:
+  stage: test
+  image: maven:3.8-openjdk-17
+  services:
+    - name: cassandra:4.0
+      alias: cassandra
+    - name: confluentinc/cp-kafka:7.0.0
+      alias: kafka
+  variables:
+    SPRING_CASSANDRA_CONTACT_POINTS: "cassandra"
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  script:
+    - mvn verify -DskipUnitTests=true failsafe:integration-test

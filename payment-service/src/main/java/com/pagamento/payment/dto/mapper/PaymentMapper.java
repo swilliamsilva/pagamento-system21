@@ -1,5 +1,6 @@
 package com.pagamento.payment.dto.mapper;
 
+import com.pagamento.payment.enums.PaymentType;
 import com.pagamento.payment.model.Payment;
 import com.pagamento.common.request.PaymentRequest;
 import com.pagamento.common.response.PaymentResponse;
@@ -23,4 +24,9 @@ public class PaymentMapper {
             payment.getData()
         );
     }
+
+	public Payment toEntity(PaymentRequest request, PaymentType paymentType) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
