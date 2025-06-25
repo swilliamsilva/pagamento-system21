@@ -1,0 +1,11 @@
+server:
+  port: 0  # Porta aleatória
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: pix-service
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/pix/**

@@ -1,12 +1,15 @@
 package com.pagamento.common.resilience;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.cloud.client.circuitbreaker.Customizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.pagamento.common.RetryRegistry;
 
 import java.time.Duration;
 
@@ -30,4 +33,14 @@ public class ResilienceConfig {
                 .circuitBreakerConfig(circuitBreakerConfig)
                 .build());
     }
+
+	public CircuitBreakerRegistry circuitBreakerRegistry() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public RetryRegistry retryRegistry() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
