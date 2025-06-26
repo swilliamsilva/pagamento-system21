@@ -1,4 +1,4 @@
-package com.pagamento.boletoservice;
+package com.pagamento.boleto.infrastructure.adapters.repository;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,21 +1,32 @@
+// Entity: Boleto.java
 package com.pagamento.boleto.domain.model;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.UUID;
-
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
+@Entity
 public class Boleto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
     private String pagador;
     private String beneficiario;
+
+    @Positive(message = "Valor deve ser positivo")
+    @NotNull(message = "Valor é obrigatório")
     private BigDecimal valor;
+
     private LocalDate dataEmissao;
     private LocalDate dataVencimento;
     private LocalDate dataPagamento;
+
+    @Enumerated(EnumType.STRING)
     private BoletoStatus status;
+
     private String documento;
     private String instrucoes;
     private String localPagamento;
@@ -28,6 +39,7 @@ public class Boleto {
     private int numeroReemissoes;
     private String motivoCancelamento;
 
+  
     // Getters e Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

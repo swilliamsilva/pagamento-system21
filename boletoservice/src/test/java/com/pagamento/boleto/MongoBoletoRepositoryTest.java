@@ -1,4 +1,4 @@
-package com.pagamento.boletoservice;
+package com.pagamento.boleto;
 
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,21 +10,20 @@ import com.pagamento.boleto.domain.ports.BoletoRepositoryPort;
 
 @SpringBootTest
 @ActiveProfiles("mongo")
-public class MongoBoletoRepositoryTest extends AbstractBoletoRepositoryTest {
-    
+class MongoBoletoRepositoryTest extends AbstractBoletoRepositoryTest {
+
     @Autowired
     private BoletoRepositoryPort mongoRepository;
-    
+
     @BeforeEach
     public void init() {
         this.repository = mongoRepository;
         super.setUpBase();
     }
-    
+
     @Test
     @Override
     public void deveSalvarEBuscarBoleto() {
-        // Implementação específica para MongoDB
         testSave();
         testFindById();
     }

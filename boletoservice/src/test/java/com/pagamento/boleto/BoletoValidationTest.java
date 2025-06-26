@@ -1,10 +1,12 @@
-package com.pagamento.boletoservice;
+package com.pagamento.boleto;
 
 import com.pagamento.boleto.domain.service.BoletoValidation;
 import org.junit.jupiter.api.*;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ActiveProfiles("test")
 class BoletoValidationTest {
 
     private BoletoValidation validator;

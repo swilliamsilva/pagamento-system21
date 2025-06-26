@@ -84,4 +84,9 @@ public class BoletoValidation {
 		// TODO Auto-generated method stub
 		
 	}
+
+	public Object validarValor(double d) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

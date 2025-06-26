@@ -1,3 +1,4 @@
+// Adapter Implementation: BoletoRepositoryAdapter.java
 package com.pagamento.boleto.infrastructure.adapters.repository;
 
 import com.pagamento.boleto.domain.model.Boleto;
@@ -12,7 +13,6 @@ import java.util.Optional;
 
 @Component
 public class BoletoRepositoryAdapter implements BoletoRepositoryPort {
-	
 
     private final BoletoJpaRepository boletoJpaRepository;
 
@@ -21,33 +21,68 @@ public class BoletoRepositoryAdapter implements BoletoRepositoryPort {
     }
 
     @Override
-    public Boleto salvar(Boleto boleto) {
+    public Boleto save(Boleto boleto) {
         return boletoJpaRepository.save(boleto);
     }
 
     @Override
-    public Optional<Boleto> buscarPorId(String id) {
+    public Optional<Boleto> findById(String id) {
         return boletoJpaRepository.findById(id);
     }
 
     @Override
-    public Boleto atualizar(Boleto boleto) {
-        return boletoJpaRepository.save(boleto);
-    }
-
-    @Override
-    public List<Boleto> buscarTodos() {
+    public List<Boleto> findAll() {
         return boletoJpaRepository.findAll();
     }
 
     @Override
-    public void deletarPorId(String id) {
+    public void deleteById(String id) {
         boletoJpaRepository.deleteById(id);
     }
 
     @Override
-    public List<Boleto> buscarPorStatus(BoletoStatus status) {
+    public List<Boleto> findByStatus(BoletoStatus status) {
         return boletoJpaRepository.findByStatus(status);
+    }
+
+    @Override
+    public List<Boleto> findByDataVencimentoBetween(LocalDate start, LocalDate end) {
+        return boletoJpaRepository.findByDataVencimentoBetween(start, end);
+    }
+
+    @Override
+    public List<Boleto> findByDocumentoPagador(String documento) {
+        return boletoJpaRepository.findByDocumento(documento);
+    }
+
+    @Override
+    public Boleto salvar(Boleto boleto) {
+        return save(boleto);
+    }
+
+    @Override
+    public Optional<Boleto> buscarPorId(String id) {
+        return findById(id);
+    }
+
+    @Override
+    public Boleto atualizar(Boleto boleto) {
+        return save(boleto);
+    }
+
+    @Override
+    public List<Boleto> buscarTodos() {
+        return findAll();
+    }
+
+    @Override
+    public void deletarPorId(String id) {
+        deleteById(id);
+    }
+
+    @Override
+    public List<Boleto> buscarPorStatus(BoletoStatus status) {
+        return findByStatus(status);
     }
 
     @Override

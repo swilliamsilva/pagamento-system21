@@ -1,4 +1,5 @@
-package com.pagamento.boletoservice;
+package com.pagamento.boleto;
+
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,11 +12,13 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.model.BoletoStatus;
 import com.pagamento.boleto.domain.ports.BoletoRepositoryPort;
 
+@ActiveProfiles("test")
 public abstract class AbstractBoletoRepositoryTest {
     protected BoletoRepositoryPort repository;
     protected Boleto boletoSalvo;

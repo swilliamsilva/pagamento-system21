@@ -1,4 +1,4 @@
-package com.pagamento.boletoservice;
+package com.pagamento.boleto;
 
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.pagamento.boleto.domain.ports.BoletoRepositoryPort;
 
 @SpringBootTest
-@ActiveProfiles("jpa")
+@ActiveProfiles("test")  // CORRIGIDO: usando perfil 'test' com H2
+@Transactional
 public class JpaBoletoRepositoryTest extends AbstractBoletoRepositoryTest {
     
     @Autowired
@@ -23,10 +24,8 @@ public class JpaBoletoRepositoryTest extends AbstractBoletoRepositoryTest {
     }
     
     @Test
-    @Transactional
     @Override
     public void deveSalvarEBuscarBoleto() {
-        // Implementação específica para JPA
         testSave();
         testFindById();
     }

@@ -17,4 +17,10 @@ public interface BoletoRepositoryPort {
     List<Boleto> findByDataVencimentoBetween(LocalDate start, LocalDate end);
     List<Boleto> findByDocumentoPagador(String documento);
     List<Boleto> buscarVencidos(LocalDate dataAtual);
+	Boleto salvar(Boleto boleto);
+	Boleto atualizar(Boleto boleto);
+	void deletarPorId(String id);
+	Optional<Boleto> buscarPorId(String idOriginal);
+	List<Boleto> buscarTodos();
+	List<Boleto> buscarPorStatus(BoletoStatus status);
 }
