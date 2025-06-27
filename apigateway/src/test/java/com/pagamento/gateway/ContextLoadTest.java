@@ -1,12 +1,30 @@
 package com.pagamento.gateway;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
-public class ContextLoadTest {
+class ContextLoadTest {
+
+    @Autowired
+    private ApplicationContext context;
+
     @Test
-    public void contextLoads() {
-        // apenas para testar se o contexto do Spring carrega
+    void contextLoads() {
+        assertNotNull(context);
+    }
+
+    @Test
+    void shouldHaveLoggingFilterBean() {
+        assertNotNull(context.getBean("loggingFilter"));
+    }
+
+    @Test
+    void shouldHaveFallbackControllerBean() {
+        assertNotNull(context.getBean("fallbackController"));
     }
 }
