@@ -12,7 +12,7 @@ import com.pagamento.boleto.application.dto.BoletoRequestDTO;
 import com.pagamento.boleto.application.dto.BoletoResponseDTO;
 import com.pagamento.boleto.application.mapper.BoletoMapper;
 import com.pagamento.boleto.domain.model.Boleto;
-import com.pagamento.boleto.domain.service.BoletoService;
+import com.pagamento.boleto.domain.ports.BoletoServicePort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/boletos")
 public class BoletoController {
 
-    private final BoletoService boletoService;
+    private final BoletoServicePort boletoService;
 
-    public BoletoController(BoletoService boletoService) {
+    public BoletoController(BoletoServicePort boletoService) {
         this.boletoService = boletoService;
     }
 

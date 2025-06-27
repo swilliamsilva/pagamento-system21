@@ -2,30 +2,23 @@ package com.pagamento.boleto.domain.service;
 
 import com.pagamento.boleto.application.dto.BoletoRequestDTO;
 import com.pagamento.boleto.domain.model.Boleto;
-import com.pagamento.boleto.domain.model.*;
 import com.pagamento.boleto.domain.model.BoletoStatus;
 import com.pagamento.boleto.domain.exception.BoletoValidationException;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.math.BigDecimal;
 
 public class BoletoValidation {
 
     public void validarEmissao(BoletoRequestDTO dto) {
-        if (dto.valor() == null || dto.valor().compareTo(BigDecimal.ZERO) <= 0) {
-            /*
-             * 
-             * The method compareTo(Double) in the type Double is not applicable for the arguments (BigDecimal)
-             * 
-             * ***/
-        	
-        	
-        	throw new BoletoValidationException("Valor deve ser positivo");
+        // Validação de valor convertido para BigDecimal
+        BigDecimal valor = BigDecimal.valueOf(dto.valor());
+        if (dto.valor() == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BoletoValidationException("Valor deve ser positivo");
         }
         
-        if (dto.dataVencimento() == null || dto.dataVencimento().isBefore(LocalDate.now())) {
-            throw new BoletoValidationException("Data de vencimento deve ser futura");
+        if (dto.dataVencimento() == null || dto.dataVencimento().isBefore(LocalDate.now().plusDays(1))) {
+            throw new BoletoValidationException("Data de vencimento deve ser futura (mínimo 1 dia)");
         }
         
         if (dto.pagador() == null || dto.pagador().isBlank()) {
@@ -38,27 +31,42 @@ public class BoletoValidation {
     }
 
     public void validarBoleto(Boleto boleto) {
+        if (boleto == null) {
+            throw new BoletoValidationException("Boleto não pode ser nulo");
+        }
+        
         if (boleto.getDataVencimento() == null) {
             throw new BoletoValidationException("Data de vencimento não definida");
         }
         
-        if (boleto.getStatus() != BoletoStatus.EMITIDO) {
-            throw new BoletoValidationException("Boleto não está em estado válido para operação");
+        if (boleto.getStatus() == null) {
+            throw new BoletoValidationException("Status não definido");
+        }
+        
+        if (!boleto.getStatus().isOperacaoPermitida()) {
+            throw new BoletoValidationException(
+                "Boleto não está em estado válido para operação: " + boleto.getStatus()
+            );
         }
     }
 
     public void validarReemissao(Boleto original) {
-        if (original.getStatus() != BoletoStatus.VENCIDO && 
-            original.getStatus() != BoletoStatus.EMITIDO) {
-            throw new BoletoValidationException("Boleto não pode ser reemitido. Status atual: " + original.getStatus());
+        validarBoleto(original);
+        
+        if (!original.getStatus().permiteReemissao()) {
+            throw new BoletoValidationException(
+                "Boleto não pode ser reemitido. Status atual: " + original.getStatus()
+            );
         }
         
-        if (original.getNumeroReemissoes() >= 3) {
-            throw new BoletoValidationException("Número máximo de reemissoes atingido");
+        if (original.getReemissoes() >= 3) {
+            throw new BoletoValidationException("Número máximo de reemissoes (3) atingido");
         }
     }
 
     public void validarCancelamento(Boleto boleto) {
+        validarBoleto(boleto);
+        
         if (boleto.getStatus() == BoletoStatus.PAGO) {
             throw new BoletoValidationException("Boleto já pago não pode ser cancelado");
         }
@@ -66,27 +74,25 @@ public class BoletoValidation {
         if (boleto.getStatus() == BoletoStatus.CANCELADO) {
             throw new BoletoValidationException("Boleto já está cancelado");
         }
+        
+        if (boleto.getStatus() == BoletoStatus.VENCIDO) {
+            throw new BoletoValidationException("Boleto vencido não pode ser cancelado");
+        }
     }
     
-    public void validarPagamento(Boleto boleto) {
-        if (boleto.getStatus() != BoletoStatus.EMITIDO && 
-            boleto.getStatus() != BoletoStatus.REEMITIDO &&
-            boleto.getStatus() != BoletoStatus.VENCIDO) {
-            throw new BoletoValidationException("Boleto não pode ser pago. Status atual: " + boleto.getStatus());
+    public void validarPagamento(Boleto boleto, BigDecimal valorPago) {
+        validarBoleto(boleto);
+        
+        if (!boleto.getStatus().permitePagamento()) {
+            throw new BoletoValidationException(
+                "Boleto não pode ser pago. Status atual: " + boleto.getStatus()
+            );
         }
         
-        if (boleto.getDataVencimento().isBefore(LocalDate.now())) {
-            throw new BoletoValidationException("Boleto vencido requer atualização de status");
+        if (valorPago.compareTo(boleto.getValor()) < 0) {
+            throw new BoletoValidationException(
+                "Valor pago insuficiente. Esperado: " + boleto.getValor() + ", Recebido: " + valorPago
+            );
         }
     }
-
-	public void validarCancelamento(Optional<Boleto> boleto) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public Object validarValor(double d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

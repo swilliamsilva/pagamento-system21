@@ -12,4 +12,5 @@ public interface BoletoServicePort {
     byte[] gerarPDF(String id);
     String gerarCodigoBarras(String id);
     String gerarQRCode(String id);
+	void cancelarBoleto(String id, String motivo);
 }

@@ -1,30 +1,34 @@
 package com.pagamento.boleto;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-
-import java.math.BigDecimal;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
-import com.pagamento.boleto.infrastructure.adapters.gateway.AsaasGatewayAdapter;
+import com.pagamento.boleto.domain.model.Boleto;
+import com.pagamento.boleto.domain.ports.AsaasGatewayPort;
 
 @SpringBootTest
-@ActiveProfiles("test")
-class AsaasGatewayAdapterTest {
+public class AsaasGatewayAdapterTest {
 
     @Autowired
-    private AsaasGatewayAdapter adapter;
+    private AsaasGatewayPort asaasGatewayPort;
 
     @Test
-    void deveEnviarBoletoComSucesso() {
-        assertDoesNotThrow(() -> adapter.enviarBoleto("123",BigDecimal(100.0)));
+    void contextLoads() {
+        assertThat(asaasGatewayPort).isNotNull();
     }
-
-	private BigDecimal BigDecimal(double d) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    
+    @Test
+    void deveRegistrarBoletoComSucesso() {
+        Boleto boleto = new Boleto();
+        boleto.setCodigo("123");
+        boleto.setValor(100.00);
+        
+        assertDoesNotThrow(() -> 
+            asaasGatewayPort.registrarBoleto(boleto)
+        );
+    }
 }

@@ -15,25 +15,6 @@ import com.pagamento.boleto.domain.service.BoletoValidation;
 public class BoletoConfig {
 
     @Bean
-    public BoletoService boletoService(
-        BoletoRepositoryPort repository,
-        AsaasGatewayPort asaasGateway,
-        NotificacaoPort notificacaoPort,
-        BoletoValidation validation,
-        BoletoCalculos calculos,
-        BoletoFactory factory
-    ) {
-        return new BoletoService(
-            repository, 
-            asaasGateway, 
-            notificacaoPort,
-            validation,
-            calculos,
-            factory
-        );
-    }
-    
-    @Bean
     public BoletoValidation boletoValidation() {
         return new BoletoValidation();
     }
@@ -46,5 +27,22 @@ public class BoletoConfig {
     @Bean
     public BoletoFactory boletoFactory(BoletoCalculos calculos) {
         return new BoletoFactory(calculos);
+    }
+    
+    @Bean
+    public BoletoService boletoService(
+        BoletoRepositoryPort repository,
+        AsaasGatewayPort asaasGateway,
+        NotificacaoPort notificacaoPort,
+        BoletoValidation validation,
+        BoletoFactory factory
+    ) {
+        return new BoletoService(
+            repository, 
+            asaasGateway, 
+            notificacaoPort,
+            validation,
+            factory  // Removido BoletoCalculos redundante
+        );
     }
 }

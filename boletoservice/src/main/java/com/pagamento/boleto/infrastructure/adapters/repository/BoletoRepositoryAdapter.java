@@ -1,17 +1,17 @@
-// Adapter Implementation: BoletoRepositoryAdapter.java
 package com.pagamento.boleto.infrastructure.adapters.repository;
 
 import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.model.BoletoStatus;
 import com.pagamento.boleto.domain.ports.BoletoRepositoryPort;
 import com.pagamento.boleto.infrastructure.adapters.repository.jpa.BoletoJpaRepository;
-import org.springframework.stereotype.Component;
+
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 public class BoletoRepositoryAdapter implements BoletoRepositoryPort {
 
     private final BoletoJpaRepository boletoJpaRepository;

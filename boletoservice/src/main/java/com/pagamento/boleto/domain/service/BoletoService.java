@@ -1,6 +1,3 @@
-/* ============================
- * UNIFICADO: BoletoService.java
- * ============================ */
 package com.pagamento.boleto.domain.service;
 
 import com.pagamento.boleto.application.dto.BoletoRequestDTO;
@@ -9,11 +6,10 @@ import com.pagamento.boleto.domain.model.*;
 import com.pagamento.boleto.domain.ports.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-@Service
 public class BoletoService implements BoletoServicePort {
 
     private static final Logger logger = LoggerFactory.getLogger(BoletoService.class);
@@ -22,136 +18,167 @@ public class BoletoService implements BoletoServicePort {
     private final AsaasGatewayPort asaasGateway;
     private final NotificacaoPort notificacaoPort;
     private final BoletoValidation validation;
-    private final BoletoCalculos calculos;
     private final BoletoFactory factory;
+    private final TaxasService taxasService;
+    private final PdfService pdfService;
 
     public BoletoService(
         BoletoRepositoryPort repository,
         AsaasGatewayPort asaasGateway,
         NotificacaoPort notificacaoPort,
         BoletoValidation validation,
-        BoletoCalculos calculos,
-        BoletoFactory factory
+        BoletoFactory factory,
+        TaxasService taxasService,
+        PdfService pdfService
     ) {
         this.repository = repository;
         this.asaasGateway = asaasGateway;
         this.notificacaoPort = notificacaoPort;
         this.validation = validation;
-        this.calculos = calculos;
         this.factory = factory;
+        this.taxasService = taxasService;
+        this.pdfService = pdfService;
     }
 
     @Override
+    @Transactional
     public Boleto emitirBoleto(BoletoRequestDTO dto) {
-        Boleto boleto = null;
+        validation.validarEmissao(dto);
+        Boleto boleto = factory.criarBoleto(dto);
+        taxasService.aplicarTaxasEmissao(boleto);
+        validation.validarBoleto(boleto);
+        
+        boleto = repository.salvar(boleto);
+        
         try {
-            validation.validarEmissao(dto);
-            boleto = factory.criarBoleto(dto);
-            calculos.aplicarTaxas(boleto);
-            validation.validarBoleto(boleto);
-            boleto = repository.salvar(boleto);
-
             String idExterno = asaasGateway.registrarBoleto(boleto);
             boleto.setIdExterno(idExterno);
+            boleto.adicionarStatus(BoletoStatus.EMITIDO);
             boleto = repository.atualizar(boleto);
-
+            
             notificacaoPort.notificarEmissao(boleto);
             return boleto;
-        } catch (BoletoValidationException e) {
-            throw new BusinessException("Erro de validação: " + e.getMessage(), e);
         } catch (GatewayIntegrationException e) {
-            if (boleto != null && boleto.getId() != null) {
-                repository.deletarPorId(boleto.getId());
-            }
-            throw new GatewayIntegrationException("Falha na integração com gateway: " + e.getMessage(), e);
+            repository.deletar(boleto.getId());
+            throw new GatewayIntegrationException("Falha no registro no gateway de pagamento", e);
         } catch (NotificationException e) {
-            logger.error("Falha ao enviar notificação: {}", e.getMessage());
-            if (boleto != null) return boleto;
-            throw new BusinessException("Falha na emissão do boleto", e);
+            logger.error("Falha na notificação de emissão do boleto {}", boleto.getId(), e);
+            return boleto; // Retorna boleto mesmo com falha de notificação
         }
     }
 
     @Override
+    @Transactional
     public Boleto reemitirBoleto(String idOriginal) {
         Boleto original = repository.buscarPorId(idOriginal)
-            .orElseThrow(() -> new BoletoNotFoundException("Boleto original não encontrado"));
+            .orElseThrow(() -> new BoletoNotFoundException("Boleto original não encontrado: " + idOriginal));
 
         validation.validarReemissao(original);
-        Boleto reemissao = factory.criarReemissao(original);
-        calculos.aplicarTaxasReemissao(reemissao);
+        Boleto reemissao = factory.criarReemissao(original, 30);
+        taxasService.aplicarTaxasReemissao(reemissao);
+        
         reemissao = repository.salvar(reemissao);
-
-        String idExterno = asaasGateway.registrarBoleto(reemissao);
-        reemissao.setIdExterno(idExterno);
-        reemissao = repository.atualizar(reemissao);
-
-        original.incrementarReemissoes();
-        repository.atualizar(original);
-
+        
         try {
+            String idExterno = asaasGateway.registrarBoleto(reemissao);
+            reemissao.setIdExterno(idExterno);
+            reemissao.adicionarStatus(BoletoStatus.REEMITIDO);
+            reemissao = repository.atualizar(reemissao);
+            
+            original.incrementarReemissoes();
+            original.adicionarStatus(BoletoStatus.REEMITIDO);
+            repository.atualizar(original);
+            
             notificacaoPort.notificarReemissao(original, reemissao);
+            return reemissao;
+        } catch (GatewayIntegrationException e) {
+            repository.deletar(reemissao.getId());
+            throw new GatewayIntegrationException("Falha no registro da reemissão no gateway", e);
         } catch (NotificationException e) {
-            logger.error("Falha ao notificar reemissão: {}", e.getMessage());
+            logger.error("Falha ao notificar reemissão do boleto {}", reemissao.getId(), e);
+            return reemissao;
         }
-
-        return reemissao;
     }
 
     @Override
-    public Boleto cancelarBoleto(String id) {
+    @Transactional
+    public Boleto cancelarBoleto(String id, String motivo) {
         Boleto boleto = repository.buscarPorId(id)
-            .orElseThrow(() -> new BoletoNotFoundException("Boleto não encontrado"));
+            .orElseThrow(() -> new BoletoNotFoundException("Boleto não encontrado: " + id));
 
         validation.validarCancelamento(boleto);
-        boleto.setStatus(BoletoStatus.CANCELADO);
-        repository.atualizar(boleto);
-
+        boleto.cancelar(motivo);
+        boleto = repository.atualizar(boleto);
+        
         try {
-            asaasGateway.cancelarBoleto(boleto.getIdExterno());
+            if (boleto.getIdExterno() != null) {
+                asaasGateway.cancelarBoleto(boleto.getIdExterno());
+            }
         } catch (GatewayIntegrationException e) {
-            logger.error("Falha ao cancelar no gateway: {}", e.getMessage());
+            logger.error("Falha ao cancelar boleto {} no gateway", boleto.getIdExterno(), e);
         }
 
         try {
             notificacaoPort.notificarCancelamento(boleto);
         } catch (NotificationException e) {
-            logger.error("Falha ao notificar cancelamento: {}", e.getMessage());
+            logger.error("Falha ao notificar cancelamento do boleto {}", boleto.getId(), e);
         }
 
         return boleto;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Boleto consultarBoleto(String id) {
         return repository.buscarPorId(id)
-            .orElseThrow(() -> new BoletoNotFoundException("Boleto não encontrado"));
+            .orElseThrow(() -> new BoletoNotFoundException("Boleto não encontrado: " + id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public byte[] gerarPDF(String id) {
         Boleto boleto = consultarBoleto(id);
-        return calculos.gerarPDF(boleto);
+        return pdfService.gerarPdf(boleto);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String gerarCodigoBarras(String id) {
         Boleto boleto = consultarBoleto(id);
-        return calculos.gerarCodigoBarras(boleto);
+        return boleto.getDadosTecnicos().codigoBarras();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String gerarQRCode(String id) {
         Boleto boleto = consultarBoleto(id);
-        return calculos.gerarQRCode(boleto);
+        return boleto.getDadosTecnicos().qrCode();
     }
 
-	public void cancelarBoleto(String id, String motivo) {
-		// TODO Auto-generated method stub
-		
-	}
+    // Método obsoleto - removido ou marcado como deprecated
+    @Deprecated
+    @Override
+    public void cancelarBoleto(String id) {
+        cancelarBoleto(id, "Cancelamento solicitado");
+    }
 
-	public String gerarBoleto(com.pagamento.common.dto.BoletoRequestDTO request) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-} 
+    @Override
+    public String gerarBoleto(com.pagamento.common.dto.BoletoRequestDTO request) {
+        // Implementação de integração cross-module
+        BoletoRequestDTO dto = convertToLocalDTO(request);
+        Boleto boleto = emitirBoleto(dto);
+        return boleto.getId();
+    }
+    
+    private BoletoRequestDTO convertToLocalDTO(com.pagamento.common.dto.BoletoRequestDTO request) {
+        return new BoletoRequestDTO(
+            request.getPagador(),
+            request.getBeneficiario(),
+            request.getValor().doubleValue(),
+            request.getDataVencimento(),
+            request.getDocumento(),
+            request.getInstrucoes(),
+            request.getLocalPagamento()
+        );
+    }
+}

@@ -1,5 +1,6 @@
 package com.pagamento.boleto.domain.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -15,50 +16,56 @@ public class BoletoFactory {
     }
     
     public Boleto criarBoleto(BoletoRequestDTO dto) {
-        Boleto boleto = new Boleto();
-        boleto.setId(UUID.randomUUID().toString());
-        boleto.setPagador(dto.pagador());
-        boleto.setBeneficiario(dto.beneficiario());
-        boleto.setValor(dto.valor());
-        /**
-         * 
-         * The method setValor(BigDecimal) in the type Boleto is not applicable for the arguments (Double)
-         * **/
-        boleto.setDataVencimento(dto.dataVencimento());
-        boleto.setDataEmissao(dto.dataEmissao() != null ? dto.dataEmissao() : LocalDate.now());
-        boleto.setDocumento(dto.documento() != null ? dto.documento() : "");
-        boleto.setInstrucoes(dto.instrucoes() != null ? dto.instrucoes() : "");
-        boleto.setLocalPagamento(dto.localPagamento() != null ? dto.localPagamento() : "Pagável em qualquer banco");
-        boleto.setStatus(BoletoStatus.EMITIDO);
-        
-        // Gerar dados técnicos
-        boleto.setCodigoBarras(calculos.gerarCodigoBarras(boleto));
-        boleto.setLinhaDigitavel(calculos.gerarLinhaDigitavel(boleto.getCodigoBarras()));
-        boleto.setQrCode(calculos.gerarQRCode(boleto));
-        boleto.setNossoNumero(calculos.gerarNossoNumero());
+        // Validação de campos obrigatórios
+        if (dto.valor() == null || dto.valor() <= 0) {
+            throw new IllegalArgumentException("Valor do boleto inválido");
+        }
+        if (dto.dataVencimento() == null) {
+            throw new IllegalArgumentException("Data de vencimento obrigatória");
+        }
+        if (dto.pagador() == null || dto.pagador().isBlank()) {
+            throw new IllegalArgumentException("Pagador é obrigatório");
+        }
+        if (dto.beneficiario() == null || dto.beneficiario().isBlank()) {
+            throw new IllegalArgumentException("Beneficiário é obrigatório");
+        }
+
+        // Construir o boleto usando o padrão Builder
+        Boleto boleto = Boleto.builder()
+            .pagador(dto.pagador())
+            .beneficiario(dto.beneficiario())
+            .valor(BigDecimal.valueOf(dto.valor()))
+            .dataVencimento(dto.dataVencimento())
+            .dataEmissao(dto.dataEmissao() != null ? dto.dataEmissao() : LocalDate.now())
+            .documento(dto.documento() != null ? dto.documento() : "")
+            .instrucoes(dto.instrucoes() != null ? dto.instrucoes() : "")
+            .localPagamento(dto.localPagamento() != null ? dto.localPagamento() : "Pagável em qualquer banco")
+            .status(BoletoStatus.EMITIDO)
+            .build();
+
+        // Gerar dados técnicos DEPOIS da construção básica
+        boleto.setDadosTecnicos(calculos.gerarDadosTecnicos(boleto));
         
         return boleto;
     }
     
-    public Boleto criarReemissao(Boleto original) {
-        Boleto reemissao = new Boleto();
-        reemissao.setId(UUID.randomUUID().toString());
-        reemissao.setPagador(original.getPagador());
-        reemissao.setBeneficiario(original.getBeneficiario());
-        reemissao.setValor(original.getValor());
-        reemissao.setDocumento(original.getDocumento());
-        reemissao.setInstrucoes(original.getInstrucoes());
-        reemissao.setLocalPagamento(original.getLocalPagamento());
-        reemissao.setDataEmissao(LocalDate.now());
-        reemissao.setDataVencimento(original.getDataVencimento().plusDays(30));
-        reemissao.setBoletoOriginalId(original.getId());
-        reemissao.setStatus(BoletoStatus.REEMITIDO);
-        
-        // Gerar novos dados técnicos
-        reemissao.setCodigoBarras(calculos.gerarCodigoBarras(reemissao));
-        reemissao.setLinhaDigitavel(calculos.gerarLinhaDigitavel(reemissao.getCodigoBarras()));
-        reemissao.setQrCode(calculos.gerarQRCode(reemissao));
-        reemissao.setNossoNumero(calculos.gerarNossoNumero());
+    public Boleto criarReemissao(Boleto original, int diasAdicionaisVencimento) {
+        // Construir a reemissão usando o padrão Builder
+        Boleto reemissao = Boleto.builder()
+            .pagador(original.getPagador())
+            .beneficiario(original.getBeneficiario())
+            .valor(original.getValor())
+            .documento(original.getDocumento())
+            .instrucoes(original.getInstrucoes())
+            .localPagamento(original.getLocalPagamento())
+            .dataEmissao(LocalDate.now())
+            .dataVencimento(original.getDataVencimento().plusDays(diasAdicionaisVencimento))
+            .boletoOriginalId(original.getId())
+            .status(BoletoStatus.REEMITIDO)
+            .build();
+
+        // Gerar dados técnicos DEPOIS da construção básica
+        reemissao.setDadosTecnicos(calculos.gerarDadosTecnicos(reemissao));
         
         return reemissao;
     }
