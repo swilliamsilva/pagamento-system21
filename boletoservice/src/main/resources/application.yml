@@ -1,0 +1,72 @@
+# Configurações comuns a todos os perfis
+spring:
+  flyway:
+    clean-disabled: true
+    placeholders:
+      prefix: '#{'
+      suffix: '}'
+    sql-migration-prefix: V
+    sql-migration-separator: '__'
+    sql-migration-suffixes: .sql
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+
+---
+# Configuração específica para ambiente de TESTE
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS public;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ''
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    properties:
+      hibernate:
+        generate_statistics: true
+        use_sql_comments: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    clean-on-validation-error: false
+  kafka:
+    bootstrap-servers: embedded
+  data:
+    mongodb:
+      enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration
+      - org.springframework.cloud.vault.config.VaultAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+management:
+  health:
+    kafka:
+      enabled: false
+    vault:
+      enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.pagamento.boleto: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type: TRACE
+    org.hibernate.stat: DEBUG
+    org.springframework: INFO
+    org.springframework.transaction: DEBUG
+    org.flywaydb: DEBUG

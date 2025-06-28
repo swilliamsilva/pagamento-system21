@@ -21,4 +21,9 @@ public record PaymentEvent(
     public PaymentEvent(String paymentId, String paymentType, BigDecimal amount, Instant timestamp) {
         this(paymentId, paymentType, amount, timestamp, "PROCESSADO");
     }
+
+	public Object getTransactionId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
