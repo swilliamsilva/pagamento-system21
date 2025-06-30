@@ -1,29 +1,20 @@
 server:
-  port: 0
+  port: 0  # Porta aleatória para o gateway
+
+wiremock:
+  server:
+    port: 0  # Deve ser 0 para corresponder à configuração do teste
 
 spring:
   cloud:
     gateway:
       routes:
-        - id: pix-service
-          uri: http://localhost:${wiremock.server.port}
-          predicates:
-            - Path=/pix/**
-          filters:
-            - StripPrefix=1
-        - id: auth-service
-          uri: http://localhost:${wiremock.server.port}
-          predicates:
-            - Path=/auth/**
-          filters:
-            - StripPrefix=1
         - id: test-route
           uri: http://localhost:${wiremock.server.port}
           predicates:
-            - Path=/api/**
-          filters:
-            - RewritePath=/api/(?<segment>.*), /$\{segment}
+            - Path=/**
 
+# Configurações do Resilience4j mantidas para outros testes
 resilience4j:
   circuitbreaker:
     instances:
@@ -39,7 +30,9 @@ resilience4j:
     instances:
       pix-service:
         max-attempts: 1
-      auth-service:
-        max-attempts: 1
+      auth-service:	
 
-# Configurações e
+logging:
+  level: 
+    org.springframework: DEBUG
+    org.springframework.boot.test.context: TRACE

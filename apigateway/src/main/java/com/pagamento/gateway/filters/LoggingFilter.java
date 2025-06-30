@@ -7,6 +7,7 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -25,36 +26,35 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         "authorization", "proxy-authorization", "cookie", "set-cookie", "x-api-key"
     );
 
+    public LoggingFilter() {
+        // Construtor padrão necessário para Spring
+    }
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        // 1. Gera correlation ID se não existir
         final String correlationId = getOrGenerateCorrelationId(exchange.getRequest());
-        
-        // 2. Cria exchange modificada com novo header se necessário
+
         final ServerWebExchange modifiedExchange = exchange.getRequest().getHeaders().containsKey(CORRELATION_ID)
             ? exchange
             : exchange.mutate().request(
-                    exchange.getRequest().mutate()
-                        .header(CORRELATION_ID, correlationId)
-                        .build()
-                ).build();
+                exchange.getRequest().mutate()
+                    .header(CORRELATION_ID, correlationId)
+                    .build()
+              ).build();
 
-        // 3. Registra tempo de início
         modifiedExchange.getAttributes().put(REQUEST_START_TIME, System.currentTimeMillis());
-        
-        // 4. Log da requisição
+
         logRequestDetails(modifiedExchange.getRequest(), correlationId);
 
-        // 5. Processa a requisição e loga a resposta usando contexto reativo
         return chain.filter(modifiedExchange)
             .doOnEach(signal -> {
                 if (signal.isOnComplete()) {
-                    long duration = System.currentTimeMillis() - 
-                        (long) modifiedExchange.getAttribute(REQUEST_START_TIME);
+                    Long startTime = modifiedExchange.getAttribute(REQUEST_START_TIME);
+                    long duration = (startTime != null) ? System.currentTimeMillis() - startTime : -1;
                     logResponseDetails(modifiedExchange, correlationId, duration);
                 }
             })
-            .contextWrite(Context.of(CORRELATION_ID, correlationId)); // Contexto reativo
+            .contextWrite(Context.of(CORRELATION_ID, correlationId));
     }
 
     private String getOrGenerateCorrelationId(ServerHttpRequest request) {
@@ -70,11 +70,11 @@ public class LoggingFilter implements GlobalFilter, Ordered {
                 .append("Request [").append(correlationId).append("]: ")
                 .append(request.getMethod()).append(" ")
                 .append(request.getURI());
-            
+
             if (logger.isDebugEnabled()) {
                 appendFilteredHeaders(logMessage, request.getHeaders());
             }
-            
+
             logger.info(logMessage.toString());
         }
     }
@@ -89,12 +89,13 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     }
 
     private void logResponseDetails(ServerWebExchange exchange, String correlationId, long duration) {
-        int statusCode = exchange.getResponse().getStatusCode() != null ?
-                         exchange.getResponse().getStatusCode().value() : 0;
-        
-        logger.info("Response [{}]: Status {} | Duration {}ms | Path: {}", 
-            correlationId, 
-            statusCode, 
+        ServerHttpResponse response = exchange.getResponse();
+        var status = (response != null) ? response.getStatusCode() : null;
+        int statusCode = (status != null) ? status.value() : 0;
+
+        logger.info("Response [{}]: Status {} | Duration {}ms | Path: {}",
+            correlationId,
+            statusCode,
             duration,
             exchange.getRequest().getPath());
     }

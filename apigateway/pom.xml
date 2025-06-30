@@ -25,6 +25,13 @@
         <mockito.version>5.11.0</mockito.version>
         <spring-cloud.version>2023.0.1</spring-cloud.version>
         <springdoc.version>2.5.0</springdoc.version>
+        <byte-buddy.version>1.14.13</byte-buddy.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <spring-boot.version>3.2.4</spring-boot.version>
+        
+        <!-- Nova propriedade para CDS -->
+        <cds.archive.file>apigateway-cds.jsa</cds.archive.file>
     </properties>
 
     <dependencyManagement>
@@ -40,12 +47,18 @@
     </dependencyManagement>
 
     <dependencies>
-    
-       <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-webflux</artifactId>
-</dependency>
-       
+        <!-- Adicione exclusões do Byte Buddy nas dependências principais -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+            <exclusions>
+                <!-- Adicione esta exclusão -->
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
        
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -62,6 +75,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
+            <!-- Adicione esta exclusão -->
+            <exclusions>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Spring Cloud -->
@@ -119,6 +139,11 @@
                     <groupId>org.junit.vintage</groupId>
                     <artifactId>junit-vintage-engine</artifactId>
                 </exclusion>
+                <!-- Adicione esta exclusão -->
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -139,81 +164,136 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
-     
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-     
             <scope>test</scope>
+            <!-- Adicione esta exclusão -->
+            <exclusions>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
         <!-- Spring Cloud Gateway -->
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-gateway</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
+        </dependency>
     
-    <!-- Service Discovery -->
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-    </dependency>
+        <!-- Service Discovery -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
     
-    <!-- Servlet API para resolver ClassNotFoundException -->
-<dependency>
-    <groupId>javax.servlet</groupId>
-    <artifactId>javax.servlet-api</artifactId>
-    <version>4.0.1</version>
-    <scope>test</scope>
-</dependency>
+        <!-- Servlet API para resolver ClassNotFoundException -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>test</scope>
+        </dependency>
 
-<dependency>
-    <groupId>org.eclipse.jetty</groupId>
-    <artifactId>jetty-server</artifactId>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>11.0.15</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- WireMock compatível com Spring Boot 3.2.x -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-contract-wiremock</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>7.6.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Byte Buddy controlado explicitamente -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+    
+        </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
    
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>org.eclipse.jetty</groupId>
-    <artifactId>jetty-servlet</artifactId>
-    <version>11.0.15</version>
-    <scope>test</scope>
-</dependency>
-
-<!-- WireMock compatível com Spring Boot 3.2.x -->
-    <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-contract-wiremock</artifactId>
-      
-        <scope>test</scope>
-    </dependency>
+        </dependency>
         
         <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
-    <scope>test</scope>
-</dependency>
+           <groupId>org.springframework.cloud</groupId>
+           <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+        </dependency>
         
+        <!-- Caffeine Cache -->
         <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
-</dependency>
+          <groupId>com.github.ben-manes.caffeine</groupId>
+          <artifactId>caffeine</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jcl-over-slf4j</artifactId>  
+        </dependency> 
+              
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+ 
+          <scope>test</scope>
+        </dependency>
 
 
-<dependency>
-    <groupId>com.github.vladimir-bukhtoyarov</groupId>
-    <artifactId>bucket4j-core</artifactId>
-    <version>7.6.0</version>
-</dependency>
-
-<dependency>
-    <groupId>io.projectreactor</groupId>
-    <artifactId>reactor-test</artifactId>
-  
-    <scope>test</scope>
-</dependency>
+        
+        
         
     </dependencies>
 
@@ -237,7 +317,9 @@
                 </includes>
             </resource>
         </resources>
+        
         <plugins>
+            <!-- Plugin Spring Boot com CDS ativado -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -248,31 +330,102 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <jvmArguments>
+                        -XX:+EnableDynamicAgentLoading
+                        -Xshare:on
+                        -XX:+UnlockDiagnosticVMOptions
+                        -XX:+IgnoreAppCDSDiagnosticsCheck
+                        -XX:SharedArchiveFile=${project.basedir}/${cds.archive.file}
+                    </jvmArguments>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
+
+           <plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>exec-maven-plugin</artifactId>
+    <version>3.1.0</version>
+    <executions>
+        <execution>
+            <id>dump-classes</id>
+            <phase>package</phase> <!-- Corrigido aqui -->
+            <goals>
+                <goal>exec</goal>
+            </goals>
+            <configuration>
+                <executable>java</executable>
+                <arguments>
+                    <argument>-XX:DumpLoadedClassList=${project.build.directory}/classes.lst</argument>
+                    <argument>-jar</argument>
+                    <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                </arguments>
+            </configuration>
+        </execution>
+        <execution>
+            <id>generate-cds</id>
+            <phase>prepare-package</phase>
+            <goals>
+                <goal>exec</goal>
+            </goals>
+            <configuration>
+                <executable>java</executable>
+                <arguments>
+                    <argument>-Xshare:dump</argument>
+                    <argument>-XX:SharedArchiveFile=${project.basedir}/${cds.archive.file}</argument>
+                    <argument>-XX:SharedClassListFile=${project.build.directory}/classes.lst</argument>
+                    <argument>-jar</argument>
+                    <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                </arguments>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+
+
+            <!-- Surefire com configurações adicionais -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-          
+  
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
                     <useModulePath>false</useModulePath>
+                    <argLine>
+                        -XX:+EnableDynamicAgentLoading
+                        -Djdk.instrument.traceUsage
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                    </argLine>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-          
+      
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-       
+   
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -280,6 +433,7 @@
                     <parameters>true</parameters>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>

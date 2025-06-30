@@ -8,7 +8,7 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 
 @Configuration
 public class SwaggerConfig {
@@ -28,24 +28,62 @@ public class SwaggerConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList(getAllowedOrigins()));
-        config.setAllowedMethods(Arrays.asList(allowedMethods));
-        config.setAllowedHeaders(Arrays.asList(allowedHeaders));
-        config.setExposedHeaders(Arrays.asList(exposedHeaders));
+
+        config.setAllowedOrigins(allowedOrigins != null
+            ? Arrays.asList(allowedOrigins)
+            : Collections.emptyList());
+
+        config.setAllowedMethods(allowedMethods != null
+            ? Arrays.asList(allowedMethods)
+            : Collections.singletonList("*"));
+
+        config.setAllowedHeaders(allowedHeaders != null
+            ? Arrays.asList(allowedHeaders)
+            : Collections.singletonList("*"));
+
+        config.setExposedHeaders(exposedHeaders != null
+            ? Arrays.asList(exposedHeaders)
+            : Collections.emptyList());
+
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);  // 1 hora
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        
+
         return new CorsWebFilter(source);
     }
 
-	public String[] getAllowedOrigins() {
-		return allowedOrigins;
-	}
+    // Getters e Setters para testes unitários
+    public String[] getAllowedOrigins() {
+        return allowedOrigins;
+    }
 
-	public void setAllowedOrigins(String[] allowedOrigins) {
-		this.allowedOrigins = allowedOrigins;
-	}
+    public void setAllowedOrigins(String[] allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
+    }
+
+    public String[] getAllowedMethods() {
+        return allowedMethods;
+    }
+
+    public void setAllowedMethods(String[] allowedMethods) {
+        this.allowedMethods = allowedMethods;
+    }
+
+    public String[] getAllowedHeaders() {
+        return allowedHeaders;
+    }
+
+    public void setAllowedHeaders(String[] allowedHeaders) {
+        this.allowedHeaders = allowedHeaders;
+    }
+
+    public String[] getExposedHeaders() {
+        return exposedHeaders;
+    }
+
+    public void setExposedHeaders(String[] exposedHeaders) {
+        this.exposedHeaders = exposedHeaders;
+    }
 }
