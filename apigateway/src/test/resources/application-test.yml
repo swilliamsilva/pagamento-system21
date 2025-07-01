@@ -1,0 +1,79 @@
+server:
+  port: 0 # porta aleatória para Spring Boot Test
+
+wiremock:
+  server:
+    port: 0 # porta aleatória para WireMock embutido
+
+spring:
+
+  profiles:
+    active: test
+
+  cloud:
+    gateway:
+      enabled: true
+      routes:
+        - id: pix-test
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/pix/test
+
+        - id: fallback-pix
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/fallback/pix
+
+        - id: api-data
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/api/data
+
+        - id: api-limited
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/api/limited
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 999
+                redis-rate-limiter.burstCapacity: 999
+                redis-rate-limiter.requestedTokens: 1
+
+      default-filters: []
+      global-filter:
+        local-response-cache:
+          enabled: false
+      filter:
+        local-response-cache:
+          enabled: false
+        local-rate-limit:
+          enabled: false # desabilita filtro local de rate limit
+
+  redis:
+    host: ${spring.redis.host:localhost}
+    port: ${spring.redis.port:6379}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      pixCircuitBreaker:
+        register-health-indicator: false
+        failure-rate-threshold: 100
+        minimum-number-of-calls: 1
+      authCircuitBreaker:
+        register-health-indicator: false
+        failure-rate-threshold: 100
+        minimum-number-of-calls: 1
+  retry:
+    instances:
+      pix-service:
+        max-attempts: 1
+      auth-service:
+        max-attempts: 1
+
+logging:
+  level:
+    root: INFO
+    org.springframework: DEBUG
+    org.springframework.boot.test.context: TRACE
