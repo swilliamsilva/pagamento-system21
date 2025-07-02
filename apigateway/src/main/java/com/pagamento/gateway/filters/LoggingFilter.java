@@ -1,25 +1,29 @@
 package com.pagamento.gateway.filters;
 
+import java.util.Set;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
-
-import java.util.Set;
-import java.util.UUID;
 
 @Component
 public class LoggingFilter implements GlobalFilter, Ordered {
 
-    private static final Logger logger = LoggerFactory.getLogger(LoggingFilter.class);
+    private final Logger logger;
+
     private static final String CORRELATION_ID = "X-Correlation-Id";
     private static final String REQUEST_START_TIME = "requestStartTime";
     private static final Set<String> SENSITIVE_HEADERS = Set.of(
@@ -27,85 +31,111 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     );
 
     public LoggingFilter() {
-        // Construtor padrão necessário para Spring
+        this(LoggerFactory.getLogger(LoggingFilter.class));
+    }
+
+    // Construtor para testes
+    LoggingFilter(Logger logger) {
+        this.logger = logger;
     }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        final String correlationId = getOrGenerateCorrelationId(exchange.getRequest());
+        final ServerHttpRequest request = exchange.getRequest();
+        final String correlationId = getOrGenerateCorrelationId(request);
 
-        final ServerWebExchange modifiedExchange = exchange.getRequest().getHeaders().containsKey(CORRELATION_ID)
-            ? exchange
-            : exchange.mutate().request(
-                exchange.getRequest().mutate()
-                    .header(CORRELATION_ID, correlationId)
-                    .build()
-              ).build();
+        // Cria uma referência final para a troca modificada
+        final ServerWebExchange exchangeToUse = getModifiedExchange(exchange, request, correlationId);
 
-        modifiedExchange.getAttributes().put(REQUEST_START_TIME, System.currentTimeMillis());
+        exchangeToUse.getAttributes().put(REQUEST_START_TIME, System.currentTimeMillis());
+        MDC.put(CORRELATION_ID, correlationId);
+        
+        logRequestDetails(exchangeToUse.getRequest(), correlationId);
 
-        logRequestDetails(modifiedExchange.getRequest(), correlationId);
-
-        return chain.filter(modifiedExchange)
-            .doOnEach(signal -> {
-                if (signal.isOnComplete()) {
-                    Long startTime = modifiedExchange.getAttribute(REQUEST_START_TIME);
-                    long duration = (startTime != null) ? System.currentTimeMillis() - startTime : -1;
-                    logResponseDetails(modifiedExchange, correlationId, duration);
+        return chain.filter(exchangeToUse)
+            .doFinally(signalType -> {
+                Long startTime = exchangeToUse.getAttribute(REQUEST_START_TIME);
+                if (startTime != null) {
+                    long duration = System.currentTimeMillis() - startTime;
+                    logResponseDetails(exchangeToUse, correlationId, duration);
                 }
+                MDC.clear();
             })
             .contextWrite(Context.of(CORRELATION_ID, correlationId));
     }
 
+    private ServerWebExchange getModifiedExchange(
+        ServerWebExchange exchange, 
+        ServerHttpRequest request,
+        String correlationId
+    ) {
+        if (!request.getHeaders().containsKey(CORRELATION_ID)) {
+            return exchange.mutate().request(
+                request.mutate()
+                    .header(CORRELATION_ID, correlationId)
+                    .build()
+            ).build();
+        }
+        return exchange;
+    }
+
     private String getOrGenerateCorrelationId(ServerHttpRequest request) {
         String correlationId = request.getHeaders().getFirst(CORRELATION_ID);
-        return (correlationId == null || correlationId.isBlank())
-            ? UUID.randomUUID().toString()
-            : correlationId;
+        return (correlationId != null && !correlationId.isBlank())
+            ? correlationId
+            : UUID.randomUUID().toString();
     }
 
     private void logRequestDetails(ServerHttpRequest request, String correlationId) {
-        if (logger.isInfoEnabled()) {
-            StringBuilder logMessage = new StringBuilder(256)
-                .append("Request [").append(correlationId).append("]: ")
-                .append(request.getMethod()).append(" ")
-                .append(request.getURI());
+        if (!logger.isInfoEnabled()) return;
 
-            if (logger.isDebugEnabled()) {
-                appendFilteredHeaders(logMessage, request.getHeaders());
-            }
+        StringBuilder logMessage = new StringBuilder(256)
+            .append("Request [").append(correlationId).append("]: ")
+            .append(request.getMethod()).append(" ")
+            .append(request.getURI());
 
-            logger.info(logMessage.toString());
+        if (logger.isDebugEnabled()) {
+            appendFilteredHeaders(logMessage, request.getHeaders());
         }
+
+        logger.info(logMessage.toString());
     }
 
     private void appendFilteredHeaders(StringBuilder builder, HttpHeaders headers) {
+        if (headers == null || headers.isEmpty()) return;
+        
         builder.append("\nHeaders:");
         headers.forEach((name, values) -> {
             if (!isSensitiveHeader(name)) {
-                builder.append("\n  ").append(name).append(": ").append(values);
+                builder.append("\n  ")
+                       .append(name)
+                       .append(": ")
+                       .append(values.size() > 1 ? values : values.get(0));
             }
         });
     }
 
     private void logResponseDetails(ServerWebExchange exchange, String correlationId, long duration) {
+        if (!logger.isInfoEnabled()) return;
+
         ServerHttpResponse response = exchange.getResponse();
-        var status = (response != null) ? response.getStatusCode() : null;
-        int statusCode = (status != null) ? status.value() : 0;
+        HttpStatusCode status = response.getStatusCode();
+        String path = exchange.getRequest().getPath().toString();
 
         logger.info("Response [{}]: Status {} | Duration {}ms | Path: {}",
             correlationId,
-            statusCode,
+            status != null ? status.value() : "N/A",
             duration,
-            exchange.getRequest().getPath());
+            path);
     }
 
     private boolean isSensitiveHeader(String headerName) {
-        return SENSITIVE_HEADERS.contains(headerName.toLowerCase());
+        return headerName != null && 
+               SENSITIVE_HEADERS.contains(headerName.toLowerCase());
     }
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
+        return Integer.MIN_VALUE;
     }
 }

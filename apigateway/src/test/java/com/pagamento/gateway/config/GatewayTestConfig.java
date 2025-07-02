@@ -19,22 +19,11 @@ public class GatewayTestConfig {
         String baseUri = "http://localhost:" + wiremockPort;
 
         return builder.routes()
-            .route("pix-test", r -> r.path("/pix/test")
-                .filters(f -> f.stripPrefix(1))
-                .uri(baseUri))
-            .route("fallback-pix", r -> r.path("/fallback/pix")
-                .filters(f -> f.stripPrefix(1))
-                .uri(baseUri))
-            .route("api-data", r -> r.path("/api/data")
-                .filters(f -> f.stripPrefix(1))
-                .uri(baseUri))
-            .route("api-limited", r -> r.path("/api/limited")
-                .filters(f -> f.stripPrefix(1)
-                    .requestRateLimiter(config -> {
-                        // Se não quiser configurar nada aqui, apenas deixe vazio.
-                        // A config será carregada automaticamente pelo application.yml
-                    }))
-                .uri(baseUri))
+            .route("pix-test", r -> r.path("/pix/test").uri(baseUri))
+            .route("fallback-pix", r -> r.path("/fallback/pix").uri(baseUri))
+            .route("api-data", r -> r.path("/api/data").uri(baseUri))
+            .route("api-resource", r -> r.path("/api/resource").uri(baseUri))  // ESSA ROTA FOI ADICIONADA
+            .route("api-limited", r -> r.path("/api/limited").uri(baseUri))
             .build();
     }
 }

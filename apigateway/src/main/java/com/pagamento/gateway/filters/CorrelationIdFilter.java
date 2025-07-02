@@ -25,12 +25,12 @@ public class CorrelationIdFilter implements GlobalFilter, Ordered {
 
         final String finalCorrelationId = correlationId;
 
-        ServerHttpRequest request = exchange.getRequest().mutate()
+        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
             .header(CORRELATION_ID_HEADER, finalCorrelationId)
             .build();
 
         ServerWebExchange mutatedExchange = exchange.mutate()
-            .request(request)
+            .request(mutatedRequest)
             .build();
 
         mutatedExchange.getResponse().beforeCommit(() -> {
@@ -43,7 +43,6 @@ public class CorrelationIdFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        // define a prioridade do filtro (quanto menor, mais cedo será executado)
         return Ordered.HIGHEST_PRECEDENCE + 10;
     }
 }

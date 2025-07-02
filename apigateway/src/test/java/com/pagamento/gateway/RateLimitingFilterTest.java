@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +46,7 @@ class RateLimitingFilterTest {
             return MockServerWebExchange.from(
                 MockServerHttpRequest.get("/api/resource")
                     .remoteAddress(socketAddress)
+                    .header("X-Forwarded-For", "192.168.1.100, 10.0.0.1")
                     .build()
             );
         } catch (UnknownHostException e) {
@@ -68,7 +70,14 @@ class RateLimitingFilterTest {
             .verifyComplete();
             
         // Verifica que o status não foi alterado (request permitida)
-        assertEquals(null, exchange.getResponse().getStatusCode());
+        assertNull(exchange.getResponse().getStatusCode(), 
+            "Status não deve ser definido para requests dentro do limite");
+            
+        // Verifica headers de rate limit
+        assertEquals("4", exchange.getResponse().getHeaders().getFirst("X-Rate-Limit-Remaining"),
+            "Deveria ter 4 tokens restantes após 1 consumo");
+        assertEquals("5", exchange.getResponse().getHeaders().getFirst("X-Rate-Limit-Capacity"),
+            "Capacidade deve ser 5");
     }
 
     @Test
@@ -76,13 +85,14 @@ class RateLimitingFilterTest {
         // Configura comportamento do filterChain
         when(filterChain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
         
-        // Primeiras 100 requisições (limite) devem passar
-        for (int i = 0; i < 100; i++) {
+        // Primeiras 5 requisições (limite) devem passar
+        for (int i = 0; i < 5; i++) {
             ServerWebExchange exchange = createExchange();
-            rateLimitingFilter.filter(exchange, filterChain).block();
+            StepVerifier.create(rateLimitingFilter.filter(exchange, filterChain))
+                .verifyComplete();
         }
         
-        // 101ª requisição deve ser bloqueada
+        // 6ª requisição deve ser bloqueada
         ServerWebExchange blockedExchange = createExchange();
         
         // Act
@@ -92,7 +102,33 @@ class RateLimitingFilterTest {
         StepVerifier.create(result)
             .verifyComplete();
             
-        assertEquals(HttpStatus.TOO_MANY_REQUESTS, blockedExchange.getResponse().getStatusCode());
-        assertEquals("60", blockedExchange.getResponse().getHeaders().getFirst("Retry-After"));
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, blockedExchange.getResponse().getStatusCode(),
+            "Deveria retornar 429 Too Many Requests");
+        assertEquals("60", blockedExchange.getResponse().getHeaders().getFirst("Retry-After"),
+            "Deveria ter header Retry-After=60");
+        assertEquals("0", blockedExchange.getResponse().getHeaders().getFirst("X-Rate-Limit-Remaining"),
+            "Deveria ter 0 tokens restantes");
+    }
+    
+    @Test
+    void shouldUseXForwardedForHeader() {
+        // Arrange
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/api/resource")
+                .header("X-Forwarded-For", "203.0.113.195, 70.41.3.18, 150.172.238.178")
+                .build()
+        );
+        
+        when(filterChain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
+        
+        // Act
+        Mono<Void> result = rateLimitingFilter.filter(exchange, filterChain);
+        
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+        
+        // Verifica se o IP usado foi o primeiro do X-Forwarded-For
+        assertEquals(1, rateLimitingFilter.getBucketCount(),
+            "Deveria ter criado bucket para o IP 203.0.113.195");
     }
 }

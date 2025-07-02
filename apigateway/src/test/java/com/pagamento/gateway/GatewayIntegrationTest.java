@@ -14,7 +14,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 @ActiveProfiles("test")
-@AutoConfigureWireMock(port = 0)
+@AutoConfigureWireMock(port = 0)  // Porta dinâmica para WireMock
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GatewayIntegrationTest {
 
@@ -32,6 +32,7 @@ class GatewayIntegrationTest {
         WireMock.reset();
         rateLimitingFilter.clearBuckets();
 
+        // Stub para /api/data
         stubFor(get(urlEqualTo("/api/data"))
             .willReturn(okJson("{\"success\": true, \"data\": \"mocked\", \"timestamp\": 1234567890}")
                 .withHeader("X-Correlation-Id", "test-correlation-id")
@@ -40,12 +41,14 @@ class GatewayIntegrationTest {
                 .withHeader("Content-Security-Policy", "default-src 'self'")
             ));
 
+        // Stub para /api/resource - importante para o teste que falhava
         stubFor(get(urlEqualTo("/api/resource"))
             .willReturn(ok()
                 .withHeader("Content-Type", "text/plain")
                 .withHeader("Retry-After", "60")
                 .withBody("resource")));
 
+        // Stub para rota inválida /test;...
         stubFor(get(urlMatching("/test;.*"))
             .willReturn(badRequest()));
 
@@ -57,7 +60,7 @@ class GatewayIntegrationTest {
 
     @Test
     void shouldEnforceRateLimit() {
-        // Faz 5 requisições válidas, que devem passar
+        // 5 requisições válidas para /api/resource, devem passar com 200
         for (int i = 0; i < 5; i++) {
             webTestClient.get()
                 .uri("/api/resource")
@@ -65,7 +68,7 @@ class GatewayIntegrationTest {
                 .expectStatus().isOk();
         }
 
-        // 6ª requisição deve retornar 429 Too Many Requests
+        // 6ª requisição deve retornar 429 (Too Many Requests) e header Retry-After = 60
         webTestClient.get()
             .uri("/api/resource")
             .exchange()
@@ -73,5 +76,5 @@ class GatewayIntegrationTest {
             .expectHeader().valueEquals("Retry-After", "60");
     }
 
-    // Outros testes podem ficar aqui...
+    // Aqui podem entrar outros testes de integração...
 }
