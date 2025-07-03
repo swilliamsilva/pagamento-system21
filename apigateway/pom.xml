@@ -20,7 +20,7 @@
         <java.version>21</java.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
         <lombok.version>1.18.32</lombok.version>
-        <testcontainers.version>1.19.7</testcontainers.version>
+        <testcontainers.version>1.19.3</testcontainers.version>
         <rest-assured.version>5.4.0</rest-assured.version>
         <mockito.version>5.11.0</mockito.version>
         <spring-cloud.version>2023.0.1</spring-cloud.version>
@@ -31,6 +31,26 @@
         <spring-boot.version>3.2.4</spring-boot.version>
         <cds.archive.file>apigateway-cds.jsa</cds.archive.file>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>pre-check</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <includes>
+                                <include>**/EnvironmentSanityTest.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>
@@ -43,6 +63,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
 
     <dependencies>
         <!-- Spring Boot Starter WebFlux com exclusão do Byte Buddy -->
@@ -196,7 +217,7 @@
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock-jre8-standalone</artifactId>
-            <version>2.35.0</version>
+  
             <scope>test</scope>
         </dependency>
 
@@ -239,150 +260,181 @@
            </exclusion>
          </exclusions>
        </dependency>
-
+           
        <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-simple</artifactId>
-         <version>2.0.12</version>
-         <scope>test</scope>
-       </dependency> 
-       <dependency>
-         <groupId>org.mockito</groupId>
-         <artifactId>mockito-core</artifactId>
+         <groupId>it.ozimov</groupId>
+         <artifactId>embedded-redis</artifactId>
+         <version>0.7.2</version>
          <scope>test</scope>
        </dependency>
-       
-       
-       
-       
+
+        
+    <!-- Spring Security -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    
+    <!-- OAuth2 Resource Server -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+   
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+</dependency>
+    
         
     </dependencies>
+<build>
+    <finalName>${project.artifactId}</finalName>
 
-    <build>
-        <finalName>${project.artifactId}</finalName>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
+    <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+            <excludes>
+                <exclude>**/*.png</exclude>
+                <exclude>**/*.jpg</exclude>
+            </excludes>
+        </resource>
+        <resource>
+            <directory>src/main/resources</directory>
+            <filtering>false</filtering>
+            <includes>
+                <include>**/*.png</include>
+                <include>**/*.jpg</include>
+            </includes>
+        </resource>
+    </resources>
+
+    <plugins>
+
+        <!-- Plugin Spring Boot -->
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
                 <excludes>
-                    <exclude>**/*.png</exclude>
-                    <exclude>**/*.jpg</exclude>
+                    <exclude>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                    </exclude>
                 </excludes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <includes>
-                    <include>**/*.png</include>
-                    <include>**/*.jpg</include>
-                </includes>
-            </resource>
-        </resources>
-        
-        <plugins>
-            <!-- Plugin Spring Boot -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
+            </configuration>
+        </plugin>
 
-            <!-- Plugin para CDS -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>dump-classes</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-XX:DumpLoadedClassList=${project.build.directory}/classes.lst</argument>
-                                <argument>-jar</argument>
-                                <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>generate-cds</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>-Xshare:dump</argument>
-                                <argument>-XX:SharedArchiveFile=${project.basedir}/${cds.archive.file}</argument>
-                                <argument>-XX:SharedClassListFile=${project.build.directory}/classes.lst</argument>
-                                <argument>-jar</argument>
-                                <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+        <!-- Plugin para CDS -->
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+                <execution>
+                    <id>dump-classes</id>
+                    <phase>package</phase>
+                    <goals><goal>exec</goal></goals>
+                    <configuration>
+                        <executable>java</executable>
+                        <arguments>
+                            <argument>-XX:DumpLoadedClassList=${project.build.directory}/classes.lst</argument>
+                            <argument>-jar</argument>
+                            <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                        </arguments>
+                    </configuration>
+                </execution>
+                <execution>
+                    <id>generate-cds</id>
+                    <phase>package</phase>
+                    <goals><goal>exec</goal></goals>
+                    <configuration>
+                        <executable>java</executable>
+                        <arguments>
+                            <argument>-Xshare:dump</argument>
+                            <argument>-XX:SharedArchiveFile=${project.basedir}/${cds.archive.file}</argument>
+                            <argument>-XX:SharedClassListFile=${project.build.directory}/classes.lst</argument>
+                            <argument>-jar</argument>
+                            <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                        </arguments>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
 
-            <!-- Surefire -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
-                <configuration>
-                    <includes>
-                        <include>**/*Test.java</include>
-                    </includes>
-                    <argLine>
-                        --add-opens java.base/java.lang=ALL-UNNAMED
-                    </argLine>
-                </configuration>
-            </plugin>
+        <!-- Jacoco para coverage -->
+        <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.11</version>
+            <executions>
+                <execution>
+                    <goals><goal>prepare-agent</goal></goals>
+                </execution>
+                <execution>
+                    <id>report</id>
+                    <phase>verify</phase>
+                    <goals><goal>report</goal></goals>
+                </execution>
+            </executions>
+        </plugin>
 
-            <!-- Compilador -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <encoding>UTF-8</encoding>
-                    <parameters>true</parameters>
-                </configuration>
-            </plugin>
+        <!-- Maven Compiler -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${maven-compiler-plugin.version}</version>
+            <configuration>
+                <source>${java.version}</source>
+                <target>${java.version}</target>
+                <encoding>UTF-8</encoding>
+                <parameters>true</parameters>
+            </configuration>
+        </plugin>
 
-            <!-- Jacoco -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+       <!-- Maven Surefire -->
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>3.0.0-M8</version>
+    <configuration>
+        <includes>
+            <!-- Rodar primeiro o teste de sanity -->
+            <include>**/EnvironmentSanityTest.java</include>
+            <!-- Depois todos os outros testes -->
+            <include>**/*Test.java</include>
+        </includes>
+        <runOrder>alphabetical</runOrder>
+        <forkCount>1</forkCount>
+        <reuseForks>true</reuseForks>
+        <argLine><![CDATA[
+            --add-opens java.base/java.lang=ALL-UNNAMED
+            --add-opens java.base/java.util=ALL-UNNAMED
+            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+            -Xmx1024m
+        ]]></argLine>
+        <failIfNoTests>true</failIfNoTests>
+    </configuration>
+</plugin>
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>3.0.0-M5</version>
+    <configuration>
+        <excludedGroups>slow</excludedGroups>
+    </configuration>
+</plugin>
+
+
+
+
+    </plugins>
+</build>
+
 </project>

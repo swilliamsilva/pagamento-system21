@@ -28,6 +28,7 @@ spring:
         local-rate-limit:
           enabled: false # Desabilita Bucket4j local nos testes com Redis
 
+data:
   redis:
-    host: localhost
+    host: localhost 
     port: 6379

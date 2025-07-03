@@ -21,7 +21,7 @@ spring:
       filter:
         local-rate-limit:
           enabled: true # Ativa o filtro baseado no Bucket4j (local)
-  
-  redis:
-    host: localhost
-    port: 6379 # Ignorado neste cenário, mas necessário para contexto
+  data:
+    redis:
+      host: localhost
+      port: 6379 # Ignorado neste cenário, mas necessário para contexto

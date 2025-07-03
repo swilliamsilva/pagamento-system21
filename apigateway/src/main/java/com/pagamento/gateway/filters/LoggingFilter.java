@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -44,24 +43,24 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         final ServerHttpRequest request = exchange.getRequest();
         final String correlationId = getOrGenerateCorrelationId(request);
 
-        // Cria uma referência final para a troca modificada
-        final ServerWebExchange exchangeToUse = getModifiedExchange(exchange, request, correlationId);
-
-        exchangeToUse.getAttributes().put(REQUEST_START_TIME, System.currentTimeMillis());
-        MDC.put(CORRELATION_ID, correlationId);
+        // Armazena o correlation ID no contexto reativo
+        Context context = Context.of(CORRELATION_ID, correlationId);
         
-        logRequestDetails(exchangeToUse.getRequest(), correlationId);
-
-        return chain.filter(exchangeToUse)
+        return Mono.just(exchange)
+            .flatMap(ex -> {
+                final ServerWebExchange modifiedExchange = getModifiedExchange(ex, request, correlationId);
+                modifiedExchange.getAttributes().put(REQUEST_START_TIME, System.currentTimeMillis());
+                logRequestDetails(modifiedExchange.getRequest(), correlationId);
+                return chain.filter(modifiedExchange);
+            })
             .doFinally(signalType -> {
-                Long startTime = exchangeToUse.getAttribute(REQUEST_START_TIME);
+                Long startTime = exchange.getAttribute(REQUEST_START_TIME);
                 if (startTime != null) {
                     long duration = System.currentTimeMillis() - startTime;
-                    logResponseDetails(exchangeToUse, correlationId, duration);
+                    logResponseDetails(exchange, correlationId, duration);
                 }
-                MDC.clear();
             })
-            .contextWrite(Context.of(CORRELATION_ID, correlationId));
+            .contextWrite(context);
     }
 
     private ServerWebExchange getModifiedExchange(
@@ -136,6 +135,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return Integer.MIN_VALUE;
+        // Alterado para alta prioridade mas não mínima absoluta
+        return Ordered.HIGHEST_PRECEDENCE + 1000;
     }
 }

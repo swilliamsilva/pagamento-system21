@@ -2,20 +2,30 @@ package com.pagamento.gateway;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.pagamento.gateway.filters.RateLimitingFilter;
+import com.pagamento.gateway.filters.SecurityFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 @ActiveProfiles("test")
-@AutoConfigureWireMock(port = 0)  // Porta dinâmica para WireMock
+@AutoConfigureWireMock(port = 0)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = {
+    "filters.local-rate-limit.enabled=true",
+    "filters.rate-limiting.capacity=5",
+    "filters.rate-limiting.refill-tokens=5",
+    "filters.rate-limiting.refill-period=60",
+    "security.admin-key=test-admin-key"
+})
 class GatewayIntegrationTest {
 
     @LocalServerPort
@@ -28,53 +38,136 @@ class GatewayIntegrationTest {
     private RateLimitingFilter rateLimitingFilter;
 
     @BeforeEach
-    void setup() {
+    void configurar() {
         WireMock.reset();
         rateLimitingFilter.clearBuckets();
 
-        // Stub para /api/data
-        stubFor(get(urlEqualTo("/api/data"))
-            .willReturn(okJson("{\"success\": true, \"data\": \"mocked\", \"timestamp\": 1234567890}")
-                .withHeader("X-Correlation-Id", "test-correlation-id")
-                .withHeader("X-Content-Type-Options", "nosniff")
-                .withHeader("X-Frame-Options", "DENY")
-                .withHeader("Content-Security-Policy", "default-src 'self'")
-            ));
-
-        // Stub para /api/resource - importante para o teste que falhava
+        // Configuração REALISTA do mock
         stubFor(get(urlEqualTo("/api/resource"))
             .willReturn(ok()
                 .withHeader("Content-Type", "text/plain")
-                .withHeader("Retry-After", "60")
-                .withBody("resource")));
+                .withBody("recurso")));
 
-        // Stub para rota inválida /test;...
-        stubFor(get(urlMatching("/test;.*"))
-            .willReturn(badRequest()));
+        stubFor(get(urlEqualTo("/internal/status"))
+            .willReturn(ok().withBody("admin-ok")));
 
-        // Configura WebTestClient para não aceitar gzip
+        // Configura fallback para teste
+        stubFor(get(urlEqualTo("/fallback/pix"))
+            .willReturn(ok()
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"message\":\"Fallback acionado\"}")));
+
         webTestClient = webTestClient.mutate()
+            .defaultHeader("X-API-Key", "test-key") // Chave fixa para testes
+            .defaultHeader("X-Forwarded-For", "192.168.1.1") // IP fixo para testes
             .defaultHeader("Accept-Encoding", "identity")
             .build();
     }
 
     @Test
-    void shouldEnforceRateLimit() {
-        // 5 requisições válidas para /api/resource, devem passar com 200
+    void deveAplicarLimiteDeTaxa() {
+        // Requisições dentro do limite
         for (int i = 0; i < 5; i++) {
             webTestClient.get()
                 .uri("/api/resource")
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isOk()
+                .expectHeader().exists("X-Rate-Limit-Remaining");
         }
 
-        // 6ª requisição deve retornar 429 (Too Many Requests) e header Retry-After = 60
+        // Requisição que excede o limite
         webTestClient.get()
             .uri("/api/resource")
             .exchange()
-            .expectStatus().isEqualTo(429)
-            .expectHeader().valueEquals("Retry-After", "60");
+            .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS) // 429
+            .expectHeader().valueEquals("X-Rate-Limit-Remaining", "0")
+            .expectHeader().exists("X-Rate-Limit-Reset")
+            .expectHeader().exists("Retry-After");
     }
 
-    // Aqui podem entrar outros testes de integração...
+    @Test
+    void deveIncluirCabecalhosDeLimiteDeTaxa() {
+        webTestClient.get()
+            .uri("/api/resource")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().valueMatches("X-Rate-Limit-Remaining", "\\d+")
+            .expectHeader().valueEquals("X-Rate-Limit-Capacity", "5")
+            .expectHeader().valueMatches("X-Rate-Limit-Reset", "\\d+");
+    }
+
+    @Test
+    void deveBloquearTentativaDePathTraversal() {
+        webTestClient.get()
+            .uri("/test;../secret")
+            .exchange()
+            .expectStatus().isForbidden() // 403
+            .expectHeader().valueEquals("X-Blocked-Reason", "Tentativa de Path Traversal detectada");
+    }
+    
+    @Test
+    void deveBloquearTentativaDeInjecaoSQL() {
+        webTestClient.get()
+            .uri("/api/data?query=SELECT * FROM users")
+            .exchange()
+            .expectStatus().isForbidden()
+            .expectHeader().valueEquals("X-Blocked-Reason", "Padrão de injeção SQL detectado");
+    }
+
+    @Test
+    void devePermitirAcessoAdminComChave() {
+        webTestClient.get()
+            .uri("/internal/status")
+            .header("X-Admin-Key", "test-admin-key")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class).isEqualTo("admin-ok");
+    }
+
+    @Test
+    void deveBloquearAcessoAdminSemChave() {
+        webTestClient.get()
+            .uri("/internal/status")
+            .exchange()
+            .expectStatus().isForbidden()
+            .expectHeader().exists("X-Blocked-Reason");
+    }
+    
+    @Test
+    void deveAplicarCabecalhosDoCircuitBreaker() {
+        webTestClient.get()
+            .uri("/api/resource")
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().valueEquals("X-Circuit-Breaker-State", "closed");
+    }
+    
+    @Test
+    void deveRotearRequisicoesParaSwagger() {
+        // Configuração específica para Swagger
+        stubFor(get(urlEqualTo("/v3/api-docs"))
+            .willReturn(ok()
+                .withBody("{\"openapi\":\"3.0.1\"}")));
+        
+        webTestClient.get()
+            .uri("/v3/api-docs/pix")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.openapi").isEqualTo("3.0.1");
+    }
+    
+    @Test
+    void deveRetornarFallbackQuandoServicoIndisponivel() {
+        // Simular falha no serviço
+        stubFor(get(urlEqualTo("/pix/unavailable"))
+            .willReturn(serverError()));
+        
+        webTestClient.get()
+            .uri("/pix/unavailable")
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.SERVICE_UNAVAILABLE) // 503
+            .expectBody()
+            .jsonPath("$.message").isEqualTo("Fallback acionado");
+    }
 }

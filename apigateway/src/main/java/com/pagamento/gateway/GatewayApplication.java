@@ -2,12 +2,15 @@ package com.pagamento.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
+import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
@@ -18,10 +21,34 @@ public class GatewayApplication {
         SpringApplication.run(GatewayApplication.class, args);
     }
 
-    // Rotas reais, só carregam se o profile NÃO for 'test'
+    // Bean para resolver chaves de rate limiting (exemplo por IP)
+    @Bean
+    public KeyResolver apiKeyResolver() {
+        return exchange -> Mono.just(
+            exchange.getRequest()
+                .getRemoteAddress()
+                .getAddress()
+                .getHostAddress()
+        );
+    }
+
+    // Bean para o rate limiter Redis
+    @Bean
+    public RedisRateLimiter redisRateLimiter() {
+        return new RedisRateLimiter(
+            10,      // Tokens por segundo
+            20,      // Capacidade do bucket
+            1        // Tokens por solicitação (default)
+        );
+    }
+
     @Bean
     @Profile("!test")
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+    public RouteLocator customRouteLocator(
+        RouteLocatorBuilder builder,
+        RedisRateLimiter redisRateLimiter,
+        KeyResolver apiKeyResolver
+    ) {
         return builder.routes()
             .route("pix-service", r -> r.path("/pix/**")
                 .filters(f -> f
@@ -33,7 +60,10 @@ public class GatewayApplication {
                         .setBackoff(Duration.ofMillis(100), Duration.ofSeconds(2), 2, true))
                     .circuitBreaker(config -> config
                         .setName("pixCircuitBreaker")
-                        .setFallbackUri("forward:/fallback/pix")))
+                        .setFallbackUri("forward:/fallback/pix"))
+                    .requestRateLimiter(config -> config
+                        .setRateLimiter(redisRateLimiter)
+                        .setKeyResolver(apiKeyResolver)))
                 .uri("lb://pix-service"))
 
             .route("auth-service", r -> r.path("/auth/**")
@@ -45,13 +75,15 @@ public class GatewayApplication {
                 .uri("lb://auth-service"))
 
             .route("swagger-pix", r -> r.path("/v3/api-docs/pix")
+                .filters(f -> f.rewritePath("/v3/api-docs/pix", "/v3/api-docs"))
                 .uri("lb://pix-service"))
 
             .route("swagger-auth", r -> r.path("/v3/api-docs/auth")
+                .filters(f -> f.rewritePath("/v3/api-docs/auth", "/v3/api-docs"))
                 .uri("lb://auth-service"))
 
             .route("swagger-ui", r -> r.path("/swagger-ui/**")
-                .filters(f -> f.rewritePath("/swagger-ui/(?<path>.*)", "/${path}/swagger-ui.html"))
+                .filters(f -> f.rewritePath("/swagger-ui/(?<segment>.*)", "/${segment}"))
                 .uri("lb://documentation-service"))
 
             .build();

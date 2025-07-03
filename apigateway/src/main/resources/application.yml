@@ -1,30 +1,44 @@
+# =============================================================================
+# Arquivo: application.yml
+# Ambiente: Produção
+# Projeto: api-gateway (módulo do pagamento-system21)
+# Finalidade: Configuração de Gateway com Redis, Resiliência, CORS, RateLimiter,
+#             Circuit Breaker, Retry e Observabilidade via Prometheus
+# Observação: Os valores com ${...} podem ser sobrescritos por variáveis de ambiente
+# =============================================================================
+
 server:
-  port: 8080
+  port: 8080  # Porta padrão do serviço gateway em produção
 
 spring:
   application:
     name: api-gateway
 
   profiles:
-    active: test
+    active: prod  #  Corrigido para produção (antes estava como "test")
 
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}  # Pode ser definido via var. ambiente
+      port: ${REDIS_PORT:6379}
 
   cloud:
     gateway:
       enabled: true
+
       discovery:
         locator:
-          enabled: false
+          enabled: false  # Desativa mapeamento automático de services
+
       httpclient:
-        connect-timeout: 1000
-        response-timeout: 5s
+        connect-timeout: 1000        # Tempo de conexão em milissegundos
+        response-timeout: 5s         # Tempo máximo para resposta
         pool:
-          max-idle-time: 60s
+          max-idle-time: 60s         # Tempo máximo de ociosidade do pool
+
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_UNIQUE
+
       routes:
         - id: pix-service
           uri: lb://pix-service
@@ -95,11 +109,11 @@ resilience4j:
   circuitbreaker:
     configs:
       default:
-        failure-rate-threshold: 50
-        minimum-number-of-calls: 10
+        failure-rate-threshold: 50           # % de falhas para abrir o circuito
+        minimum-number-of-calls: 10          # Número mínimo de chamadas para avaliar
         sliding-window-type: TIME_BASED
-        sliding-window-size: 10
-        wait-duration-in-open-state: 10s
+        sliding-window-size: 10              # Janela de tempo para amostragem
+        wait-duration-in-open-state: 10s     # Tempo que o circuito fica aberto
     instances:
       pixCircuitBreaker:
         baseConfig: default
@@ -113,13 +127,10 @@ resilience4j:
 
 eureka:
   client:
-    enabled: false
-
-bytebuddy:
-  dynamic: false
+    enabled: false  # Desabilitado se descoberta for manual ou via DNS
 
 cache:
-  type: caffeine # Pode ser usado com Spring Cache se for habilitado
+  type: caffeine  # Cache local (usado apenas se ativar @Cacheable)
 
 logging:
   level:
@@ -127,7 +138,7 @@ logging:
     org.springframework.cloud.gateway: INFO
     org.springframework.http.server.reactive: WARN
     reactor.netty: WARN
-    com.pagamento.gateway: DEBUG
+    com.pagamento.gateway: DEBUG  # Logs detalhados dos filtros do projeto
 
 management:
   endpoints:
@@ -135,14 +146,19 @@ management:
       exposure:
         include: health, metrics, prometheus, gateway
       cors:
-        allowed-origins: "*"
+        allowed-origins: "*"   # Permite integração com Prometheus, Grafana, etc.
         allowed-methods: "*"
+
+  prometheus:
+    metrics:
+      export:
+        enabled: true  # Novo formato para habilitar exportação de métricas
+
   metrics:
     tags:
       application: ${spring.application.name}
-    export:
-      prometheus:
-        enabled: true
+
   endpoint:
     health:
-      show-details: always
+      show-details: always  # Exibe informações detalhadas no /actuator/health
+
