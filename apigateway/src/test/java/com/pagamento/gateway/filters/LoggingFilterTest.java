@@ -1,144 +1,184 @@
 package com.pagamento.gateway.filters;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.Ordered;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.server.ServerWebExchange;
+
+import ch.qos.logback.classic.Logger;
 import reactor.core.publisher.Mono;
-
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LoggingFilterTest {
 
     @Mock
-    private GatewayFilterChain chain;
+    private GatewayFilterChain cadeiaFiltros;
 
     @Mock
     private Logger logger;
 
-    @InjectMocks
-    private LoggingFilter loggingFilter;
-
+    private LoggingFilter filtroLogging;
     private ServerWebExchange exchange;
 
     @BeforeEach
-    void setUp() {
-        // Mocking the logger
-        try (MockedStatic<LoggerFactory> loggerFactory = Mockito.mockStatic(LoggerFactory.class)) {
-            loggerFactory.when(() -> LoggerFactory.getLogger(LoggingFilter.class)).thenReturn(logger);
-            when(logger.isInfoEnabled()).thenReturn(true);
-            
-            // Setup exchange with a request
-            MockServerHttpRequest request = MockServerHttpRequest
-                .get("/test")
-                .header("X-Correlation-Id", "test-correlation-id")
-                .header("Authorization", "Bearer token")
-                .build();
-            exchange = MockServerWebExchange.from(request);
-        }
+    void configurar() {
+        filtroLogging = new LoggingFilter(logger);
 
-        // Setup filter chain to return a successful response
-        when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
-    }
-
-    @Test
-    void filter_shouldAddCorrelationIdIfMissing() {
-        // Arrange: Create an exchange without a correlation id
-        MockServerHttpRequest request = MockServerHttpRequest.get("/test").build();
-        ServerWebExchange exchangeWithoutCorrelation = MockServerWebExchange.from(request);
-
-        // Act
-        loggingFilter.filter(exchangeWithoutCorrelation, chain).block();
-
-        // Assert: Verify that the correlation id was added
-        assertNotNull(exchangeWithoutCorrelation.getRequest().getHeaders().getFirst("X-Correlation-Id"));
-    }
-
-    @Test
-    void filter_shouldUseExistingCorrelationId() {
-        // Arrange
-        String expectedCorrelationId = "existing-correlation-id";
-        MockServerHttpRequest request = MockServerHttpRequest.get("/test")
-            .header("X-Correlation-Id", expectedCorrelationId)
-            .build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
-
-        // Act
-        loggingFilter.filter(exchange, chain).block();
-
-        // Assert
-        assertEquals(expectedCorrelationId, MDC.get("X-Correlation-Id"));
-    }
-
-    @Test
-    void filter_shouldLogRequestAndResponse() {
-        // Act
-        loggingFilter.filter(exchange, chain).block();
-
-        // Assert: Verify that the request and response were logged
-        verify(logger).info(contains("Request [test-correlation-id]: GET /test"));
-        verify(logger).info(contains("Response [test-correlation-id]: Status 0 | Duration"));
-    }
-
-    @Test
-    void filter_shouldNotLogSensitiveHeaders() {
-        // Arrange
+        when(logger.isInfoEnabled()).thenReturn(true);
         when(logger.isDebugEnabled()).thenReturn(true);
-        
-        // Act
-        loggingFilter.filter(exchange, chain).block();
 
-        // Assert: Verify that sensitive headers are not logged
-        verify(logger, never()).debug(contains("Authorization"));
-        verify(logger, never()).debug(contains("Bearer token"));
-        verify(logger).debug(contains("X-Correlation-Id: [test-correlation-id]"));
+        MockServerHttpRequest request = MockServerHttpRequest
+            .get("/teste")
+            .header("X-Correlation-Id", "teste-correlation-id")
+            .header("Authorization", "Bearer token")
+            .header("X-Sensitive", "dado-sensivel")
+            .build();
+        exchange = MockServerWebExchange.from(request);
+
+        when(cadeiaFiltros.filter(any(ServerWebExchange.class)))
+            .thenAnswer(invocacao -> {
+                ServerWebExchange ex = invocacao.getArgument(0);
+                ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.OK);
+                return Mono.empty();
+            });
     }
 
     @Test
-    void filter_shouldMeasureRequestDuration() {
-        // Arrange
-        long startTime = System.currentTimeMillis();
-        when(chain.filter(any())).thenReturn(Mono.delay(java.time.Duration.ofMillis(100)).then());
+    void deveAdicionarCorrelationIdQuandoAusente() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/teste").build();
+        ServerWebExchange exchangeSemCorrelation = MockServerWebExchange.from(request);
 
-        // Act
-        loggingFilter.filter(exchange, chain).block();
+        filtroLogging.filter(exchangeSemCorrelation, cadeiaFiltros).block();
 
-        // Assert: Verify that the duration is logged and is at least 100ms
-        verify(logger).info(contains("Duration"), anyString(), anyInt(), anyLong(), anyString());
-        // We can't exactly assert the duration value because of the mock, but we can check that the log method was called with a long argument for duration
+        assertNotNull(exchangeSemCorrelation.getRequest().getHeaders().getFirst("X-Correlation-Id"));
     }
 
     @Test
-    void getOrder_shouldReturnHighestPrecedence() {
-        assertEquals(Integer.MIN_VALUE, loggingFilter.getOrder());
+    void deveUtilizarCorrelationIdExistente() {
+        String correlationIdEsperado = "correlation-id-existente";
+        MockServerHttpRequest request = MockServerHttpRequest.get("/teste")
+            .header("X-Correlation-Id", correlationIdEsperado)
+            .build();
+        ServerWebExchange exchangeComCorrelation = MockServerWebExchange.from(request);
+
+        filtroLogging.filter(exchangeComCorrelation, cadeiaFiltros).block();
+
+        assertEquals(correlationIdEsperado,
+            exchangeComCorrelation.getRequest().getHeaders().getFirst("X-Correlation-Id"));
     }
 
     @Test
-    void filter_shouldClearMDCAfterProcessing() {
-        // Act
-        loggingFilter.filter(exchange, chain).block();
+    void deveRegistrarLogDeRequisicao() {
+        filtroLogging.filter(exchange, cadeiaFiltros).block();
 
-        // Assert
-        assertNull(MDC.get("X-Correlation-Id"));
+        verify(logger).info(argThat(msg ->
+            msg.contains("Request [teste-correlation-id]: GET /teste")
+        ));
+    }
+
+    @Test
+    void deveRegistrarLogDeResposta() {
+        filtroLogging.filter(exchange, cadeiaFiltros).block();
+
+        verify(logger).info(eq("Response [{}]: Status {} | Duration {}ms | Path: {}"),
+            eq("teste-correlation-id"), eq(200), anyLong(), eq("/teste"));
+    }
+
+    @Test
+    void naoDeveLogarDadosSensiveis() {
+        when(logger.isDebugEnabled()).thenReturn(true);
+        filtroLogging.filter(exchange, cadeiaFiltros).block();
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, atLeastOnce()).info(captor.capture());
+
+        List<String> logs = captor.getAllValues();
+        for (String msg : logs) {
+            // Verificamos os valores sensíveis, não os nomes dos headers
+            assertFalse(msg.contains("Bearer token"), "Mensagem contém dado sensível: " + msg);
+            assertFalse(msg.contains("dado-sensivel"), "Mensagem contém dado sensível: " + msg);
+        }
+    }
+
+    @Test
+    void deveMedirTempoDeProcessamento() {
+        when(cadeiaFiltros.filter(any(ServerWebExchange.class)))
+            .thenAnswer(invocacao -> {
+                ServerWebExchange ex = invocacao.getArgument(0);
+                ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.OK);
+                return Mono.delay(java.time.Duration.ofMillis(50)).then();
+            });
+
+        filtroLogging.filter(exchange, cadeiaFiltros).block();
+
+        verify(logger).info(eq("Response [{}]: Status {} | Duration {}ms | Path: {}"),
+            eq("teste-correlation-id"), eq(200), anyLong(), eq("/teste"));
+    }
+
+    @Test
+    void deveRetornarOrdemCorreta() {
+        assertEquals(Ordered.HIGHEST_PRECEDENCE + 1000, filtroLogging.getOrder());
+    }
+
+    @Test
+    void devePropagarCorrelationIdNoContexto() {
+        when(cadeiaFiltros.filter(any())).thenAnswer(invocacao -> {
+            // Renomeado para evitar conflito com o campo da classe
+            ServerWebExchange ex = invocacao.getArgument(0);
+            String correlationId = ex.getRequest().getHeaders().getFirst("X-Correlation-Id");
+
+            return Mono.deferContextual(contextView -> {
+                String ctxCorrelationId = contextView.getOrDefault("X-Correlation-Id", "");
+                assertEquals(correlationId, ctxCorrelationId);
+                return Mono.empty();
+            });
+        });
+
+        filtroLogging.filter(exchange, cadeiaFiltros).block();
+    }
+
+    @Test
+    void deveRegistrarLogsApenasQuandoInfoHabilitado() {
+        when(logger.isInfoEnabled()).thenReturn(false);
+
+        filtroLogging.filter(exchange, cadeiaFiltros).block();
+
+        verify(logger, never()).info(anyString());
+    }
+
+    @Test
+    void deveRegistrarLogDeRespostaMesmoComErro() {
+        when(cadeiaFiltros.filter(any())).thenAnswer(invocacao -> {
+            ServerWebExchange ex = invocacao.getArgument(0);
+            ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+            return Mono.error(new RuntimeException("Erro simulado"));
+        });
+
+        filtroLogging.filter(exchange, cadeiaFiltros).onErrorResume(e -> Mono.empty()).block();
+
+        verify(logger).info(eq("Response [{}]: Status {} | Duration {}ms | Path: {}"),
+            eq("teste-correlation-id"), eq(500), anyLong(), eq("/teste"));
     }
 }

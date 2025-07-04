@@ -1,0 +1,15 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: api-limited
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 999
+                redis-rate-limiter.burstCapacity: 999
+                redis-rate-limiter.requestedTokens: 1
+
+      filter:
+        local-rate-limit:
+          enabled: false

@@ -1,0 +1,34 @@
+server:
+  port: 0 # Usa porta aleatória para evitar conflitos durante testes
+
+wiremock:
+  server:
+    port: 0 # Porta aleatória para o WireMock embutido nos testes
+
+spring:
+  cloud:
+    gateway:
+      enabled: true
+
+      routes:
+        - id: api-limited
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/api/limited
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5       # Requisições por minuto
+                redis-rate-limiter.burstCapacity: 5        # Capacidade máxima do balde
+                redis-rate-limiter.requestedTokens: 1      # Tokens por requisição
+
+      default-filters: [] # Garante que nenhum filtro global interfira
+
+      filter:
+        local-rate-limit:
+          enabled: false # Desabilita Bucket4j local nos testes com Redis
+
+data:
+  redis:
+    host: localhost 
+    port: 6379

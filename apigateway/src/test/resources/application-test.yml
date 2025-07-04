@@ -1,0 +1,151 @@
+# =================================================
+# Configurações CORRIGIDAS para testes automatizados
+# =================================================
+
+server:
+  port: 0  # Porta aleatória para testes
+
+spring:
+  application:
+    name: gateway-service-test
+  
+  main:
+    web-application-type: reactive
+    allow-bean-definition-overriding: true
+  
+  # Configuração do Redis atualizada
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 5000ms
+      database: 0
+
+  cloud:
+    gateway:
+      enabled: true
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 5s
+      
+      routes:
+        - id: pix-service-route
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/pix/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: pixCircuitBreaker
+                fallbackUri: forward:/fallback/pix
+            
+        - id: auth-service-route
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+        
+        - id: swagger-route
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/v3/api-docs/**
+          filters:
+            - RewritePath=/v3/api-docs/(?<segment>.*), /v3/api-docs
+            
+        - id: admin-service-route
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/internal/**
+
+      discovery:
+        locator:
+          enabled: false
+      globalcors:
+        add-to-simple-url-handler-mapping: false
+
+      default-filters: 
+        - DedupeResponseHeader=Access-Control-Allow-Origin
+        - AddResponseHeader=X-Gateway-Instance, ${spring.application.name}
+
+logging:
+  level:
+    root: INFO
+    org.springframework: WARN
+    org.springframework.cloud.gateway: DEBUG
+    com.pagamento.gateway: DEBUG
+    reactor.netty: WARN
+    io.netty: WARN
+    org.apache: WARN
+
+# Configuração de segurança
+security:
+  admin-key: test-admin-key
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: http://fake-auth-service
+        jwk-set-uri: http://fake-auth-service/.well-known/jwks.json
+
+# Configuração de rate limiting
+filters:
+  local-rate-limit:
+    enabled: false  # Desabilitado por padrão
+  rate-limiting:
+    capacity: 5
+    refill-tokens: 5
+    refill-period: 60
+
+# Configuração de circuit breaker
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: false
+        failureRateThreshold: 100
+        minimumNumberOfCalls: 1
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 100ms
+    instances:
+      pixCircuitBreaker:
+        baseConfig: default
+      authCircuitBreaker:
+        baseConfig: default
+
+# =================================================
+# Perfis Específicos para Diferentes Cenários de Teste
+# =================================================
+
+---
+# Perfil para testes de rate limiting
+spring:
+  config:
+    activate:
+      on-profile: test-rate-limit
+  cloud:
+    gateway:
+      filter:
+        request-rate-limiter:
+          redis-rate-limiter:
+            replenish-rate: 10
+            burst-capacity: 20
+            requested-tokens: 1
+  filters:
+    local-rate-limit:
+      enabled: true
+
+---
+# Perfil para desabilitar completamente o Redis
+spring:
+  config:
+    activate:
+      on-profile: no-redis
+  data:
+    redis:
+      host: invalid-host
+      port: 0
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration

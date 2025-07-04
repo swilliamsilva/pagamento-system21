@@ -1,0 +1,27 @@
+server:
+  port: 0
+
+wiremock:
+  server:
+    port: 0
+
+spring:
+  cloud:
+    gateway:
+      enabled: true
+
+      routes:
+        - id: api-limited
+          uri: http://localhost:${wiremock.server.port}
+          predicates:
+            - Path=/api/limited
+
+      default-filters: []
+
+      filter:
+        local-rate-limit:
+          enabled: true # Ativa o filtro baseado no Bucket4j (local)
+  data:
+    redis:
+      host: localhost
+      port: 6379 # Ignorado neste cenário, mas necessário para contexto
