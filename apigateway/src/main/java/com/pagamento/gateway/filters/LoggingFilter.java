@@ -9,6 +9,7 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -20,7 +21,6 @@ import reactor.util.context.Context;
 
 @Component
 public class LoggingFilter implements GlobalFilter, Ordered {
-
     private final Logger logger;
 
     private static final String CORRELATION_ID = "X-Correlation-Id";
@@ -33,7 +33,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         this(LoggerFactory.getLogger(LoggingFilter.class));
     }
 
-    // Construtor para testes
+    // Constructor for tests
     LoggingFilter(Logger logger) {
         this.logger = logger;
     }
@@ -43,39 +43,40 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         final ServerHttpRequest request = exchange.getRequest();
         final String correlationId = getOrGenerateCorrelationId(request);
 
-        // Armazena o correlation ID no contexto reativo
-        Context context = Context.of(CORRELATION_ID, correlationId);
+        // Add correlation ID to response headers
+        ServerHttpResponse response = exchange.getResponse();
+        response.getHeaders().add(CORRELATION_ID, correlationId);
+
+        // Mutate request if needed and store start time
+        final ServerWebExchange modifiedExchange = mutateRequestIfNeeded(exchange, correlationId);
+        modifiedExchange.getAttributes().put(REQUEST_START_TIME, System.currentTimeMillis());
         
-        return Mono.just(exchange)
-            .flatMap(ex -> {
-                final ServerWebExchange modifiedExchange = getModifiedExchange(ex, request, correlationId);
-                modifiedExchange.getAttributes().put(REQUEST_START_TIME, System.currentTimeMillis());
-                logRequestDetails(modifiedExchange.getRequest(), correlationId);
-                return chain.filter(modifiedExchange);
-            })
+        logRequestDetails(modifiedExchange.getRequest(), correlationId);
+        
+        // Set context and process chain
+        return Mono.deferContextual(ctx -> 
+                chain.filter(modifiedExchange)
+            )
             .doFinally(signalType -> {
-                Long startTime = exchange.getAttribute(REQUEST_START_TIME);
+                Long startTime = modifiedExchange.getAttribute(REQUEST_START_TIME);
                 if (startTime != null) {
                     long duration = System.currentTimeMillis() - startTime;
-                    logResponseDetails(exchange, correlationId, duration);
+                    logResponseDetails(modifiedExchange, correlationId, duration);
                 }
             })
-            .contextWrite(context);
+            .contextWrite(Context.of(CORRELATION_ID, correlationId));
     }
 
-    private ServerWebExchange getModifiedExchange(
+    private ServerWebExchange mutateRequestIfNeeded(
         ServerWebExchange exchange, 
-        ServerHttpRequest request,
         String correlationId
     ) {
-        if (!request.getHeaders().containsKey(CORRELATION_ID)) {
-            return exchange.mutate().request(
-                request.mutate()
-                    .header(CORRELATION_ID, correlationId)
-                    .build()
-            ).build();
+        if (exchange.getRequest().getHeaders().containsKey(CORRELATION_ID)) {
+            return exchange;
         }
-        return exchange;
+        return exchange.mutate()
+            .request(builder -> builder.header(CORRELATION_ID, correlationId))
+            .build();
     }
 
     private String getOrGenerateCorrelationId(ServerHttpRequest request) {
@@ -94,36 +95,29 @@ public class LoggingFilter implements GlobalFilter, Ordered {
             .append(request.getURI());
 
         if (logger.isDebugEnabled()) {
-            appendFilteredHeaders(logMessage, request.getHeaders());
+            logMessage.append("\nHeaders:");
+            request.getHeaders().forEach((name, values) -> {
+                if (!isSensitiveHeader(name)) {
+                    logMessage.append("\n  ")
+                             .append(name)
+                             .append(": ")
+                             .append(values.size() > 1 ? values : values.get(0));
+                }
+            });
         }
 
         logger.info(logMessage.toString());
     }
 
-    private void appendFilteredHeaders(StringBuilder builder, HttpHeaders headers) {
-        if (headers == null || headers.isEmpty()) return;
-        
-        builder.append("\nHeaders:");
-        headers.forEach((name, values) -> {
-            if (!isSensitiveHeader(name)) {
-                builder.append("\n  ")
-                       .append(name)
-                       .append(": ")
-                       .append(values.size() > 1 ? values : values.get(0));
-            }
-        });
-    }
-
     private void logResponseDetails(ServerWebExchange exchange, String correlationId, long duration) {
         if (!logger.isInfoEnabled()) return;
 
-        ServerHttpResponse response = exchange.getResponse();
-        HttpStatusCode status = response.getStatusCode();
+        HttpStatusCode status = exchange.getResponse().getStatusCode();
         String path = exchange.getRequest().getPath().toString();
 
         logger.info("Response [{}]: Status {} | Duration {}ms | Path: {}",
             correlationId,
-            status != null ? status.value() : "N/A",
+            (status != null ? status.value() : HttpStatus.OK.value()),
             duration,
             path);
     }
@@ -135,7 +129,6 @@ public class LoggingFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        // Alterado para alta prioridade mas não mínima absoluta
         return Ordered.HIGHEST_PRECEDENCE + 1000;
     }
 }

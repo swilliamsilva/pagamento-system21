@@ -19,7 +19,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWireMock(port = 0)
-@ActiveProfiles("test-rate-limit")  // Perfil corrigido
+@ActiveProfiles("test-rate-limit")
 @TestPropertySource(properties = {
     "filters.local-rate-limit.enabled=true",
     "filters.rate-limiting.capacity=5",
@@ -96,7 +96,7 @@ class RateLimitingBehaviorTest {
             .defaultHeader("X-Forwarded-For", "192.168.1.2")
             .build();
 
-        // Cliente 1 usa todo seu limite
+        // Cliente 1 usa todo seu limite (5 requisições)
         for (int i = 0; i < 5; i++) {
             client1.get()
                 .uri("/api/limited")
@@ -104,16 +104,24 @@ class RateLimitingBehaviorTest {
                 .expectStatus().isOk();
         }
         
-        // Cliente 1 deve ser bloqueado
+        // Cliente 1 deve ser bloqueado na sexta requisição
         client1.get()
             .uri("/api/limited")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
         
-        // Cliente 2 deve conseguir acessar
+        // Cliente 2 faz 5 requisições (dentro do seu próprio limite)
+        for (int i = 0; i < 5; i++) {
+            client2.get()
+                .uri("/api/limited")
+                .exchange()
+                .expectStatus().isOk();
+        }
+        
+        // Cliente 2 deve ser bloqueado na sexta requisição
         client2.get()
             .uri("/api/limited")
             .exchange()
-            .expectStatus().isOk();
+            .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
     }
 }

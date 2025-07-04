@@ -30,6 +30,7 @@
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <spring-boot.version>3.2.4</spring-boot.version>
         <cds.archive.file>apigateway-cds.jsa</cds.archive.file>
+        <jacoco.version>0.8.11</jacoco.version>
     </properties>
 
     <profiles>
@@ -50,6 +51,22 @@
                 </plugins>
             </build>
         </profile>
+        
+        <!-- Perfil para testes lentos -->
+        <profile>
+            <id>include-slow-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludedGroups></excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <dependencyManagement>
@@ -64,9 +81,8 @@
         </dependencies>
     </dependencyManagement>
 
-
     <dependencies>
-        <!-- Spring Boot Starter WebFlux com exclusão do Byte Buddy -->
+        <!-- Spring Boot Starter WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -75,10 +91,13 @@
                     <groupId>net.bytebuddy</groupId>
                     <artifactId>byte-buddy</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
        
-        <!-- Removido starter-data-jpa não necessário para gateway -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -217,7 +236,7 @@
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock-jre8-standalone</artifactId>
-  
+            <version>2.35.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -231,6 +250,7 @@
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy-agent</artifactId>
             <version>${byte-buddy.version}</version>
+            <scope>test</scope>
         </dependency>
         
         <!-- Logging -->
@@ -238,37 +258,20 @@
           <groupId>org.slf4j</groupId>
           <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
-        <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-simple</artifactId>
-          <scope>test</scope>
-        </dependency>
         
         <dependency>
           <groupId>com.github.vladimir-bukhtoyarov</groupId>
           <artifactId>bucket4j-core</artifactId>
           <version>7.6.0</version>
         </dependency>
-        
-        <dependency>
-         <groupId>org.springframework.boot</groupId>
-         <artifactId>spring-boot-starter-webflux</artifactId>
-         <exclusions>
-           <exclusion>
-              <groupId>org.slf4j</groupId>
-              <artifactId>slf4j-simple</artifactId>
-           </exclusion>
-         </exclusions>
-       </dependency>
            
-       <dependency>
+        <dependency>
          <groupId>it.ozimov</groupId>
          <artifactId>embedded-redis</artifactId>
          <version>0.7.2</version>
          <scope>test</scope>
        </dependency>
 
-        
     <!-- Spring Security -->
     <dependency>
         <groupId>org.springframework.boot</groupId>
@@ -281,18 +284,21 @@
         <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
     </dependency>
    
-<dependency>
-    <groupId>org.springframework</groupId>
-    <artifactId>spring-test</artifactId>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
-</dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-test</artifactId>
+        <scope>test</scope>
+    </dependency>
     
+    <!-- JUnit Platform (suporte moderno) -->
+    <dependency>
+        <groupId>org.junit.platform</groupId>
+        <artifactId>junit-platform-launcher</artifactId>
+        <scope>test</scope>
+    </dependency>
         
     </dependencies>
+    
 <build>
     <finalName>${project.artifactId}</finalName>
 
@@ -316,7 +322,6 @@
     </resources>
 
     <plugins>
-
         <!-- Plugin Spring Boot -->
         <plugin>
             <groupId>org.springframework.boot</groupId>
@@ -360,8 +365,9 @@
                             <argument>-Xshare:dump</argument>
                             <argument>-XX:SharedArchiveFile=${project.basedir}/${cds.archive.file}</argument>
                             <argument>-XX:SharedClassListFile=${project.build.directory}/classes.lst</argument>
-                            <argument>-jar</argument>
+                            <argument>-cp</argument>
                             <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
+                            <argument>com.pagamento.gateway.ApiGatewayApplication</argument>
                         </arguments>
                     </configuration>
                 </execution>
@@ -372,7 +378,7 @@
         <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.11</version>
+            <version>${jacoco.version}</version>
             <executions>
                 <execution>
                     <goals><goal>prepare-agent</goal></goals>
@@ -395,44 +401,36 @@
                 <target>${java.version}</target>
                 <encoding>UTF-8</encoding>
                 <parameters>true</parameters>
+                <compilerArgs>
+                    <arg>-Xlint:unchecked</arg>
+                    <arg>-Xlint:deprecation</arg>
+                </compilerArgs>
             </configuration>
         </plugin>
 
-       <!-- Maven Surefire -->
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-surefire-plugin</artifactId>
-    <version>3.0.0-M8</version>
-    <configuration>
-        <includes>
-            <!-- Rodar primeiro o teste de sanity -->
-            <include>**/EnvironmentSanityTest.java</include>
-            <!-- Depois todos os outros testes -->
-            <include>**/*Test.java</include>
-        </includes>
-        <runOrder>alphabetical</runOrder>
-        <forkCount>1</forkCount>
-        <reuseForks>true</reuseForks>
-        <argLine><![CDATA[
-            --add-opens java.base/java.lang=ALL-UNNAMED
-            --add-opens java.base/java.util=ALL-UNNAMED
-            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
-            -Xmx1024m
-        ]]></argLine>
-        <failIfNoTests>true</failIfNoTests>
-    </configuration>
-</plugin>
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-surefire-plugin</artifactId>
-    <version>3.0.0-M5</version>
-    <configuration>
-        <excludedGroups>slow</excludedGroups>
-    </configuration>
-</plugin>
-
-
-
+        <!-- Maven Surefire (configuração consolidada) -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven-surefire-plugin.version}</version>
+            <configuration>
+                <includes>
+                    <include>**/EnvironmentSanityTest.java</include>
+                    <include>**/*Test.java</include>
+                </includes>
+                <excludedGroups>slow</excludedGroups>
+                <runOrder>alphabetical</runOrder>
+                <forkCount>1</forkCount>
+                <reuseForks>true</reuseForks>
+                <argLine>
+                    --add-opens java.base/java.lang=ALL-UNNAMED
+                    --add-opens java.base/java.util=ALL-UNNAMED
+                    --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                    -Xmx1024m
+                </argLine>
+                <failIfNoTests>true</failIfNoTests>
+            </configuration>
+        </plugin>
 
     </plugins>
 </build>

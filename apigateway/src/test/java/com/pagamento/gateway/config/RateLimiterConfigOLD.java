@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Mono;
 
 /**
- * Configuração do limitador de requisições baseado em Redis.
+ * 
  * 
  * <p>Define os beans necessários para implementação do rate limiting no Gateway:
  * <ul>
@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  */
 @Configuration
-public class RateLimiterConfig {
+public class RateLimiterConfigOLD {
 
     /**
      * Configura o algoritmo de limitação de requisições usando Redis.

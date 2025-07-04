@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -52,7 +53,11 @@ class TesteConexaoRedisRateLimit {
     @BeforeEach
     void prepararAmbiente() {
         if (redisTemplate != null) {
-            redisTemplate.getConnectionFactory().getConnection().flushDb();
+            // Usando execute com RedisCallback para limpar o banco de dados atual
+            redisTemplate.execute((RedisCallback<Void>) connection -> {
+                connection.serverCommands().flushDb();
+                return null;
+            });
         }
     }
 

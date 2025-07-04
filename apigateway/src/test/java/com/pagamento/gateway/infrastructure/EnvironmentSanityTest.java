@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
     "spring.autoconfigure.exclude=" // Limpa exclusões anteriores
 })
 @ActiveProfiles("test")
-public class EnvironmentSanityTest {
+class EnvironmentSanityTest { // Removido modificador 'public'
 
     @Container
     static GenericContainer<?> containerRedis = 

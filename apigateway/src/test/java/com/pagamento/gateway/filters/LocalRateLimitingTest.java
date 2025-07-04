@@ -1,11 +1,14 @@
 package com.pagamento.gateway.filters;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Testes para o filtro de limitação local de requisições.
@@ -83,12 +86,12 @@ class LocalRateLimitingTest {
      * <p>Fluxo do teste:
      * <ol>
      *   <li>Excede o limite de requisições</li>
-     *   <li>Aguarda 60 segundos</li>
+     *   <li>Aguarda até que o bucket seja recarregado</li>
      *   <li>Verifica que novas requisições são permitidas</li>
      * </ol>
      */
     @Test
-    void devePermitirRequisicoesAposPeriodoDeRecarga() throws InterruptedException {
+    void devePermitirRequisicoesAposPeriodoDeRecarga() {
         // Exceder o limite
         for (int i = 0; i < 6; i++) {
             webTestClient.get()
@@ -96,14 +99,16 @@ class LocalRateLimitingTest {
                 .exchange();
         }
 
-        // Aguardar período de recarga
-        Thread.sleep(60000);
-
-        // Nova requisição deve ser permitida
-        webTestClient.get()
-            .uri("/api/limited")
-            .exchange()
-            .expectStatus().isOk();
+        // Usar Awaitility para esperar de forma assíncrona até que o bucket seja recarregado
+        Awaitility.await()
+            .atMost(70, TimeUnit.SECONDS) // Máximo de 70s (10s de margem)
+            .pollInterval(1, TimeUnit.SECONDS)
+            .untilAsserted(() -> {
+                webTestClient.get()
+                    .uri("/api/limited")
+                    .exchange()
+                    .expectStatus().isOk();
+            });
     }
 
     /**

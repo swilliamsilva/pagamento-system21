@@ -3,9 +3,7 @@ package com.pagamento.gateway.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpMethod;
 import org.springframework.web.server.WebFilter;
-import reactor.core.publisher.Mono;
 
 @Configuration
 public class SecurityConfig {

@@ -1,5 +1,6 @@
 package com.pagamento.gateway;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.http.HttpStatus.TOO_MANY_REQUESTS;
 
@@ -107,9 +110,9 @@ class RedisRateLimitingTest {
      * </ol>
      */
     @Test
-    @Tag("slow")  // Usando a anotação Tag padrão do JUnit
-    void deveResetarContadorAposPeriodoDeRecarga() throws InterruptedException {
-        // Exceder o limite
+    @Tag("slow")
+    void deveResetarContadorAposPeriodoDeRecarga() {
+        // Exceder o limite (5 requisições)
         for (int i = 0; i < 5; i++) {
             webTestClient.get()
                 .uri("/api/protegido")
@@ -117,19 +120,22 @@ class RedisRateLimitingTest {
                 .expectStatus().isOk();
         }
 
-        // Verificar bloqueio
+        // Verificar bloqueio (6ª requisição)
         webTestClient.get()
             .uri("/api/protegido")
             .exchange()
             .expectStatus().isEqualTo(TOO_MANY_REQUESTS);
 
-        // Aguardar recarga (60s + 5s de tolerância)
-        Thread.sleep(65000);
-
-        // Nova requisição deve ser permitida
-        webTestClient.get()
-            .uri("/api/protegido")
-            .exchange()
-            .expectStatus().isOk();
+        // Usar Awaitility para esperar de forma assíncrona
+        Awaitility.await()
+            .atMost(70, TimeUnit.SECONDS) // Máximo de 70s (60s + 10s de margem)
+            .pollInterval(5, TimeUnit.SECONDS) // Verifica a cada 5 segundos
+            .pollDelay(60, TimeUnit.SECONDS) // Espera inicial de 60s
+            .untilAsserted(() -> {
+                webTestClient.get()
+                    .uri("/api/protegido")
+                    .exchange()
+                    .expectStatus().isOk();
+            });
     }
 }

@@ -1,54 +1,138 @@
 package com.pagamento.gateway.config;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.redis.connection.ReactiveRedisConnection;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-/**
- * Configuração do Redis para testes de limitação de requisições com bloqueio.
- * 
- * <p>Esta configuração é ativada apenas quando o perfil "test-rate-limit-block" está ativo
- * e fornece os beans necessários para integração com Redis em ambiente de teste.</p>
- * 
- * <p>Principais componentes configurados:
- * <ul>
- *   <li>Conexão reativa com servidor Redis local</li>
- *   <li>Template Redis reativo para operações de chave-valor</li>
- * </ul>
- * 
- * <p>Utilizada especificamente para testes que exigem controle preciso sobre o estado do Redis
- * e comportamento de bloqueio do rate limiting.
- */
+import java.time.Duration;
+
 @Configuration
 @Profile("test-rate-limit-block")
+@Testcontainers
 public class RedisConfigTest {
 
-    /**
-     * Configura a fábrica de conexões reativas com Redis.
-     * 
-     * <p>Estabelece conexão com instância local do Redis na porta padrão 6379.
-     * 
-     * @return Fábrica de conexões reativas configurada para ambiente de teste
-     */
+    @Container
+    public static GenericContainer<?> redisContainer = new GenericContainer<>(
+        DockerImageName.parse("redis:7.0-alpine"))
+        .withExposedPorts(6379)
+        .withStartupTimeout(Duration.ofSeconds(30));
+    
     @Bean
     public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory() {
-        return new LettuceConnectionFactory("localhost", 6379);
+        return new LettuceConnectionFactory(
+            redisContainer.getHost(), 
+            redisContainer.getFirstMappedPort()
+        );
     }
 
-    /**
-     * Configura o template Redis reativo para operações de string.
-     * 
-     * <p>Fornece um cliente reativo para interagir com o Redis usando serialização de strings.
-     * 
-     * @param factory Fábrica de conexões injetada automaticamente
-     * @return Template Redis reativo pronto para operações de chave-valor
-     */
     @Bean
-    public ReactiveRedisTemplate<String, String> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
+    public ReactiveRedisTemplate<String, String> reactiveRedisTemplate(
+        ReactiveRedisConnectionFactory factory
+    ) {
         return new ReactiveRedisTemplate<>(factory, RedisSerializationContext.string());
+    }
+    
+    @SpringBootTest
+    @ActiveProfiles("test-rate-limit-block")
+    @Testcontainers
+    static class RedisConfigIntegrationTest {
+        
+        @Autowired
+        private ReactiveRedisConnectionFactory connectionFactory;
+        
+        @Autowired
+        private ReactiveRedisTemplate<String, String> redisTemplate;
+        
+        @Test
+        void deveEstabelecerConexaoComRedis() {
+            ReactiveRedisConnection connection = connectionFactory.getReactiveConnection();
+            
+            StepVerifier.create(connection.ping())
+                .expectNext("PONG")
+                .verifyComplete();
+        }
+        
+        @Test
+        void deveExecutarOperacoesBasicasNoRedis() {
+            String chave = "teste:chave";
+            String valor = "valor-teste";
+            
+            Mono<Void> operacao = redisTemplate.opsForValue().set(chave, valor)
+                .then(redisTemplate.opsForValue().get(chave))
+                .flatMap(resultado -> {
+                    assertEquals(valor, resultado);
+                    return redisTemplate.delete(chave);
+                })
+                .then();
+            
+            StepVerifier.create(operacao)
+                .verifyComplete();
+        }
+    }
+    
+    @SpringBootTest
+    @ActiveProfiles("test-rate-limit-block")
+    static class RedisConfigUnitTest {
+        
+        @Autowired
+        private ApplicationContext context;
+        
+        @Test
+        void deveCriarBeanReactiveRedisConnectionFactory() {
+            ReactiveRedisConnectionFactory factory = 
+                context.getBean(ReactiveRedisConnectionFactory.class);
+            
+            assertNotNull(factory);
+            assertInstanceOf(LettuceConnectionFactory.class, factory);
+        }
+        
+        @Test
+        void deveCriarBeanReactiveRedisTemplate() {
+            ReactiveRedisTemplate<String, String> template = 
+                context.getBean(ReactiveRedisTemplate.class);
+            
+            assertNotNull(template);
+        }
+    }
+    
+    @SpringBootTest
+    @ActiveProfiles("test-rate-limit-block")
+    static class RedisFailureTest {
+        
+        @MockBean
+        private ReactiveRedisConnectionFactory mockConnectionFactory;
+        
+        @Autowired
+        private ReactiveRedisTemplate<String, String> redisTemplate;
+        
+        @Test
+        void deveLidarComFalhaNaConexao() {
+            when(mockConnectionFactory.getReactiveConnection())
+                .thenThrow(new RuntimeException("Erro simulado de conexão"));
+            
+            StepVerifier.create(redisTemplate.opsForValue().get("qualquer-chave"))
+                .expectError(RuntimeException.class)
+                .verify();
+        }
     }
 }

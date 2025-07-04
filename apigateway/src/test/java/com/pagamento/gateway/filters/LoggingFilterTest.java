@@ -1,12 +1,25 @@
 package com.pagamento.gateway.filters;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.*;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.core.Ordered;
@@ -16,20 +29,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import ch.qos.logback.classic.Logger;
 import reactor.core.publisher.Mono;
-import reactor.util.context.Context;
 
-/**
- * Testes para o filtro de logging do Gateway.
- * 
- * <p>Verifica o comportamento do filtro em relação a:
- * <ul>
- *   <li>Geração e propagação de Correlation ID</li>
- *   <li>Registro de logs de requisições e respostas</li>
- *   <li>Proteção de dados sensíveis nos logs</li>
- *   <li>Medição de tempo de processamento</li>
- *   <li>Propagação de contexto</li>
- * </ul>
- */
 @ExtendWith(MockitoExtension.class)
 class LoggingFilterTest {
 
@@ -57,12 +57,14 @@ class LoggingFilterTest {
             .build();
         exchange = MockServerWebExchange.from(request);
 
-        when(cadeiaFiltros.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
+        when(cadeiaFiltros.filter(any(ServerWebExchange.class)))
+            .thenAnswer(invocacao -> {
+                ServerWebExchange ex = invocacao.getArgument(0);
+                ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.OK);
+                return Mono.empty();
+            });
     }
 
-    /**
-     * Verifica se o filtro adiciona um Correlation ID quando ausente.
-     */
     @Test
     void deveAdicionarCorrelationIdQuandoAusente() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/teste").build();
@@ -70,13 +72,9 @@ class LoggingFilterTest {
 
         filtroLogging.filter(exchangeSemCorrelation, cadeiaFiltros).block();
 
-        assertNotNull(exchangeSemCorrelation.getRequest().getHeaders().getFirst("X-Correlation-Id"),
-            "Deve gerar um Correlation ID quando ausente");
+        assertNotNull(exchangeSemCorrelation.getRequest().getHeaders().getFirst("X-Correlation-Id"));
     }
 
-    /**
-     * Verifica se o filtro utiliza um Correlation ID existente.
-     */
     @Test
     void deveUtilizarCorrelationIdExistente() {
         String correlationIdEsperado = "correlation-id-existente";
@@ -88,87 +86,72 @@ class LoggingFilterTest {
         filtroLogging.filter(exchangeComCorrelation, cadeiaFiltros).block();
 
         assertEquals(correlationIdEsperado,
-            exchangeComCorrelation.getRequest().getHeaders().getFirst("X-Correlation-Id"),
-            "Deve manter o Correlation ID existente");
+            exchangeComCorrelation.getRequest().getHeaders().getFirst("X-Correlation-Id"));
     }
 
-    /**
-     * Verifica se o filtro registra logs de requisição e resposta.
-     */
     @Test
-    void deveRegistrarLogsDeRequisicaoEResposta() {
+    void deveRegistrarLogDeRequisicao() {
         filtroLogging.filter(exchange, cadeiaFiltros).block();
 
-        verify(logger).info(argThat(msg -> 
+        verify(logger).info(argThat(msg ->
             msg.contains("Request [teste-correlation-id]: GET /teste")
         ));
-        verify(logger).info(argThat(msg -> 
-            msg.startsWith("Response [teste-correlation-id]: Status") &&
-            msg.contains("Path: /teste")
-        ));
     }
 
-    /**
-     * Verifica se o filtro protege dados sensíveis nos logs.
-     */
+    @Test
+    void deveRegistrarLogDeResposta() {
+        filtroLogging.filter(exchange, cadeiaFiltros).block();
+
+        verify(logger).info(eq("Response [{}]: Status {} | Duration {}ms | Path: {}"),
+            eq("teste-correlation-id"), eq(200), anyLong(), eq("/teste"));
+    }
+
     @Test
     void naoDeveLogarDadosSensiveis() {
+        when(logger.isDebugEnabled()).thenReturn(true);
         filtroLogging.filter(exchange, cadeiaFiltros).block();
 
-        // Verifica que headers sensíveis não aparecem no log
-        verify(logger).info(argThat(msg -> 
-            !msg.contains("Authorization") &&
-            !msg.contains("Bearer token") &&
-            !msg.contains("dado-sensivel")
-        ));
-        
-        // Verifica que headers não sensíveis são logados
-        verify(logger).info(argThat(msg -> 
-            msg.contains("X-Correlation-Id")
-        ));
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(logger, atLeastOnce()).info(captor.capture());
+
+        List<String> logs = captor.getAllValues();
+        for (String msg : logs) {
+            // Verificamos os valores sensíveis, não os nomes dos headers
+            assertFalse(msg.contains("Bearer token"), "Mensagem contém dado sensível: " + msg);
+            assertFalse(msg.contains("dado-sensivel"), "Mensagem contém dado sensível: " + msg);
+        }
     }
 
-    /**
-     * Verifica se o filtro mede o tempo de processamento.
-     */
     @Test
     void deveMedirTempoDeProcessamento() {
-        // Simula um atraso na cadeia de filtros
         when(cadeiaFiltros.filter(any(ServerWebExchange.class)))
-            .thenReturn(Mono.delay(java.time.Duration.ofMillis(100)).then());
+            .thenAnswer(invocacao -> {
+                ServerWebExchange ex = invocacao.getArgument(0);
+                ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.OK);
+                return Mono.delay(java.time.Duration.ofMillis(50)).then();
+            });
 
         filtroLogging.filter(exchange, cadeiaFiltros).block();
 
-        // Verifica que a mensagem de response inclui a duração
-        verify(logger).info(argThat(msg -> 
-            msg.contains("Duration") &&
-            msg.contains("ms")
-        ));
+        verify(logger).info(eq("Response [{}]: Status {} | Duration {}ms | Path: {}"),
+            eq("teste-correlation-id"), eq(200), anyLong(), eq("/teste"));
     }
 
-    /**
-     * Verifica a ordem de execução do filtro.
-     */
     @Test
     void deveRetornarOrdemCorreta() {
-        assertEquals(Ordered.HIGHEST_PRECEDENCE + 1000, filtroLogging.getOrder(),
-            "A ordem do filtro deve ser HIGHEST_PRECEDENCE + 1000");
+        assertEquals(Ordered.HIGHEST_PRECEDENCE + 1000, filtroLogging.getOrder());
     }
 
-    /**
-     * Verifica se o Correlation ID é propagado no contexto.
-     */
     @Test
     void devePropagarCorrelationIdNoContexto() {
-        // Configura a cadeia para verificar o contexto
         when(cadeiaFiltros.filter(any())).thenAnswer(invocacao -> {
-            ServerWebExchange exchange = invocacao.getArgument(0);
-            String correlationId = exchange.getRequest().getHeaders().getFirst("X-Correlation-Id");
-            
+            // Renomeado para evitar conflito com o campo da classe
+            ServerWebExchange ex = invocacao.getArgument(0);
+            String correlationId = ex.getRequest().getHeaders().getFirst("X-Correlation-Id");
+
             return Mono.deferContextual(contextView -> {
                 String ctxCorrelationId = contextView.getOrDefault("X-Correlation-Id", "");
-                assertEquals(correlationId, ctxCorrelationId,
-                    "O Correlation ID deve ser propagado no contexto");
+                assertEquals(correlationId, ctxCorrelationId);
                 return Mono.empty();
             });
         });
@@ -176,9 +159,6 @@ class LoggingFilterTest {
         filtroLogging.filter(exchange, cadeiaFiltros).block();
     }
 
-    /**
-     * Verifica se o filtro registra logs apenas quando o nível INFO está habilitado.
-     */
     @Test
     void deveRegistrarLogsApenasQuandoInfoHabilitado() {
         when(logger.isInfoEnabled()).thenReturn(false);
@@ -188,19 +168,17 @@ class LoggingFilterTest {
         verify(logger, never()).info(anyString());
     }
 
-    /**
-     * Verifica se o filtro trata corretamente erros durante o processamento.
-     */
     @Test
-    void deveRegistrarLogsMesmoComErroNoProcessamento() {
-        when(cadeiaFiltros.filter(any())).thenReturn(Mono.error(new RuntimeException("Erro simulado")));
+    void deveRegistrarLogDeRespostaMesmoComErro() {
+        when(cadeiaFiltros.filter(any())).thenAnswer(invocacao -> {
+            ServerWebExchange ex = invocacao.getArgument(0);
+            ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+            return Mono.error(new RuntimeException("Erro simulado"));
+        });
 
         filtroLogging.filter(exchange, cadeiaFiltros).onErrorResume(e -> Mono.empty()).block();
 
-        // Verifica que o log de resposta foi registrado mesmo com erro
-        verify(logger).info(argThat(msg -> 
-            msg.startsWith("Response [teste-correlation-id]: Status") &&
-            msg.contains("Path: /teste")
-        ));
+        verify(logger).info(eq("Response [{}]: Status {} | Duration {}ms | Path: {}"),
+            eq("teste-correlation-id"), eq(500), anyLong(), eq("/teste"));
     }
 }

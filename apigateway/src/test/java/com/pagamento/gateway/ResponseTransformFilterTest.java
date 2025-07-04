@@ -31,18 +31,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-/**
- * Testes unitários para o filtro de transformação de respostas.
- * 
- * <p>Verifica o comportamento do {@link ResponseTransformFilter} em diferentes cenários:
- * <ul>
- *   <li>Transformação de respostas JSON em formato padrão</li>
- *   <li>Manutenção de respostas não-JSON sem modificação</li>
- *   <li>Adição de headers de segurança</li>
- * </ul>
- */
 @ExtendWith(MockitoExtension.class)
-class FiltroTransformacaoRespostaTest {
+class ResponseTransformFilterTest {
 
     @InjectMocks
     private ResponseTransformFilter filtroTransformacao;
@@ -50,22 +40,8 @@ class FiltroTransformacaoRespostaTest {
     @Mock
     private GatewayFilterChain cadeiaFiltros;
 
-    /**
-     * Verifica se o filtro transforma corretamente respostas JSON no formato padrão.
-     * 
-     * <p>O formato esperado é:
-     * <pre>
-     * {
-     *   "success": true,
-     *   "status": 200,
-     *   "data": {...},
-     *   "timestamp": "2023-01-01T00:00:00Z"
-     * }
-     * </pre>
-     */
     @Test
     void deveTransformarRespostaJsonParaFormatoPadrao() throws Exception {
-        // Configuração
         MockServerWebExchange exchange = MockServerWebExchange.from(
             MockServerHttpRequest.get("/api/dados").build()
         );
@@ -74,7 +50,6 @@ class FiltroTransformacaoRespostaTest {
         resposta.setStatusCode(HttpStatus.OK);
         resposta.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        // Comportamento simulado da cadeia de filtros
         when(cadeiaFiltros.filter(any(ServerWebExchange.class)))
             .thenAnswer(invocacao -> {
                 ServerWebExchange ex = invocacao.getArgument(0);
@@ -83,45 +58,27 @@ class FiltroTransformacaoRespostaTest {
                 return ex.getResponse().writeWith(Flux.just(buffer));
             });
 
-        // Execução
         Mono<Void> resultado = filtroTransformacao.filter(exchange, cadeiaFiltros);
-
-        // Verificação
-        StepVerifier.create(resultado)
-            .verifyComplete();
+        StepVerifier.create(resultado).verifyComplete();
 
         String corpoTransformado = obterCorpoRespostaComoString(resposta);
-        assertNotNull(corpoTransformado, "O corpo da resposta não deve ser nulo");
+        assertNotNull(corpoTransformado);
 
         ObjectMapper mapeador = new ObjectMapper();
         JsonNode json = mapeador.readTree(corpoTransformado);
 
-        // Valida estrutura do JSON transformado
-        assertTrue(json.get("success").asBoolean(), "O campo 'success' deve ser true");
-        assertEquals(HttpStatus.OK.value(), json.get("status").asInt(), "Status deve ser 200");
-        assertNotNull(json.get("data"), "O campo 'data' deve estar presente");
-        assertNotNull(json.get("timestamp"), "O campo 'timestamp' deve estar presente");
+        assertTrue(json.get("success").asBoolean());
+        assertEquals(HttpStatus.OK.value(), json.get("status").asInt());
+        assertNotNull(json.get("data"));
+        assertNotNull(json.get("timestamp"));
 
-        // Valida headers de segurança
-        assertEquals("nosniff", resposta.getHeaders().getFirst("X-Content-Type-Options"),
-            "Header X-Content-Type-Options deve ser 'nosniff'");
-        assertEquals("DENY", resposta.getHeaders().getFirst("X-Frame-Options"),
-            "Header X-Frame-Options deve ser 'DENY'");
-        assertEquals("default-src 'self'", resposta.getHeaders().getFirst("Content-Security-Policy"),
-            "Header Content-Security-Policy deve ser 'default-src 'self''");
+        assertEquals("nosniff", resposta.getHeaders().getFirst("X-Content-Type-Options"));
+        assertEquals("DENY", resposta.getHeaders().getFirst("X-Frame-Options"));
+        assertEquals("default-src 'self'", resposta.getHeaders().getFirst("Content-Security-Policy"));
     }
 
-    /**
-     * Verifica se o filtro mantém respostas não-JSON inalteradas.
-     * 
-     * <p>O filtro não deve modificar respostas de tipos como:
-     * - text/plain
-     * - application/xml
-     * - application/octet-stream
-     */
     @Test
     void naoDeveTransformarRespostasNaoJson() {
-        // Configuração
         MockServerWebExchange exchange = MockServerWebExchange.from(
             MockServerHttpRequest.get("/api/texto").build()
         );
@@ -139,23 +96,19 @@ class FiltroTransformacaoRespostaTest {
                 return ex.getResponse().writeWith(Flux.just(buffer));
             });
 
-        // Execução
         Mono<Void> resultado = filtroTransformacao.filter(exchange, cadeiaFiltros);
-
-        // Verificação
-        StepVerifier.create(resultado)
-            .verifyComplete();
+        StepVerifier.create(resultado).verifyComplete();
 
         String corpo = obterCorpoRespostaComoString(resposta);
-        assertEquals(corpoResposta, corpo, "O corpo da resposta deve permanecer inalterado");
+        assertEquals(corpoResposta, corpo);
+
+        assertEquals("nosniff", resposta.getHeaders().getFirst("X-Content-Type-Options"));
+        assertEquals("DENY", resposta.getHeaders().getFirst("X-Frame-Options"));
+        assertEquals("default-src 'self'", resposta.getHeaders().getFirst("Content-Security-Policy"));
     }
 
-    /**
-     * Verifica se o filtro adiciona headers de segurança mesmo em respostas não transformadas.
-     */
     @Test
     void deveAdicionarHeadersSegurancaEmTodasRespostas() {
-        // Configuração
         MockServerWebExchange exchange = MockServerWebExchange.from(
             MockServerHttpRequest.get("/api/seguro").build()
         );
@@ -170,40 +123,22 @@ class FiltroTransformacaoRespostaTest {
                 return ex.getResponse().writeWith(Flux.empty());
             });
 
-        // Execução
         Mono<Void> resultado = filtroTransformacao.filter(exchange, cadeiaFiltros);
+        StepVerifier.create(resultado).verifyComplete();
 
-        // Verificação
-        StepVerifier.create(resultado)
-            .verifyComplete();
-
-        // Valida headers de segurança
-        assertNotNull(resposta.getHeaders().getFirst("X-Content-Type-Options"),
-            "Header de segurança X-Content-Type-Options deve estar presente");
-        assertNotNull(resposta.getHeaders().getFirst("X-Frame-Options"),
-            "Header de segurança X-Frame-Options deve estar presente");
-        assertNotNull(resposta.getHeaders().getFirst("Content-Security-Policy"),
-            "Header de segurança Content-Security-Policy deve estar presente");
+        assertNotNull(resposta.getHeaders().getFirst("X-Content-Type-Options"));
+        assertNotNull(resposta.getHeaders().getFirst("X-Frame-Options"));
+        assertNotNull(resposta.getHeaders().getFirst("Content-Security-Policy"));
     }
 
-    /**
-     * Método auxiliar para obter o corpo da resposta como string.
-     * 
-     * @param resposta A resposta HTTP simulada
-     * @return O conteúdo do corpo como string
-     */
     private String obterCorpoRespostaComoString(MockServerHttpResponse resposta) {
-        List<DataBuffer> buffers = resposta.getBody()
-            .collectList()
-            .block();
-
+        List<DataBuffer> buffers = resposta.getBody().collectList().block();
         if (buffers == null || buffers.isEmpty()) return null;
 
         DataBuffer bufferCombinado = new DefaultDataBufferFactory().join(buffers);
         byte[] bytes = new byte[bufferCombinado.readableByteCount()];
         bufferCombinado.read(bytes);
 
-        // Liberar recursos
         buffers.forEach(DataBufferUtils::release);
         DataBufferUtils.release(bufferCombinado);
 

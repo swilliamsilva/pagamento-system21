@@ -1,16 +1,19 @@
 package com.pagamento.gateway;
 
-import com.pagamento.gateway.fallback.FallbackController;
-import com.pagamento.gateway.filters.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
-import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.context.ApplicationContext;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.pagamento.gateway.fallback.FallbackController;
+import com.pagamento.gateway.filters.CircuitBreakerStateFilter;
+import com.pagamento.gateway.filters.LoggingFilter;
+import com.pagamento.gateway.filters.RateLimitingFilter;
+import com.pagamento.gateway.filters.SecurityFilter;
 
 @SpringBootTest(properties = {
     "spring.cloud.gateway.enabled=true",

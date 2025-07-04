@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 @ActiveProfiles("test")
 @SpringBootTest
-public class DockerRedisEnvironmentCheckTest {
+class DockerRedisEnvironmentCheckTest { // Removido modificador 'public'
 
     @Container
     static GenericContainer<?> containerRedis = new GenericContainer<>(DockerImageName.parse("redis:7.2.5"))

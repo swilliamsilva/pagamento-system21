@@ -29,37 +29,46 @@ public class ResponseTransformFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        ServerWebExchange modifiedExchange = exchange.mutate()
-            .response(new CapturingResponseDecorator(exchange.getResponse()))
-            .build();
+        ServerHttpResponse originalResponse = exchange.getResponse();
+        CapturingResponseDecorator decoratedResponse = new CapturingResponseDecorator(originalResponse);
+
+        ServerWebExchange modifiedExchange = exchange.mutate().response(decoratedResponse).build();
 
         return chain.filter(modifiedExchange).then(Mono.defer(() -> {
-            ServerHttpResponse response = exchange.getResponse();
-            CapturingResponseDecorator capturedResponse = (CapturingResponseDecorator) modifiedExchange.getResponse();
+            MediaType contentType = decoratedResponse.getContentType();
+            addSecurityHeaders(originalResponse);
 
-            MediaType contentType = capturedResponse.getContentType();
             if (contentType != null && contentType.includes(MediaType.APPLICATION_JSON)) {
-                response.getHeaders().add("X-Content-Type-Options", "nosniff");
-                response.getHeaders().add("X-Frame-Options", "DENY");
-                response.getHeaders().add("Content-Security-Policy", "default-src 'self'");
-
                 String transformedBody = transformResponse(
-                    capturedResponse.getBodyAsString(),
-                    response.getStatusCode()
+                    decoratedResponse.getBodyAsString(),
+                    originalResponse.getStatusCode()
                 );
 
                 byte[] bytes = transformedBody.getBytes(StandardCharsets.UTF_8);
-                DataBuffer buffer = response.bufferFactory().wrap(bytes);
+                DataBuffer buffer = originalResponse.bufferFactory().wrap(bytes);
 
-                response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-                response.getHeaders().setContentLength(bytes.length);
+                originalResponse.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                originalResponse.getHeaders().setContentLength(bytes.length);
 
-                return response.writeWith(Mono.just(buffer));
+                return originalResponse.writeWith(Mono.just(buffer));
             }
 
-            // CORREÇÃO: garante que a resposta seja finalizada mesmo se não for JSON
-            return response.setComplete();
+            // Se não for JSON, escreve corpo original (caso exista)
+            String originalBody = decoratedResponse.getBodyAsString();
+            if (originalBody != null && !originalBody.isEmpty()) {
+                byte[] bytes = originalBody.getBytes(StandardCharsets.UTF_8);
+                DataBuffer buffer = originalResponse.bufferFactory().wrap(bytes);
+                return originalResponse.writeWith(Mono.just(buffer));
+            }
+
+            return originalResponse.setComplete();
         }));
+    }
+
+    private void addSecurityHeaders(ServerHttpResponse response) {
+        response.getHeaders().add("X-Content-Type-Options", "nosniff");
+        response.getHeaders().add("X-Frame-Options", "DENY");
+        response.getHeaders().add("Content-Security-Policy", "default-src 'self'");
     }
 
     private String transformResponse(String originalBody, HttpStatusCode statusCode) {
@@ -88,7 +97,6 @@ public class ResponseTransformFilter implements GlobalFilter, Ordered {
         return Ordered.LOWEST_PRECEDENCE - 1;
     }
 
-    // Captura o corpo da resposta
     static class CapturingResponseDecorator extends ServerHttpResponseDecorator {
         private final StringBuilder body = new StringBuilder();
 
@@ -112,7 +120,7 @@ public class ResponseTransformFilter implements GlobalFilter, Ordered {
                         DataBufferUtils.release(dataBuffer);
                     }
                 })
-                .then(); // evita escrita duplicada
+                .then();
         }
 
         @Override
@@ -124,4 +132,4 @@ public class ResponseTransformFilter implements GlobalFilter, Ordered {
             return body.toString();
         }
     }
-}
+} 
