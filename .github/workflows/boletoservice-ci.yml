@@ -1,0 +1,43 @@
+### .github/workflows/boletoservice-ci.yml
+name: Boleto Service CI/CD
+
+on:
+  push:
+    paths:
+      - 'boletoservice/**'
+  pull_request:
+    paths:
+      - 'boletoservice/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+         path: ~/.m2
+         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+         restore-keys: |
+          ${{ runner.os }}-maven-
+
+      - name: Build e testes com Maven
+        run: |
+          cd boletoservice
+          mvn clean install
+
+      - name: Upload de artefato JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: boletoservice-jar
+          path: boletoservice/target/*.jar
+

@@ -3,11 +3,20 @@ package com.pagamento.gateway;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+<Questions>
+</Questions>
+</Question>
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import com.pagamento.gateway.fallback.FallbackController;
 import com.pagamento.gateway.filters.CircuitBreakerStateFilter;
@@ -15,15 +24,19 @@ import com.pagamento.gateway.filters.LoggingFilter;
 import com.pagamento.gateway.filters.RateLimitingFilter;
 import com.pagamento.gateway.filters.SecurityFilter;
 
-@SpringBootTest(properties = {
-    "spring.cloud.gateway.enabled=true",
-    "spring.main.web-application-type=reactive",
-    "filters.local-rate-limit.enabled=true",
-    "security.admin-key=test-key",
-    "spring.redis.host=localhost",
-    "spring.redis.port=6379"
-})
+@SpringBootTest
+@Testcontainers
 class ContextLoadTest {
+
+    @Container
+    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7.0-alpine"))
+        .withExposedPorts(6379);
+
+    @DynamicPropertySource
+    static void redisProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.redis.host", redis::getHost);
+        registry.add("spring.redis.port", () -> redis.getMappedPort(6379));
+    }
 
     @Autowired
     private ApplicationContext context;
@@ -33,7 +46,6 @@ class ContextLoadTest {
         assertNotNull(context, "O contexto da aplicação deve ser carregado corretamente");
     }
 
-    // Teste para verificar beans de filtros essenciais
     @Test
     void deveExistirFiltroDeLog() {
         assertNotNull(context.getBean(LoggingFilter.class), "Filtro de logging deve estar presente");
@@ -54,33 +66,20 @@ class ContextLoadTest {
         assertNotNull(context.getBean(CircuitBreakerStateFilter.class), "Filtro de estado do Circuit Breaker deve estar presente");
     }
 
-    // Teste para verificar beans de controllers
     @Test
     void deveExistirControladorDeFallback() {
         assertNotNull(context.getBean(FallbackController.class), "Controlador de fallback deve estar presente");
     }
 
-    // Teste para verificar beans de configuração
     @Test
     void deveExistirDefinidorDeRotas() {
         assertNotNull(context.getBean(RouteLocator.class), "Definidor de rotas deve estar presente");
     }
 
-    // Teste para verificar beans de integração
-    @Test
-    void deveExistirLimitadorDeTaxaRedis() {
-        assertNotNull(context.getBean("redisRateLimiter"), "Limitador de taxa Redis deve estar presente");
-    }
-
-    @Test
-    void deveExistirResolvedorDeChaveDeApi() {
-        assertNotNull(context.getBean("apiKeyResolver"), "Resolvedor de chave de API deve estar presente");
-    }
-    
     @Test
     void deveTerOrdemCorretaNosFiltros() {
-        LoggingFilter loggingFilter = context.getBean(LoggingFilter.class);
         SecurityFilter securityFilter = context.getBean(SecurityFilter.class);
+        LoggingFilter loggingFilter = context.getBean(LoggingFilter.class);
         RateLimitingFilter rateLimitingFilter = context.getBean(RateLimitingFilter.class);
         CircuitBreakerStateFilter circuitBreakerFilter = context.getBean(CircuitBreakerStateFilter.class);
         

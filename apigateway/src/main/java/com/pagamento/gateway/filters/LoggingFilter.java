@@ -1,6 +1,5 @@
 package com.pagamento.gateway.filters;
 
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -9,7 +8,6 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -21,19 +19,28 @@ import reactor.util.context.Context;
 
 @Component
 public class LoggingFilter implements GlobalFilter, Ordered {
-    private final Logger logger;
 
+    private final Logger logger;
     private static final String CORRELATION_ID = "X-Correlation-Id";
     private static final String REQUEST_START_TIME = "requestStartTime";
     private static final Set<String> SENSITIVE_HEADERS = Set.of(
-        "authorization", "proxy-authorization", "cookie", "set-cookie", "x-api-key"
+    		/**
+    		 * 
+    		 * Multiple markers at this line
+	- Set cannot be resolved
+	- Set cannot be resolved to a type
+    		 * 
+    		 * 
+    		 * **/
+    		
+        "authorization", "proxy-authorization", "cookie", 
+        "set-cookie", "x-api-key", "x-sensitive"
     );
 
     public LoggingFilter() {
         this(LoggerFactory.getLogger(LoggingFilter.class));
     }
 
-    // Constructor for tests
     LoggingFilter(Logger logger) {
         this.logger = logger;
     }
@@ -43,20 +50,15 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         final ServerHttpRequest request = exchange.getRequest();
         final String correlationId = getOrGenerateCorrelationId(request);
 
-        // Add correlation ID to response headers
-        ServerHttpResponse response = exchange.getResponse();
-        response.getHeaders().add(CORRELATION_ID, correlationId);
-
-        // Mutate request if needed and store start time
+        // Adiciona correlation ID aos headers de resposta
+        exchange.getResponse().getHeaders().add(CORRELATION_ID, correlationId);
+        
         final ServerWebExchange modifiedExchange = mutateRequestIfNeeded(exchange, correlationId);
         modifiedExchange.getAttributes().put(REQUEST_START_TIME, System.currentTimeMillis());
         
         logRequestDetails(modifiedExchange.getRequest(), correlationId);
         
-        // Set context and process chain
-        return Mono.deferContextual(ctx -> 
-                chain.filter(modifiedExchange)
-            )
+        return chain.filter(modifiedExchange)
             .doFinally(signalType -> {
                 Long startTime = modifiedExchange.getAttribute(REQUEST_START_TIME);
                 if (startTime != null) {
@@ -89,7 +91,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     private void logRequestDetails(ServerHttpRequest request, String correlationId) {
         if (!logger.isInfoEnabled()) return;
 
-        StringBuilder logMessage = new StringBuilder(256)
+        StringBuilder logMessage = new StringBuilder()
             .append("Request [").append(correlationId).append("]: ")
             .append(request.getMethod()).append(" ")
             .append(request.getURI());
@@ -102,6 +104,10 @@ public class LoggingFilter implements GlobalFilter, Ordered {
                              .append(name)
                              .append(": ")
                              .append(values.size() > 1 ? values : values.get(0));
+                } else {
+                    logMessage.append("\n  ")
+                             .append(name)
+                             .append(": *****"); // Mascarar valores sensíveis
                 }
             });
         }
@@ -115,9 +121,10 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         HttpStatusCode status = exchange.getResponse().getStatusCode();
         String path = exchange.getRequest().getPath().toString();
 
+        // Formato padronizado que o teste espera
         logger.info("Response [{}]: Status {} | Duration {}ms | Path: {}",
             correlationId,
-            (status != null ? status.value() : HttpStatus.OK.value()),
+            (status != null ? status.value() : "N/A"),
             duration,
             path);
     }
@@ -125,6 +132,12 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     private boolean isSensitiveHeader(String headerName) {
         return headerName != null && 
                SENSITIVE_HEADERS.contains(headerName.toLowerCase());
+        /**
+         * 
+         * Set cannot be resolved to a type
+         * */
+        
+        
     }
 
     @Override
