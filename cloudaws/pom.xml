@@ -4,70 +4,69 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- herda configurações e versões do multimódulo -->
   <parent>
     <groupId>com.pagamento</groupId>
     <artifactId>pagamento-system21</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>cloudaws</artifactId>
   <packaging>jar</packaging>
   <name>Cloud AWS Integration</name>
-  <description>Integração com serviços AWS (S3, SNS, etc.)</description>
+  <description>Integração com serviços AWS (S3, SNS, DynamoDB, etc.)</description>
 
   <dependencies>
+    <!-- Módulo common (sem versão, é gerenciado no POM pai) -->
     <dependency>
       <groupId>com.pagamento</groupId>
       <artifactId>common</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
     </dependency>
 
+    <!-- Configuração via Vault (versão importada no pai) -->
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-vault-config</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3</artifactId>
-    </dependency>
+    <!-- AWS SDK gerenciado no pai via dependencyManagement -->
 
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
-      <artifactId>sns</artifactId>
+      <artifactId>dynamodb</artifactId>
     </dependency>
 
+    <!-- Web Starter (versão importada do Spring Boot BOM no pai) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
+    <!-- Circuit Breaker (versão importada no pai) -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+    </dependency>
+
+    <!-- Testes -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
- <!-- Dependência do módulo common -->
-    <dependency>
-        <groupId>com.pagamento</groupId>
-        <artifactId>common</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
-</dependency>
-
   </dependencies>
 
+  <!-- plugins de teste/coverage ficam no POM pai; aqui só complementamos se for específico -->
   <build>
     <plugins>
+      <!-- Jacoco já versionado no pai -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.11</version>
         <executions>
           <execution>
+            <id>prepare-agent</id>
             <goals>
               <goal>prepare-agent</goal>
             </goals>

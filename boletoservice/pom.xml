@@ -1,12 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Herda do multimódulo pai -->
     <parent>
         <groupId>com.pagamento</groupId>
         <artifactId>pagamento-system21</artifactId>
         <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>boletoservice</artifactId>
@@ -15,11 +19,12 @@
     <description>Módulo responsável pelo processamento de boletos</description>
 
     <properties>
+        <!-- Caso queira adicionar propriedades específicas -->
         <rest-assured.version>5.4.0</rest-assured.version>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot -->
+        <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -41,7 +46,7 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Vault -->
+        <!-- Configuração via Vault -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-vault-config</artifactId>
@@ -53,25 +58,35 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
-        <!-- Banco de dados -->
+        <!-- Banco de dados PostgreSQL em runtime -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- HTTP Client -->
+        <!-- HTTP Client gerenciado no pai -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.14</version>
         </dependency>
 
-        <!-- Módulo comum -->
+        <!-- Common interno -->
         <dependency>
             <groupId>com.pagamento</groupId>
             <artifactId>common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Circuit Breaker fornecido pelo pai -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+        </dependency>
+
+        <!-- Flyway (escopo test caso seja só para migrações de teste) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
         </dependency>
 
         <!-- Testes -->
@@ -103,25 +118,8 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
-            <version>${rest-assured.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <scope>test</scope>
-        </dependency>
- <!-- Dependência do módulo common -->
-    <dependency>
-        <groupId>com.pagamento</groupId>
-        <artifactId>common</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
-</dependency>
-
     </dependencies>
+
 </project>
