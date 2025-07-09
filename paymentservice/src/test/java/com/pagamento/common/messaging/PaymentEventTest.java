@@ -1,12 +1,11 @@
-package payment_service.src.test.java;
-// PaymentEventTest.java
+package com.pagamento.common.messaging;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import org.junit.Test;
-
-import com.pagamento.common.messaging.PaymentEvent;
+import org.junit.jupiter.api.Test;
 
 class PaymentEventTest {
     

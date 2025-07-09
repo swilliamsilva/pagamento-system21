@@ -9,7 +9,10 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class PaymentMongoRepositoryAdapter implements PaymentRepositoryPort {
-    
+    /**
+     * 
+     * The type PaymentMongoRepositoryAdapter must implement the inherited abstract method PaymentRepositoryPort.salvar(Payment)
+     * **/
     private final PaymentMongoRepository repository = null;
     
     @Override

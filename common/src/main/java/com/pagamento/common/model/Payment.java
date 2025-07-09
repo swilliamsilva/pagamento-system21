@@ -3,6 +3,8 @@ package com.pagamento.common.model;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.pagamento.payment.enums.PaymentType;
+
 public class Payment {
     private String transactionId;
     private String userId;
@@ -29,4 +31,8 @@ public class Payment {
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+	public void setTipoPagamento(PaymentType pix) {
+		// TODO Auto-generated method stub
+		
+	}
 }

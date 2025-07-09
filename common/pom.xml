@@ -126,7 +126,25 @@
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
+<!-- MongoDB Java Driver (Síncrono) -->
+    <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-sync</artifactId>
+     
+    </dependency>
 
+    <!-- BSON (necessário para serialização) -->
+    <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>bson</artifactId>
+     </dependency>
+
+    <!-- Se estiver usando Spring Data MongoDB -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-mongodb</artifactId>
+    </dependency>
+ 
        
     </dependencies>
 
@@ -147,7 +165,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+           
                 <executions>
                     <execution>
                         <goals>

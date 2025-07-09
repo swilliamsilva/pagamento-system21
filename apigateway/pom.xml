@@ -106,14 +106,6 @@
             <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
         </dependency>
 
-        <!-- Rate Limiting -->
-        <dependency>
-        <groupId>com.github.vladimir-bukhtoyarov</groupId>
-           <artifactId>bucket4j-core</artifactId>
-           <version>8.6.0</version> <!-- ou a versão que quiser usar -->
-        </dependency>
-
-
         <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>

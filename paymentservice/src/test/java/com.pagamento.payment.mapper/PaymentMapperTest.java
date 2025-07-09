@@ -1,58 +1,51 @@
-// ==========================
-// TEST: PaymentMapperTest.java
-// ==========================
-package com.pagamento.common.mapper;
+package com.pagamento.payment.dto.mapper;
 
-import com.pagamento.common.dto.PaymentDTO;
-import com.pagamento.common.dto.PaymentRequest;
-import com.pagamento.common.dto.PaymentResponse;
-import com.pagamento.common.model.Payment;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+import com.pagamento.common.request.PaymentRequest;
+import com.pagamento.common.response.PaymentResponse;
+import com.pagamento.payment.enums.PaymentType;
+import com.pagamento.payment.model.Payment;
 
 public class PaymentMapperTest {
 
+    private final PaymentMapper mapper = new PaymentMapper();
+
     @Test
     public void deveConverterRequestParaEntidade() {
-        PaymentRequest request = new PaymentRequest("user001", "CARTAO", new BigDecimal("250.00"));
-        Payment entity = PaymentMapper.toEntity(request);
+        PaymentRequest request = new PaymentRequest("user001", "PIX", new BigDecimal("250.00"));
+        PaymentType paymentType = PaymentType.PIX;
+        
+        Payment entity = mapper.toEntity(request, paymentType);
 
         assertEquals("user001", entity.getUserId());
-        assertEquals("CARTAO", entity.getPaymentType());
-        assertEquals(new BigDecimal("250.00"), entity.getAmount());
-        assertNotNull(entity.getTransactionId());
-        assertNotNull(entity.getCreatedAt());
-    }
-
-    @Test
-    public void deveConverterEntidadeParaDTO() {
-        Payment entity = new Payment();
-        entity.setTransactionId("tx123");
-        entity.setPaymentType("PIX");
-        entity.setAmount(new BigDecimal("75.00"));
-
-        PaymentDTO dto = PaymentMapper.toDto(entity);
-
-        assertEquals("tx123", dto.transactionId());
-        assertEquals("PIX", dto.tipoPagamento());
-        assertEquals(new BigDecimal("75.00"), dto.valor());
+        assertEquals(PaymentType.PIX, entity.getTipoPagamento());
+        assertEquals(new BigDecimal("250.00"), entity.getValor());
+        assertNotNull(entity.getIdTransacao());
+        assertNotNull(entity.getData());
     }
 
     @Test
     public void deveConverterEntidadeParaResponse() {
         Payment entity = new Payment();
-        entity.setTransactionId("tx456");
-        entity.setPaymentType("BOLETO");
-        entity.setAmount(new BigDecimal("300.00"));
+        entity.setIdTransacao("tx123");
+        entity.setTipoPagamento(PaymentType.PIX);
+        entity.setValor(new BigDecimal("75.00"));
+        entity.setData(Instant.now());
+        entity.setStatus("APROVADO");
 
-        PaymentResponse response = PaymentMapper.toResponse(entity);
+        PaymentResponse response = mapper.toResponse(entity);
 
-        assertEquals("tx456", response.idTransacao());
-        assertEquals("BOLETO", response.tipoPagamento());
-        assertEquals(new BigDecimal("300.00"), response.valor());
         assertEquals("APROVADO", response.status());
+        assertEquals("tx123", response.idTransacao());
+        assertEquals(new BigDecimal("75.00"), response.valor());
+        assertEquals("PIX", response.tipoPagamento());
+        assertNotNull(response.data());
     }
 }

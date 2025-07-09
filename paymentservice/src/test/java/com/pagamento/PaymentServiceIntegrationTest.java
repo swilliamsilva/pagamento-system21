@@ -1,4 +1,4 @@
-package com.pagamento.payment;
+package com.pagamento;
 
 import com.pagamento.payment.model.Payment;
 import com.pagamento.payment.repository.mongo.PaymentMongoRepository;

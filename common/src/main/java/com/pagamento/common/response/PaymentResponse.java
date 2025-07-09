@@ -20,4 +20,8 @@ public class PaymentResponse {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	public Object valor() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

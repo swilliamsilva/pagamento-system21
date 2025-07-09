@@ -18,43 +18,35 @@
   <description>Integração com serviços AWS (S3, SNS, DynamoDB, etc.)</description>
 
   <dependencies>
-    <!-- Módulo common (sem versão, é gerenciado no POM pai) -->
     <dependency>
-      <groupId>com.pagamento</groupId>
-      <artifactId>common</artifactId>
+        <groupId>com.pagamento</groupId>
+        <artifactId>common</artifactId>
     </dependency>
-
-    <!-- Configuração via Vault (versão importada no pai) -->
     <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-vault-config</artifactId>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-vault-config</artifactId>
     </dependency>
-
-    <!-- AWS SDK gerenciado no pai via dependencyManagement -->
-
     <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>dynamodb</artifactId>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>dynamodb</artifactId>
+     
     </dependency>
-
-    <!-- Web Starter (versão importada do Spring Boot BOM no pai) -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
-
-    <!-- Circuit Breaker (versão importada no pai) -->
     <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
     </dependency>
-
-    <!-- Testes -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
     </dependency>
+   
+    
+    
   </dependencies>
 
   <!-- plugins de teste/coverage ficam no POM pai; aqui só complementamos se for específico -->

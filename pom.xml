@@ -49,6 +49,7 @@
 
         <!-- Outros -->
         <cds.archive.file>apigateway-cds.jsa</cds.archive.file>
+        <aws.sdk.version>2.25.0</aws.sdk.version> 
     </properties>
 
     <dependencyManagement>
@@ -135,6 +136,16 @@
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
             </dependency>
+            <!--  dependências do AWS SDK -->
+        
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3-presigner</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+                 
+            
+            
         </dependencies>
     </dependencyManagement>
 

@@ -1,0 +1,19 @@
+# application.yml
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/nomedobancoDB
+      # Opções adicionais (opcionais):
+      # database: nomedobanco  # Pode ser omitido se já estiver na URI
+      # authentication-database: admin  # Para autenticação
+      # username: usuario
+      # password: senha
+      
+  # Outras configurações do Spring (exemplo)
+  application:
+    name: seu-servico
+
+server:
+  port: 8080
+
+# Configurações adicionais...

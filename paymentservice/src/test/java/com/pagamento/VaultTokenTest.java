@@ -1,4 +1,4 @@
-package com.pagamento.payment.tests.integration;
+package com.pagamento;
 
 import com.pagamento.payment.config.VaultInitializer;
 import org.junit.jupiter.api.Test;
