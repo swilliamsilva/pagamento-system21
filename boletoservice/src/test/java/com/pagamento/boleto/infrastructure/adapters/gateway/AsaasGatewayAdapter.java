@@ -28,7 +28,7 @@ public class AsaasGatewayAdapter implements AsaasGatewayPort {
     }
 
     @Override
-    public void enviarBoleto(String identificador, BigDecimal valor) {
+    public String enviarBoleto(String identificador, BigDecimal valor) {
         System.out.println("Boleto enviado para ASAAS: " + identificador + " valor: " + valor);
     }
 }

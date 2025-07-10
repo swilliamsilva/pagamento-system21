@@ -12,6 +12,14 @@
 
     <artifactId>paymentservice</artifactId>
     <packaging>jar</packaging>
+<profiles>
+    <profile>
+        <id>dev</id>
+        <properties>
+            <skipTests>true</skipTests>
+        </properties>
+    </profile>
+</profiles>
 
     <dependencies>
         <!-- Spring Boot Starters -->

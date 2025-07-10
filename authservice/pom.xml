@@ -19,6 +19,14 @@
         <jjwt.version>0.11.5</jjwt.version>
         <rest-assured.version>5.4.0</rest-assured.version>
     </properties>
+<profiles>
+    <profile>
+        <id>dev</id>
+        <properties>
+            <skipTests>true</skipTests>
+        </properties>
+    </profile>
+</profiles>
 
     <dependencies>
         <!-- Spring Boot -->

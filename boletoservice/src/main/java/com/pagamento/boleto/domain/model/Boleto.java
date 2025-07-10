@@ -50,8 +50,11 @@ public class Boleto {
     private LocalDateTime dataUltimaAtualizacao;
 
     // Construtor protegido para JPA
-    public Boleto() {}
-
+    public Boleto() {
+        // Construtor vazio obrigatório pelo JPA. 
+        // Não deve ser utilizado diretamente - utilize o builder pattern para criação.
+    }
+    
     @PrePersist
     @PreUpdate
     private void atualizarData() {
@@ -60,7 +63,7 @@ public class Boleto {
 
     // Getters e Setters
     public String getId() { return id; }
-    protected void setId(String id) { this.id = id; }
+    public void setId(String id) { this.id = id; }
     
     public String getPagador() { return pagador; }
     public void setPagador(String pagador) { this.pagador = pagador; }
@@ -69,8 +72,8 @@ public class Boleto {
     public void setBeneficiario(String beneficiario) { this.beneficiario = beneficiario; }
     
     public BigDecimal getValor() { return valor; }
-    public void setValor(BigDecimal valor) { 
-        this.valor = valor; 
+    public void setValor(@Positive(message = "Valor deve ser positivo") @NotNull(message = "Valor é obrigatório") BigDecimal d) { 
+        this.valor = d; 
     }
     
     public LocalDate getDataEmissao() { return dataEmissao; }
@@ -184,4 +187,18 @@ public class Boleto {
             return boleto;
         }
     }
+
+    public void setCodigo(String codigo) {
+        this.idExterno = codigo;
+    }
+
+	public int getNumeroReemissoes() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void setNumeroReemissoes(int i) {
+		// TODO Auto-generated method stub
+		
+	}
 }

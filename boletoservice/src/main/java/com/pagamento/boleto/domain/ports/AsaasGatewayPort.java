@@ -1,43 +1,50 @@
 package com.pagamento.boleto.domain.ports;
 
-import com.pagamento.boleto.domain.exception.GatewayIntegrationException;
+import com.pagamento.boleto.application.dto.BoletoRequestDTO;
 import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.model.BoletoStatus;
+import com.pagamento.boleto.domain.model.PagamentoStatus;
+
+import java.math.BigDecimal;
 
 public interface AsaasGatewayPort {
-    
+
     /**
-     * Registra um novo boleto no gateway de pagamento Asaas
+     * Envia um boleto para processamento no gateway Asaas
      * 
-     * @param boleto Boleto a ser registrado
-     * @return ID externo gerado pelo gateway
-     * @throws GatewayIntegrationException em caso de falha na integração
+     * @param id Identificador único do boleto no sistema local
+     * @param valor Valor do boleto
+     * @return ID do pagamento no gateway Asaas
      */
-    String registrarBoleto(Boleto boleto) throws GatewayIntegrationException;
-    
+    String enviarBoleto(String id, BigDecimal valor);
+
     /**
-     * Cancela um boleto no gateway de pagamento
+     * Consulta o status de um boleto no gateway Asaas e mapeia para nosso domínio
      * 
-     * @param idExterno ID do boleto no sistema externo
-     * @throws GatewayIntegrationException em caso de falha na integração
+     * @param paymentId ID do pagamento no gateway Asaas
+     * @return Status do boleto no nosso domínio ou null se não encontrado
      */
-    void cancelarBoleto(String idExterno) throws GatewayIntegrationException;
-    
+    BoletoStatus consultarBoleto(String paymentId);
+
     /**
-     * Consulta o status atual de um boleto no gateway
+     * Cancela um boleto no gateway Asaas
      * 
-     * @param idExterno ID do boleto no sistema externo
-     * @return Status atual do boleto
-     * @throws GatewayIntegrationException em caso de falha na integração
+     * @param paymentId ID do pagamento no gateway Asaas
+     * @throws RuntimeException em caso de falha no cancelamento
      */
-    BoletoStatus consultarStatusBoleto(String idExterno) throws GatewayIntegrationException;
-    
+    void cancelarBoleto(String paymentId);
+
     /**
-     * Confirma o pagamento de um boleto no gateway
+     * Confirma o pagamento de um boleto
      * 
-     * @param idExterno ID do boleto no sistema externo
-     * @return Status atualizado após confirmação
-     * @throws GatewayIntegrationException em caso de falha na integração
+     * @param paymentId ID do pagamento no gateway Asaas
+     * @return Status de confirmação do pagamento
      */
-    BoletoStatus confirmarPagamento(String idExterno) throws GatewayIntegrationException;
+    PagamentoStatus confirmarPagamento(String paymentId);
+
+	String registrarBoleto(Boleto boleto);
+
+	String criarCobranca(BoletoRequestDTO request, String customerId);
+
+	Object consultarCobranca(String cobrancaId);
 }

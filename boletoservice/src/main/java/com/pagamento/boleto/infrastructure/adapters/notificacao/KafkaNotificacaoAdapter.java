@@ -24,6 +24,9 @@ public abstract class KafkaNotificacaoAdapter implements NotificacaoPort {
     private final KafkaTemplate<String, String> kafkaTemplate;
     
     public KafkaNotificacaoAdapter(KafkaTemplate<String, String> kafkaTemplate) {
+    	/**Resource	Date	Description
+KafkaNotificacaoAdapter.java	16 days ago	Change the visibility of this constructor to "protected". [+1 location]
+**/
         this.kafkaTemplate = kafkaTemplate;
     }
 
@@ -74,6 +77,15 @@ public abstract class KafkaNotificacaoAdapter implements NotificacaoPort {
             kafkaTemplate.send(topico, mensagem);
             logger.info("Mensagem enviada para o tópico {}: {}", topico, mensagem);
         } catch (Exception e) {
+        	/**
+        	 * 
+        	 * Resource	Date	Description
+KafkaNotificacaoAdapter.java	16 days ago	Either log this exception and handle it, or rethrow it with some contextual information. [+2 locations]
+
+        	 * 
+        	 * **/
+        	
+        	
             logger.error("Falha ao enviar mensagem para o Kafka. Tópico: {}, Mensagem: {}", topico, mensagem, e);
             throw new KafkaNotificacaoException("Erro ao enviar mensagem para Kafka", e);
         }

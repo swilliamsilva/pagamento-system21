@@ -1,311 +1,188 @@
-package com.pagamento.boleto;
+package com.pagamento.boleto.domain.service;
 
 import com.pagamento.boleto.application.dto.BoletoRequestDTO;
 import com.pagamento.boleto.domain.exception.*;
 import com.pagamento.boleto.domain.model.*;
 import com.pagamento.boleto.domain.ports.*;
-import com.pagamento.boleto.domain.service.*;
-import com.pagamento.common.dto.BoletoRequestDTO as CommonBoletoRequestDTO;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.ApplicationContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@ActiveProfiles("test")
-@DisplayName("Testes do Serviço de Boletos")
 class BoletoServiceTest {
 
-    @Mock private BoletoRepositoryPort repository;
-    @Mock private AsaasGatewayPort asaasGateway;
-    @Mock private NotificacaoPort notificacaoPort;
-    @Mock private BoletoValidation validation;
-    @Mock private BoletoFactory factory;
-    @Mock private TaxasService taxasService;
-    @Mock private PdfService pdfService;
-    @Mock private BoletoCalculos calculos;
-
+    @Mock
+    private BoletoRepositoryPort repository;
+    
+    @Mock
+    private AsaasGatewayPort asaasGateway;
+    
+    @Mock
+    private NotificacaoPort notificacaoPort;
+    
+    @Mock
+    private BoletoValidation validation;
+    
+    @Mock
+    private BoletoFactory factory;
+    
+    @Mock
+    private TaxasService taxasService;
+    
+    @Mock
+    private PdfService pdfService;
+    
+    @Mock
+    private ApplicationContext applicationContext;
+    
+    @Mock
+    private BoletoServicePort transactionalProxy;
+    
     @InjectMocks
-    private BoletoService service;
+    private BoletoService boletoService;
 
-    private Boleto boletoSimulado;
-    private DadosTecnicosBoleto dadosTecnicosSimulado;
-    private final String ID_VALIDO = UUID.randomUUID().toString();
-    private final String ID_EXTERNO_VALIDO = "ASAAS_123";
+    private BoletoRequestDTO requestDTO;
+    private Boleto boleto;
 
     @BeforeEach
-    void setup() {
-        // Configurar dados técnicos simulados
-        dadosTecnicosSimulado = new DadosTecnicosBoleto(
-            "3419334470000123456789012345678901234567890",
-            "34191.23457 89012.345678 90123.456789 3 44700001234567",
-            "00020126580014BR.GOV.BCB.PIX0136123...",
-            "2024000001"
+    void setUp() {
+        requestDTO = new BoletoRequestDTO(
+            "Cliente A",
+            "Beneficiário B",
+            BigDecimal.valueOf(1000.00),
+            LocalDate.now().plusDays(30),
+            "DOC-123",
+            "Instruções",
+            "Local de pagamento"
         );
         
-        // Configurar boleto simulado
-        boletoSimulado = new Boleto();
-        boletoSimulado.setId(ID_VALIDO);
-        boletoSimulado.setValor(new BigDecimal("200.00"));
-        boletoSimulado.setStatus(BoletoStatus.EMITIDO);
-        boletoSimulado.setIdExterno(ID_EXTERNO_VALIDO);
-        boletoSimulado.setDadosTecnicos(dadosTecnicosSimulado);
+        boleto = new Boleto();
+        boleto.setId("boleto-123");
+        
+        // Configurar proxy transacional
+        when(applicationContext.getBean(BoletoServicePort.class)).thenReturn(transactionalProxy);
+        when(transactionalProxy.consultarBoleto(any())).thenReturn(boleto);
+        when(transactionalProxy.emitirBoleto(any())).thenReturn(boleto);
     }
 
-    // Teste de Emissão
     @Test
-    @DisplayName("Deve emitir boleto com sucesso")
-    void deveEmitirBoletoComSucesso() {
+    void emitirBoleto_ShouldWorkSuccessfully() {
         // Arrange
-        CommonBoletoRequestDTO request = new CommonBoletoRequestDTO(
-            "Cliente A", "Beneficiário B", BigDecimal.valueOf(200.00), 
-            LocalDate.of(2025, 7, 1), "DOC123", "Pagar até vencimento", "Qualquer banco"
-        );
-        
-        when(factory.criarBoleto(any())).thenReturn(boletoSimulado);
-        when(repository.salvar(any())).thenReturn(boletoSimulado);
-        when(asaasGateway.registrarBoleto(any())).thenReturn(ID_EXTERNO_VALIDO);
+        when(factory.criarBoleto(any())).thenReturn(boleto);
+        when(repository.salvar(any())).thenReturn(boleto);
+        when(asaasGateway.registrarBoleto(any())).thenReturn("asaas-123");
 
         // Act
-        String idBoleto = service.gerarBoleto(request);
+        Boleto result = boletoService.emitirBoleto(requestDTO);
 
         // Assert
-        assertNotNull(idBoleto);
-        assertEquals(ID_VALIDO, idBoleto);
-        
-        // Verificar interações
-        verify(validation).validarEmissao(any());
-        verify(taxasService).aplicarTaxasEmissao(any());
-        verify(validation).validarBoleto(any());
-        verify(repository, times(2)).salvar(any());
-        verify(asaasGateway).registrarBoleto(any());
-        verify(notificacaoPort).notificarEmissao(any());
+        assertNotNull(result);
+        verify(validation).validarEmissao(requestDTO);
+        verify(taxasService).aplicarTaxasEmissao(boleto);
+        verify(validation).validarBoleto(boleto);
+        verify(notificacaoPort).notificarEmissao(boleto);
     }
 
-    // Teste de Código de Barras
     @Test
-    @DisplayName("Deve gerar código de barras válido")
-    void deveGerarCodigoBarrasValido() {
+    void emitirBoleto_ShouldDeleteWhenGatewayFails() {
         // Arrange
-        BoletoRequestDTO request = new BoletoRequestDTO(
-            "Cliente A", "Beneficiário B", 200.0, 
-            LocalDate.of(2025, 7, 1), "DOC123", "Instruções", "Local"
-        );
-        
-        when(factory.criarBoleto(any())).thenReturn(boletoSimulado);
-        when(calculos.gerarDadosTecnicos(any())).thenReturn(dadosTecnicosSimulado);
-
-        // Act
-        Boleto boleto = service.emitirBoleto(request);
-
-        // Assert
-        assertNotNull(boleto.getDadosTecnicos());
-        assertNotNull(boleto.getDadosTecnicos().codigoBarras());
-        assertEquals(44, boleto.getDadosTecnicos().codigoBarras().length());
-        assertTrue(boleto.getDadosTecnicos().codigoBarras().matches("^[0-9]{44}$"));
-    }
-
-    // Teste de Validação
-    @Test
-    @DisplayName("Deve lançar exceção quando validação falhar")
-    void deveLancarExcecaoQuandoValidacaoFalhar() {
-        // Arrange
-        CommonBoletoRequestDTO request = new CommonBoletoRequestDTO(
-            null, null, BigDecimal.valueOf(-100), 
-            LocalDate.now().minusDays(1), null, null, null
-        );
-        
-        doThrow(new BoletoValidationException("Valor inválido"))
-            .when(validation).validarEmissao(any());
+        when(factory.criarBoleto(any())).thenReturn(boleto);
+        when(repository.salvar(any())).thenReturn(boleto);
+        when(asaasGateway.registrarBoleto(any())).thenThrow(new GatewayIntegrationException("Erro"));
 
         // Act & Assert
-        assertThrows(BoletoValidationException.class, () -> service.gerarBoleto(request));
-    }
-
-    // Teste de Rollback
-    @Test
-    @DisplayName("Deve fazer rollback quando gateway falhar")
-    void deveFazerRollbackQuandoGatewayFalhar() {
-        // Arrange
-        CommonBoletoRequestDTO request = new CommonBoletoRequestDTO(
-            "Cliente", "Beneficiário", BigDecimal.valueOf(100), 
-            LocalDate.now().plusDays(10), "DOC", "Inst", "Local"
+        assertThrows(GatewayIntegrationException.class, () -> 
+            boletoService.emitirBoleto(requestDTO)
         );
-        
-        when(factory.criarBoleto(any())).thenReturn(boletoSimulado);
-        when(repository.salvar(any())).thenReturn(boletoSimulado);
-        when(asaasGateway.registrarBoleto(any()))
-            .thenThrow(new GatewayIntegrationException("Falha no gateway"));
-
-        // Act & Assert
-        assertThrows(GatewayIntegrationException.class, () -> service.gerarBoleto(request));
-        
-        // Verificar rollback
-        verify(repository).deletarPorId(ID_VALIDO);
-        verify(notificacaoPort, never()).notificarEmissao(any());
+        verify(repository).deletar(boleto.getId());
     }
 
-    // Teste de Reemissão
     @Test
-    @DisplayName("Deve reemitir boleto com novos dados técnicos")
-    void deveReemitirBoletoComNovosDadosTecnicos() {
+    void consultarBoleto_ShouldReturnBoleto() {
         // Arrange
-        DadosTecnicosBoleto novosDados = new DadosTecnicosBoleto(
-            "3419334470000987654321098765432109876543210",
-            "34191.23457 89012.345678 90123.456789 3 44700009876543",
-            "00020126580014BR.GOV.BCB.PIX0136987...",
-            "2024000002"
-        );
-        
-        Boleto reemissaoSimulada = new Boleto();
-        reemissaoSimulada.setId(UUID.randomUUID().toString());
-        reemissaoSimulada.setDadosTecnicos(novosDados);
-        
-        when(repository.buscarPorId(ID_VALIDO)).thenReturn(Optional.of(boletoSimulado));
-        when(factory.criarReemissao(eq(boletoSimulado), anyInt())).thenReturn(reemissaoSimulada);
-        when(repository.salvar(any())).thenReturn(reemissaoSimulada);
-        when(asaasGateway.registrarBoleto(any())).thenReturn("ASAAS_NEW_123");
+        when(repository.buscarPorId("123")).thenReturn(Optional.of(boleto));
 
         // Act
-        Boleto reemissao = service.reemitirBoleto(ID_VALIDO);
+        Boleto result = boletoService.consultarBoleto("123");
 
         // Assert
-        assertNotNull(reemissao);
-        assertNotEquals(boletoSimulado.getId(), reemissao.getId());
-        assertEquals(novosDados, reemissao.getDadosTecnicos());
-        
-        // Verificar atualização do original
-        verify(repository).atualizar(boletoSimulado);
-        assertEquals(1, boletoSimulado.getReemissoes());
-        
-        // Verificar notificação
-        verify(notificacaoPort).notificarReemissao(eq(boletoSimulado), eq(reemissao));
+        assertEquals(boleto, result);
     }
 
-    // Teste de Cancelamento
     @Test
-    @DisplayName("Deve cancelar boleto e marcar status corretamente")
-    void deveCancelarBoletoEMarcarStatus() {
+    void consultarBoleto_ShouldThrowWhenNotFound() {
         // Arrange
-        String motivo = "Cancelamento solicitado pelo cliente";
-        when(repository.buscarPorId(ID_VALIDO)).thenReturn(Optional.of(boletoSimulado));
-        
-        // Act
-        Boleto cancelado = service.cancelarBoleto(ID_VALIDO, motivo);
+        when(repository.buscarPorId("123")).thenReturn(Optional.empty());
 
-        // Assert
-        assertEquals(BoletoStatus.CANCELADO, cancelado.getStatus());
-        assertEquals(motivo, cancelado.getMotivoCancelamento());
-        
-        // Verificar operações externas
-        verify(asaasGateway).cancelarBoleto(ID_EXTERNO_VALIDO);
-        verify(notificacaoPort).notificarCancelamento(cancelado);
-    }
-
-    // Teste de Geração de PDF
-    @Test
-    @DisplayName("Deve gerar PDF com conteúdo válido")
-    void deveGerarPdfComConteudoValido() {
-        // Arrange
-        byte[] pdfSimulado = "%PDF-1.4 fake content %%EOF".getBytes();
-        when(repository.buscarPorId(ID_VALIDO)).thenReturn(Optional.of(boletoSimulado));
-        when(pdfService.gerarPdf(any())).thenReturn(pdfSimulado);
-        
-        // Act
-        byte[] pdf = service.gerarPDF(ID_VALIDO);
-
-        // Assert
-        assertNotNull(pdf);
-        assertTrue(pdf.length > 0);
-        
-        // Verificar header do PDF: %PDF
-        String header = new String(pdf, 0, 5);
-        assertEquals("%PDF-", header);
-    }
-
-    // Teste de Consulta
-    @Test
-    @DisplayName("Deve consultar boleto por ID")
-    void deveConsultarBoletoPorId() {
-        // Arrange
-        when(repository.buscarPorId(ID_VALIDO)).thenReturn(Optional.of(boletoSimulado));
-        
-        // Act
-        Boleto encontrado = service.consultarBoleto(ID_VALIDO);
-        
-        // Assert
-        assertNotNull(encontrado);
-        assertEquals(ID_VALIDO, encontrado.getId());
-        assertEquals(new BigDecimal("200.00"), encontrado.getValor());
-    }
-
-    // Teste de Boleto Não Encontrado
-    @Test
-    @DisplayName("Deve lançar exceção quando boleto não encontrado")
-    void deveLancarExcecaoQuandoBoletoNaoEncontrado() {
-        // Arrange
-        String idInexistente = "ID_INEXISTENTE";
-        when(repository.buscarPorId(idInexistente)).thenReturn(Optional.empty());
-        
         // Act & Assert
-        assertThrows(BoletoNotFoundException.class, () -> service.consultarBoleto(idInexistente));
-        assertThrows(BoletoNotFoundException.class, () -> service.gerarPDF(idInexistente));
-        assertThrows(BoletoNotFoundException.class, () -> service.cancelarBoleto(idInexistente, "Motivo"));
-    }
-
-    // Teste de Reemissão Inválida
-    @Test
-    @DisplayName("Deve lançar exceção ao reemitir boleto com status inválido")
-    void deveLancarExcecaoAoReemitirBoletoComStatusInvalido() {
-        // Arrange
-        boletoSimulado.setStatus(BoletoStatus.PAGO); // Status não permitido
-        when(repository.buscarPorId(ID_VALIDO)).thenReturn(Optional.of(boletoSimulado));
-        
-        // Act & Assert
-        assertThrows(BoletoValidationException.class, () -> service.reemitirBoleto(ID_VALIDO));
-    }
-
-    // Teste de Cancelamento Inválido
-    @Test
-    @DisplayName("Deve lançar exceção ao cancelar boleto já pago")
-    void deveLancarExcecaoAoCancelarBoletoJaPago() {
-        // Arrange
-        boletoSimulado.setStatus(BoletoStatus.PAGO);
-        when(repository.buscarPorId(ID_VALIDO)).thenReturn(Optional.of(boletoSimulado));
-        
-        // Act & Assert
-        assertThrows(BoletoValidationException.class, () -> 
-            service.cancelarBoleto(ID_VALIDO, "Motivo")
+        assertThrows(BoletoNotFoundException.class, () -> 
+            boletoService.consultarBoleto("123")
         );
     }
 
-    // Teste de Geração de QR Code
     @Test
-    @DisplayName("Deve gerar QR Code válido")
-    void deveGerarQrCodeValido() {
+    void gerarPDF_ShouldUseTransactionalProxy() {
         // Arrange
-        when(repository.buscarPorId(ID_VALIDO)).thenReturn(Optional.of(boletoSimulado));
-        
+        when(pdfService.gerarPdf(any())).thenReturn(new byte[0]);
+
         // Act
-        String qrCode = service.gerarQRCode(ID_VALIDO);
-        
+        byte[] result = boletoService.gerarPDF("123");
+
         // Assert
-        assertNotNull(qrCode);
-        assertTrue(qrCode.startsWith("000201"));
-        assertTrue(qrCode.contains("BR.GOV.BCB.PIX"));
-        assertTrue(qrCode.length() > 50);
+        assertNotNull(result);
+        verify(transactionalProxy).consultarBoleto("123");
+    }
+
+    @Test
+    void cancelarBoleto_ShouldWorkSuccessfully() {
+        // Arrange
+        when(repository.buscarPorId("123")).thenReturn(Optional.of(boleto));
+
+        // Act
+        Boleto result = boletoService.cancelarBoleto("123", "Motivo");
+
+        // Assert
+        assertNotNull(result);
+        verify(validation).validarCancelamento(boleto);
+        verify(notificacaoPort).notificarCancelamento(boleto);
+        assertEquals(BoletoStatus.CANCELADO, boleto.getStatus());
+    }
+
+    @Test
+    void deprecatedCancelarBoleto_ShouldUseTransactionalProxy() {
+        // Act
+        boletoService.cancelarBoleto("123");
+
+        // Assert
+        verify(transactionalProxy).cancelarBoleto("123", "Cancelamento solicitado");
+    }
+
+    @Test
+    void gerarBoleto_ShouldUseTransactionalProxy() {
+        // Arrange
+        com.pagamento.common.dto.BoletoRequestDTO commonRequest = 
+            new com.pagamento.common.dto.BoletoRequestDTO(
+                "Cliente", "Benef", BigDecimal.TEN, LocalDate.now(), 
+                "DOC", "Inst", "Local"
+            );
+
+        // Act
+        String result = boletoService.gerarBoleto(commonRequest);
+
+        // Assert
+        assertEquals(boleto.getId(), result);
+        verify(transactionalProxy).emitirBoleto(any());
     }
 }

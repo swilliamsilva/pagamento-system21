@@ -17,9 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.pagamento.boleto.domain.model.BoletoStatus;
 import com.pagamento.boleto.domain.model.PagamentoStatus;
 import com.pagamento.boleto.domain.ports.AsaasGatewayPort;
+import com.pagamento.boleto.infra.adapters.AsaasGatewayAdapter;
+import com.pagamento.boleto.infra.clients.AsaasClient;
 import com.pagamento.boleto.infra.clients.AsaasStatusResponse;
-import com.pagamento.boleto.infrastructure.adapters.AsaasClient;
-import com.pagamento.boleto.infrastructure.adapters.gateway.AsaasGatewayAdapter;
 
 @ExtendWith(MockitoExtension.class)
 class AsaasGatewayAdapterTest {

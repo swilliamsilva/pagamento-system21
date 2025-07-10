@@ -2,8 +2,6 @@ package com.pagamento.boleto.domain.model;
 
 import java.math.BigDecimal;
 
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import jakarta.persistence.Id;
 
 // BoletoDocument.java

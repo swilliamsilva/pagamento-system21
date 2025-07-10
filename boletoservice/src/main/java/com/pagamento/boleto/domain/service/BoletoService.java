@@ -6,9 +6,8 @@ import com.pagamento.boleto.domain.model.*;
 import com.pagamento.boleto.domain.ports.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 public class BoletoService implements BoletoServicePort {
 
@@ -21,6 +20,7 @@ public class BoletoService implements BoletoServicePort {
     private final BoletoFactory factory;
     private final TaxasService taxasService;
     private final PdfService pdfService;
+    private final ApplicationContext applicationContext;
 
     public BoletoService(
         BoletoRepositoryPort repository,
@@ -29,7 +29,8 @@ public class BoletoService implements BoletoServicePort {
         BoletoValidation validation,
         BoletoFactory factory,
         TaxasService taxasService,
-        PdfService pdfService
+        PdfService pdfService,
+        ApplicationContext applicationContext
     ) {
         this.repository = repository;
         this.asaasGateway = asaasGateway;
@@ -38,6 +39,12 @@ public class BoletoService implements BoletoServicePort {
         this.factory = factory;
         this.taxasService = taxasService;
         this.pdfService = pdfService;
+        this.applicationContext = applicationContext;
+    }
+
+    // Método auxiliar para obter proxy transacional
+    private BoletoServicePort getTransactionalService() {
+        return applicationContext.getBean(BoletoServicePort.class);
     }
 
     @Override
@@ -63,7 +70,7 @@ public class BoletoService implements BoletoServicePort {
             throw new GatewayIntegrationException("Falha no registro no gateway de pagamento", e);
         } catch (NotificationException e) {
             logger.error("Falha na notificação de emissão do boleto {}", boleto.getId(), e);
-            return boleto; // Retorna boleto mesmo com falha de notificação
+            return boleto;
         }
     }
 
@@ -137,36 +144,39 @@ public class BoletoService implements BoletoServicePort {
     @Override
     @Transactional(readOnly = true)
     public byte[] gerarPDF(String id) {
-        Boleto boleto = consultarBoleto(id);
+        // Chamada via proxy para garantir transação
+        Boleto boleto = getTransactionalService().consultarBoleto(id);
         return pdfService.gerarPdf(boleto);
     }
 
     @Override
     @Transactional(readOnly = true)
     public String gerarCodigoBarras(String id) {
-        Boleto boleto = consultarBoleto(id);
+        // Chamada via proxy para garantir transação
+        Boleto boleto = getTransactionalService().consultarBoleto(id);
         return boleto.getDadosTecnicos().codigoBarras();
     }
 
     @Override
     @Transactional(readOnly = true)
     public String gerarQRCode(String id) {
-        Boleto boleto = consultarBoleto(id);
+        // Chamada via proxy para garantir transação
+        Boleto boleto = getTransactionalService().consultarBoleto(id);
         return boleto.getDadosTecnicos().qrCode();
     }
 
-    // Método obsoleto - removido ou marcado como deprecated
     @Deprecated
     @Override
     public void cancelarBoleto(String id) {
-        cancelarBoleto(id, "Cancelamento solicitado");
+        // Chamada via proxy para garantir transação
+        getTransactionalService().cancelarBoleto(id, "Cancelamento solicitado");
     }
 
     @Override
     public String gerarBoleto(com.pagamento.common.dto.BoletoRequestDTO request) {
-        // Implementação de integração cross-module
         BoletoRequestDTO dto = convertToLocalDTO(request);
-        Boleto boleto = emitirBoleto(dto);
+        // Chamada via proxy para garantir transação
+        Boleto boleto = getTransactionalService().emitirBoleto(dto);
         return boleto.getId();
     }
     
@@ -174,7 +184,7 @@ public class BoletoService implements BoletoServicePort {
         return new BoletoRequestDTO(
             request.getPagador(),
             request.getBeneficiario(),
-            request.getValor().doubleValue(),
+            request.getValor(),
             request.getDataVencimento(),
             request.getDocumento(),
             request.getInstrucoes(),

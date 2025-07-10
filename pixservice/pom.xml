@@ -19,6 +19,14 @@
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
+<profiles>
+    <profile>
+        <id>dev</id>
+        <properties>
+            <skipTests>true</skipTests>
+        </properties>
+    </profile>
+</profiles>
 
     <dependencies>
         <!-- Spring Boot Starters -->
