@@ -11,22 +11,20 @@ package com.pagamento.boleto.infrastructure.adapters.notificacao;
 import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.ports.NotificacaoPort;
 import com.pagamento.boleto.infrastructure.config.KafkaConfig;
+import com.pagamento.boleto.infrastructure.exception.KafkaNotificacaoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public abstract class KafkaNotificacaoAdapter implements NotificacaoPort {
+public class KafkaNotificacaoAdapter implements NotificacaoPort {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaNotificacaoAdapter.class);
     
     private final KafkaTemplate<String, String> kafkaTemplate;
     
-    public KafkaNotificacaoAdapter(KafkaTemplate<String, String> kafkaTemplate) {
-    	/**Resource	Date	Description
-KafkaNotificacaoAdapter.java	16 days ago	Change the visibility of this constructor to "protected". [+1 location]
-**/
+    protected KafkaNotificacaoAdapter(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
@@ -77,17 +75,13 @@ KafkaNotificacaoAdapter.java	16 days ago	Change the visibility of this construct
             kafkaTemplate.send(topico, mensagem);
             logger.info("Mensagem enviada para o tópico {}: {}", topico, mensagem);
         } catch (Exception e) {
-        	/**
-        	 * 
-        	 * Resource	Date	Description
-KafkaNotificacaoAdapter.java	16 days ago	Either log this exception and handle it, or rethrow it with some contextual information. [+2 locations]
-
-        	 * 
-        	 * **/
-        	
-        	
-            logger.error("Falha ao enviar mensagem para o Kafka. Tópico: {}, Mensagem: {}", topico, mensagem, e);
-            throw new KafkaNotificacaoException("Erro ao enviar mensagem para Kafka", e);
+            String errorMessage = String.format(
+                "Falha ao enviar mensagem para o Kafka. Tópico: %s, Mensagem: %s",
+                topico,
+                mensagem
+            );
+            logger.error(errorMessage, e);
+            throw new KafkaNotificacaoException(errorMessage, e);
         }
     }
 }

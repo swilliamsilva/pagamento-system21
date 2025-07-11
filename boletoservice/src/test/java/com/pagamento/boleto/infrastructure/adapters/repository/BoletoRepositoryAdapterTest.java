@@ -1,9 +1,11 @@
 package com.pagamento.boleto.infrastructure.adapters.repository;
 
+import com.pagamento.boleto.application.mapper.BoletoMapper;
 import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.model.BoletoStatus;
 import com.pagamento.boleto.infrastructure.adapters.entity.BoletoEntity;
-import com.pagamento.boleto.infrastructure.adapters.mapper.BoletoMapper;
+import com.pagamento.boleto.infrastructure.persistence.SpringDataBoletoRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +26,7 @@ import static org.mockito.Mockito.*;
 class BoletoRepositoryAdapterTest {
 
     @Mock
-    private SpringBoletoRepository springBoletoRepository;
+    private SpringDataBoletoRepository springBoletoRepository;
 
     @Mock
     private BoletoMapper boletoMapper;
@@ -32,16 +34,16 @@ class BoletoRepositoryAdapterTest {
     @InjectMocks
     private BoletoRepositoryAdapter boletoRepositoryAdapter;
 
+    private UUID boletoId;
     private Boleto boleto;
     private BoletoEntity boletoEntity;
-    private UUID boletoId;
 
     @BeforeEach
     void setUp() {
         boletoId = UUID.randomUUID();
         
         boleto = new Boleto();
-        boleto.setId(boletoId.toString());
+        boleto.setId(boletoId);
         boleto.setPagador("Cliente A");
         boleto.setBeneficiario("Beneficiário B");
         boleto.setValor(new BigDecimal("1000.00"));
@@ -69,7 +71,7 @@ class BoletoRepositoryAdapterTest {
 
         // Assert
         assertNotNull(savedBoleto);
-        assertEquals(boletoId.toString(), savedBoleto.getId());
+        assertEquals(boletoId, savedBoleto.getId());
         verify(springBoletoRepository, times(1)).save(boletoEntity);
         verify(boletoMapper, times(1)).toEntity(boleto);
         verify(boletoMapper, times(1)).toDomain(boletoEntity);
@@ -82,11 +84,11 @@ class BoletoRepositoryAdapterTest {
         when(boletoMapper.toDomain(boletoEntity)).thenReturn(boleto);
 
         // Act
-        Optional<Boleto> foundBoleto = boletoRepositoryAdapter.findById(boletoId.toString());
+        Optional<Boleto> foundBoleto = boletoRepositoryAdapter.findById(boletoId);
 
         // Assert
         assertTrue(foundBoleto.isPresent());
-        assertEquals(boletoId.toString(), foundBoleto.get().getId());
+        assertEquals(boletoId, foundBoleto.get().getId());
         verify(springBoletoRepository, times(1)).findById(boletoId);
     }
 
@@ -96,7 +98,7 @@ class BoletoRepositoryAdapterTest {
         when(springBoletoRepository.findById(boletoId)).thenReturn(Optional.empty());
 
         // Act
-        Optional<Boleto> foundBoleto = boletoRepositoryAdapter.findById(boletoId.toString());
+        Optional<Boleto> foundBoleto = boletoRepositoryAdapter.findById(boletoId);
 
         // Assert
         assertTrue(foundBoleto.isEmpty());
@@ -109,11 +111,10 @@ class BoletoRepositoryAdapterTest {
         // Arrange
         when(springBoletoRepository.findById(boletoId)).thenReturn(Optional.of(boletoEntity));
         when(springBoletoRepository.save(any(BoletoEntity.class))).thenReturn(boletoEntity);
-        when(boletoMapper.toDomain(boletoEntity)).thenReturn(boleto);
 
         // Act
         boletoRepositoryAdapter.updateStatus(
-            boletoId.toString(), 
+            boletoId, 
             BoletoStatus.CANCELADO, 
             "Cancelamento solicitado"
         );
@@ -133,7 +134,7 @@ class BoletoRepositoryAdapterTest {
         // Act & Assert
         assertThrows(RuntimeException.class, () -> 
             boletoRepositoryAdapter.updateStatus(
-                boletoId.toString(), 
+                boletoId, 
                 BoletoStatus.CANCELADO, 
                 "Motivo"
             )
@@ -148,10 +149,9 @@ class BoletoRepositoryAdapterTest {
         boletoEntity.setNumeroReemissoes(1);
         when(springBoletoRepository.findById(boletoId)).thenReturn(Optional.of(boletoEntity));
         when(springBoletoRepository.save(any(BoletoEntity.class))).thenReturn(boletoEntity);
-        when(boletoMapper.toDomain(boletoEntity)).thenReturn(boleto);
 
         // Act
-        boletoRepositoryAdapter.incrementReemissaoCount(boletoId.toString());
+        boletoRepositoryAdapter.incrementReemissaoCount(boletoId);
 
         // Assert
         assertEquals(2, boletoEntity.getNumeroReemissoes());

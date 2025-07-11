@@ -1,10 +1,13 @@
 package com.pagamento.boleto;
 
 import com.pagamento.boleto.application.dto.BoletoResponseDTO;
+import com.pagamento.boleto.application.mapper.BoletoMapper;
 import com.pagamento.boleto.domain.model.Boleto;
 import com.pagamento.boleto.domain.model.BoletoStatus;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -16,11 +19,11 @@ class BoletoMapperTest {
     @Test
     void toDTO_ShouldMapAllFieldsCorrectly() {
         // Arrange
-        String id = UUID.randomUUID().toString();
+        UUID id = UUID.randomUUID();
         LocalDate now = LocalDate.now();
         
         Boleto boleto = new Boleto();
-        boleto.setId(id);
+        boleto.setId(id.toString());
         boleto.setPagador("Cliente A");
         boleto.setBeneficiario("Beneficiário B");
         boleto.setValor(BigDecimal.valueOf(1500.75));
@@ -39,7 +42,7 @@ class BoletoMapperTest {
 
         // Assert
         assertAll(
-            () -> assertEquals(id, dto.id()),
+            () -> assertEquals(id.toString(), dto.id()),
             () -> assertEquals("Cliente A", dto.pagador()),
             () -> assertEquals("Beneficiário B", dto.beneficiario()),
             () -> assertEquals(BigDecimal.valueOf(1500.75), dto.valor()),
@@ -92,13 +95,21 @@ class BoletoMapperTest {
     }
 
     @Test
-    void constructor_ShouldBePrivateAndThrowException() {
-        // Arrange & Act
-        Exception exception = assertThrows(UnsupportedOperationException.class, () -> {
-            new BoletoMapper();
+    void constructor_ShouldBePrivateAndThrowException() throws Exception {
+        // Obtém o construtor privado
+        Constructor<BoletoMapper> constructor = BoletoMapper.class.getDeclaredConstructor();
+        
+        // Permite acesso ao construtor privado
+        constructor.setAccessible(true);
+        
+        // Verifica se lança a exceção correta ao tentar instanciar
+        Exception exception = assertThrows(InvocationTargetException.class, () -> {
+            constructor.newInstance();
         });
-
-        // Assert
-        assertEquals("Esta é uma classe utilitária e não pode ser instanciada", exception.getMessage());
+        
+        // Verifica a causa da exceção
+        assertTrue(exception.getCause() instanceof UnsupportedOperationException);
+        assertEquals("Esta é uma classe utilitária e não pode ser instanciada", 
+                     exception.getCause().getMessage());
     }
 }

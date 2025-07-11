@@ -16,4 +16,5 @@ public interface BoletoServicePort {
     String gerarQRCode(String id);
 	void cancelarBoleto(String id, String motivo);
 	Object listarBoletos(Pageable any);
+	String gerarBoleto(com.pagamento.common.dto.BoletoRequestDTO request);
 }

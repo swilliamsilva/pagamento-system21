@@ -6,6 +6,7 @@ import com.pagamento.boleto.domain.model.BoletoStatus;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface BoletoRepositoryPort {
 
@@ -79,4 +80,16 @@ public interface BoletoRepositoryPort {
      * @param id ID do boleto a ser excluído
      */
     void deletarPorId(String id);
+
+	Boleto save(Boleto boleto);
+
+	void updateStatus(UUID id, BoletoStatus status, String motivoCancelamento);
+
+	Optional<Boleto> findById(UUID id);
+
+	void deletar(UUID id);
+
+	void incrementReemissaoCount(UUID id);
+
+	void delete(UUID id);
 }

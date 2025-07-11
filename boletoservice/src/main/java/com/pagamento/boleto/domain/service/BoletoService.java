@@ -4,9 +4,13 @@ import com.pagamento.boleto.application.dto.BoletoRequestDTO;
 import com.pagamento.boleto.domain.exception.*;
 import com.pagamento.boleto.domain.model.*;
 import com.pagamento.boleto.domain.ports.*;
+
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 public class BoletoService implements BoletoServicePort {
@@ -144,7 +148,6 @@ public class BoletoService implements BoletoServicePort {
     @Override
     @Transactional(readOnly = true)
     public byte[] gerarPDF(String id) {
-        // Chamada via proxy para garantir transação
         Boleto boleto = getTransactionalService().consultarBoleto(id);
         return pdfService.gerarPdf(boleto);
     }
@@ -152,30 +155,37 @@ public class BoletoService implements BoletoServicePort {
     @Override
     @Transactional(readOnly = true)
     public String gerarCodigoBarras(String id) {
-        // Chamada via proxy para garantir transação
         Boleto boleto = getTransactionalService().consultarBoleto(id);
+        if (boleto.getDadosTecnicos() == null) {
+            throw new DadosTecnicosNaoDisponiveisException("Dados técnicos não disponíveis para o boleto: " + id);
+        }
         return boleto.getDadosTecnicos().codigoBarras();
     }
 
     @Override
     @Transactional(readOnly = true)
     public String gerarQRCode(String id) {
-        // Chamada via proxy para garantir transação
         Boleto boleto = getTransactionalService().consultarBoleto(id);
+        if (boleto.getDadosTecnicos() == null) {
+            throw new DadosTecnicosNaoDisponiveisException("Dados técnicos não disponíveis para o boleto: " + id);
+        }
         return boleto.getDadosTecnicos().qrCode();
     }
 
-    @Deprecated
+    /**
+     * @return 
+     * @deprecated Este método foi substituído por {@link #cancelarBoleto(String, String)}.
+     *             Será removido em versões futuras.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     @Override
-    public void cancelarBoleto(String id) {
-        // Chamada via proxy para garantir transação
+    public Boleto cancelarBoleto(String id) {
         getTransactionalService().cancelarBoleto(id, "Cancelamento solicitado");
     }
 
     @Override
-    public String gerarBoleto(com.pagamento.common.dto.BoletoRequestDTO request) {
+    public UUID gerarBoleto(com.pagamento.common.dto.BoletoRequestDTO request) {
         BoletoRequestDTO dto = convertToLocalDTO(request);
-        // Chamada via proxy para garantir transação
         Boleto boleto = getTransactionalService().emitirBoleto(dto);
         return boleto.getId();
     }
@@ -191,4 +201,10 @@ public class BoletoService implements BoletoServicePort {
             request.getLocalPagamento()
         );
     }
+
+	@Override
+	public Object listarBoletos(Pageable any) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

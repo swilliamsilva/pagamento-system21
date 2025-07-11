@@ -1,8 +1,8 @@
 package com.pagamento.boleto.domain.model;
 
 import jakarta.persistence.Embeddable;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
 
@@ -45,25 +45,48 @@ public class DadosTecnicosBoleto {
         return nossoNumero; 
     }
 
-    // Setters com validação
+    // Setters com validação aprimorada
     public void setCodigoBarras(String codigoBarras) {
-        Validate.notBlank(codigoBarras, "Código de barras não pode ser vazio");
+        validateCampo(codigoBarras, "Código de barras");
         this.codigoBarras = codigoBarras;
     }
 
     public void setLinhaDigitavel(String linhaDigitavel) {
-        Validate.notBlank(linhaDigitavel, "Linha digitável não pode ser vazia");
+        validateCampo(linhaDigitavel, "Linha digitável");
         this.linhaDigitavel = linhaDigitavel;
     }
 
     public void setQrCode(String qrCode) {
-        Validate.notBlank(qrCode, "QR Code não pode ser vazio");
+        validateCampo(qrCode, "QR Code");
         this.qrCode = qrCode;
     }
 
     public void setNossoNumero(String nossoNumero) {
-        Validate.notBlank(nossoNumero, "Nosso número não pode ser vazio");
+        validateCampo(nossoNumero, "Nosso número");
         this.nossoNumero = nossoNumero;
+    }
+
+    // Método auxiliar para validação
+    private void validateCampo(String valor, String nomeCampo) {
+        Validate.notNull(valor, nomeCampo + " não pode ser nulo");
+        Validate.isTrue(StringUtils.isNotBlank(valor), nomeCampo + " não pode ser vazio ou em branco");
+    }
+
+    // Métodos de acesso simplificados (opcionais)
+    public String codigoBarras() {
+        return this.codigoBarras;
+    }
+    
+    public String linhaDigitavel() {
+        return this.linhaDigitavel;
+    }
+    
+    public String qrCode() {
+        return this.qrCode;
+    }
+    
+    public String nossoNumero() {
+        return this.nossoNumero;
     }
 
     // Equals e HashCode
