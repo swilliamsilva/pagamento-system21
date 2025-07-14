@@ -1,0 +1,188 @@
+# ========================================================
+# Arquivo: application.yml
+# Serviço: card-service
+# Projeto: pagamento-system21
+# Descrição: Configurações completas com documentação para suporte
+# ========================================================
+
+spring:
+  application:
+    name: card-service
+  main:
+    banner-mode: off
+  jackson:
+    serialization:
+      indent-output: true
+      
+  # Configuração Cassandra
+  cassandra:
+    keyspace-name: pagamento_card
+    contact-points: ${CASSANDRA_HOST:127.0.0.1}
+    port: ${CASSANDRA_PORT:9042}
+    schema-action: create-if-not-exists
+    # Documentação: Define o keyspace para armazenamento de dados de cartões
+    # - contact-points: Endereços dos nós Cassandra (separados por vírgula para cluster)
+    # - schema-action: Cria automaticamente tabelas se não existirem
+  
+  # Configuração PostgreSQL para dados transacionais
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/pagamento
+    username: ${DB_USER:user}
+    password: ${DB_PASS:pass}
+    # Documentação: Conexão com banco transacional
+    # - Configurações podem ser sobrescritas via variáveis de ambiente
+
+server:
+  port: 8084
+  # Documentação: Porta de acesso à API (ajustar conforme necessidade de implantação)
+
+logging:
+  level:
+    root: INFO
+    # Níveis recomendados: INFO (produção), DEBUG (testes)
+    com.pagamento.resilience: DEBUG  # Log detalhado para módulo de resiliência
+
+jwt:
+  secret: ${jwt.secret}          # DEVE ser definido em produção
+  expiration: ${jwt.expiration}  # Ex: 86400000 (24h em ms)
+  # Documentação: Segurança JWT para autenticação de API
+  # !!! ATENÇÃO: jwt.secret DEVE ser gerado com chave forte em produção !!!
+
+# ========================================================
+# SEÇÃO PAGAMENTOS - Configurações por bandeira
+# ========================================================
+payment:
+  environment: ${PAY_ENV:SANDBOX}  # PRODUCTION | SANDBOX
+  # Documentação: Define ambiente operacional
+  # - SANDBOX: APIs de teste, limites reduzidos
+  # - PRODUCTION: Tráfego real, habilitar todos os checks
+
+  # --------------------------
+  # Configurações VISA
+  # --------------------------
+  visa:
+    api:
+      key: ${VISA_API_KEY:test-key-sandbox}
+      url: ${VISA_API_URL:https://sandbox.visa.com/api}
+    daily-limit: 10000.00
+    fraud-check-level: MEDIUM
+    # Documentação:
+    # - key: Chave de API (obrigatória para produção)
+    # - daily-limit: Limite diário acumulado por merchant
+    # - fraud-check-level: HIGH|MEDIUM|LOW (controle de sensibilidade)
+
+  # --------------------------
+  # Configurações MASTERCARD
+  # --------------------------
+  mastercard:
+    api:
+      url: ${MASTERCARD_API_URL:https://sandbox.api.mastercard.com}
+      timeout: 5000  # ms
+    currency-conversion: true
+    # Documentação:
+    # - timeout: Tempo máximo de espera por resposta
+    # - currency-conversion: Habilita conversão automática de moedas
+
+  # --------------------------
+  # Configurações ELO
+  # --------------------------
+  elo:
+    max-value: 5000.00
+    installment-limit: 12
+    # Documentação:
+    # - max-value: Valor máximo por transação
+    # - installment-limit: Número máximo de parcelas permitidas
+
+  # --------------------------
+  # Configurações AMEX (Nova)
+  # --------------------------
+  amex:
+    api:
+      url: ${AMEX_API_URL:https://sandbox.americanexpress.com/gateway}
+      merchant-id: ${AMEX_MERCHANT_ID:test-merchant}
+    priority-routing: true
+    # Documentação:
+    # - priority-routing: Habilita roteamento preferencial
+
+  # --------------------------
+  # Configurações HIPERCARD (Nova)
+  # --------------------------
+  hipercard:
+    api:
+      url: ${HIPERCARD_API_URL:https://api.sandbox.hipercard.com.br}
+    region: BR-SOUTH
+    # Documentação:
+    # - region: Região de processamento (BR-SOUTH | BR-NORTHEAST)
+
+# ========================================================
+# SEÇÃO RESILIÊNCIA - Circuit Breaker Pattern
+# ========================================================
+resilience:
+  bandeira:
+    # Configurações padrão para todas bandeiras
+    default:
+      failure-threshold: 50    # % de falhas para abrir o circuito
+      wait-duration: 30s       # tempo em estado aberto antes de tentar semi-abrir
+      sliding-window: 10       # tamanho da janela (número de chamadas)
+      min-call-threshold: 5    # chamadas mínimas antes de calcular métricas
+      
+    # Overrides específicos por bandeira
+    VISA:
+      failure-threshold: 40    # Threshold mais baixo para Visa
+      wait-duration: 20s       # Recuperação mais rápida
+    MASTERCARD:
+      failure-threshold: 60    # Threshold mais alto para Mastercard
+      wait-duration: 40s       # Recuperação mais lenta
+    AMEX:
+      failure-threshold: 55
+      wait-duration: 25s
+    # Documentação:
+    # - failure-threshold: % de falhas para abrir o circuito
+    # - wait-duration: Tempo em estado "open" antes de permitir testes
+    # - sliding-window: Tamanho da amostra para cálculo de métricas
+    # - min-call-threshold: Chamadas mínimas antes de ativar o circuito
+
+# ========================================================
+# SEÇÃO ALERTAS - Monitoramento e notificações
+# ========================================================
+alerts:
+  # Alertas de Circuit Breaker
+  circuit-breaker:
+    open:
+      - bandeira: VISA
+        threshold: 3             # Número de aberturas para disparar alerta
+        channels: [email, slack]  # Canais de notificação
+        severity: HIGH
+        
+      - bandeira: MASTERCARD
+        threshold: 5
+        channels: [pagerduty]    # Canal crítico para Mastercard
+        severity: CRITICAL
+        
+      - bandeira: AMEX
+        threshold: 4
+        channels: [slack, dashboard]
+        severity: MEDIUM
+        
+    # Documentação: Dispara quando circuit breaker abre repetidamente
+    # - threshold: Número de aberturas em 1h para disparar
+    # - channels: Sistemas de notificação
+    # - severity: HIGH (24h response) | CRITICAL (immediate action)
+
+  # Alertas de Falhas de Pagamento
+  payment-failure:
+    statuses: [DECLINED, FRAUD_SUSPECTED, PROCESSING_ERROR] # Status de erro
+    threshold-percentage: 20   # % de transações com erro para disparar
+    timeframe: 5m              # Janela de análise (5 minutos)
+    channels: [slack, dashboard, email]
+    exclude-codes: [101, 205]  # Códigos de erro para ignorar
+    # Documentação:
+    # - Monitora taxa de falhas em tempo real
+    # - exclude-codes: Erros conhecidos que não requerem alerta
+
+  # Alertas de Latência
+  latency:
+    threshold-ms: 2000         # Limite de latência em milissegundos
+    sample-size: 50            # Número de requisições para análise
+    channels: [dashboard]
+    # Documentação: Dispara quando latência média excede limite

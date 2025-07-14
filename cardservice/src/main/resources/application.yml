@@ -13,14 +13,15 @@ spring:
   jackson:
     serialization:
       indent-output: true
-
-  data:
-    cassandra:
-      keyspace-name: pagamento_card
-      contact-points: 127.0.0.1
-      port: 9042
-      schema-action: create-if-not-exists
-
+      
+  # Nova configuração Cassandra (sem o .data)
+  cassandra:
+    keyspace-name: pagamento_card
+    contact-points: 127.0.0.1
+    port: 9042
+    schema-action: create-if-not-exists
+  
+  # Configuração do PostgreSQL permanece a mesma
   datasource:
     url: jdbc:postgresql://localhost:5432/pagamento
     username: user
@@ -36,3 +37,33 @@ logging:
 jwt:
   secret: ${jwt.secret}
   expiration: ${jwt.expiration}
+
+# ----------------------------------------
+# Configurações de pagamento
+# ----------------------------------------
+payment:
+  environment: SANDBOX  # PRODUCTION ou SANDBOX
+  visa:
+    api:
+      key: ${VISA_API_KEY:test-key}
+  mastercard:
+    api:
+      url: https://sandbox.api.mastercard.com
+  elo:
+    max-value: 5000.00
+
+# ----------------------------------------
+# Configurações de resiliência (Circuit Breaker)
+# ----------------------------------------
+resilience:
+  bandeira:
+    default:
+      failure-threshold: 50    # % de falhas para abrir o circuito
+      wait-duration: 30s        # tempo em estado aberto
+      sliding-window: 10        # tamanho da janela (em chamadas)
+    VISA:
+      failure-threshold: 40
+      wait-duration: 20s
+    MASTERCARD:
+      failure-threshold: 60
+      wait-duration: 40s

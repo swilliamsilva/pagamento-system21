@@ -1,81 +1,82 @@
-/* ========================================================
-# Classe: Card
-# Módulo: card-service - model
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Representa os dados de um cartão de pagamento.
-# ======================================================== */
-
 package com.pagamento.card.model;
 
-public class Card {
+import jakarta.validation.constraints.*;
 
+public class Card {
+    @NotBlank(message = "ID do cartão é obrigatório")
     private String id;
-    private String holderName;
-    private String number;
-    private String expiration;
+    
+    @NotBlank(message = "Nome do titular é obrigatório")
+    @Size(min = 2, max = 100, message = "Nome deve ter entre 2 e 100 caracteres")
+    @Pattern(regexp = "^[\\p{L} .'-]+$", message = "Nome contém caracteres inválidos")
+    private String nomeTitular;
+    
+    @NotBlank(message = "Número do cartão é obrigatório")
+    @Pattern(regexp = "^\\d{13,19}$", message = "Número do cartão inválido")
+    private String numero;
+    
+    @NotBlank(message = "Data de validade é obrigatória")
+    @Pattern(regexp = "^(0[1-9]|1[0-2])\\/?(\\d{2})$", 
+             message = "Formato deve ser MM/AA")
+    private String validade;
+    
+    @NotBlank(message = "CVV é obrigatório")
+    @Size(min = 3, max = 4, message = "CVV deve ter 3 ou 4 dígitos")
+    @Pattern(regexp = "^\\d+$", message = "CVV deve conter apenas números")
     private String cvv;
 
-    public Card() {
-        // Construtor padrão
-    }
+    public Card() {}
 
-    public Card(String id, String holderName, String number, String expiration, String cvv) {
+    public Card(String id, String nomeTitular, String numero, String validade, String cvv) {
         this.id = id;
-        this.holderName = holderName;
-        this.number = number;
-        this.expiration = expiration;
+        this.nomeTitular = nomeTitular;
+        this.numero = numero;
+        this.validade = validade;
         this.cvv = cvv;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getHolderName() {
-        return holderName;
-    }
-
-    public void setHolderName(String holderName) {
-        this.holderName = holderName;
-    }
-
-    public String getNumber() {
-        return number;
-    }
-
-    public void setNumber(String number) {
-        this.number = number;
-    }
-
-    public String getExpiration() {
-        return expiration;
-    }
-
-    public void setExpiration(String expiration) {
-        this.expiration = expiration;
-    }
-
-    public String getCvv() {
-        return cvv;
-    }
-
-    public void setCvv(String cvv) {
-        this.cvv = cvv;
-    }
+    // Getters e Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    
+    public String getNomeTitular() { return nomeTitular; }
+    public void setNomeTitular(String nomeTitular) { this.nomeTitular = nomeTitular; }
+    
+    public String getNumero() { return numero; }
+    public void setNumero(String numero) { this.numero = numero; }
+    
+    public String getValidade() { return validade; }
+    public void setValidade(String validade) { this.validade = validade; }
+    
+    public String getCvv() { return cvv; }
+    public void setCvv(String cvv) { this.cvv = cvv; }
 
     @Override
     public String toString() {
         return "Card{" +
                "id='" + id + '\'' +
-               ", holderName='" + holderName + '\'' +
-               ", number='" + number + '\'' +
-               ", expiration='" + expiration + '\'' +
-               ", cvv='" + cvv + '\'' +
+               ", nomeTitular='" + nomeTitular + '\'' +
+               ", numero='" + maskCardNumber() + '\'' +
+               ", validade='" + validade + '\'' +
                '}';
+    }
+
+    private String maskCardNumber() {
+        if (numero == null) {
+            return "null";
+        }
+        
+        if (numero.length() <= 4) {
+            return "****";
+        }
+        
+        return "****-****-****-" + numero.substring(numero.length() - 4);
+    }
+
+    public String maskCardNumberForLog() {
+        if (numero == null || numero.length() < 4) {
+            return "****";
+        }
+        return "****-****-****-" + numero.substring(numero.length() - 4);
     }
 }

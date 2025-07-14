@@ -123,5 +123,21 @@ public class PaymentServiceImpl implements PaymentService {
         public PaymentProcessingException(String message) {
             super(message);
         }
+        public CardResponseDTO processarPagamento(CardRequestDTO request) {
+            // Converter DTO para entidade de domínio
+            Transaction transaction = CardMapper.toTransactionEntity(request);
+            
+            // Processar pagamento (lógica existente)
+            CardResponseDTO response = processInternal(request, transaction.getId());
+            
+            // Atualizar entidade com resposta
+            CardMapper.updateEntityFromResponse(transaction, response);
+            
+            // Auditoria
+            auditService.saveTransaction(transaction);
+            
+            return response;
+        }
+        
     }
 }

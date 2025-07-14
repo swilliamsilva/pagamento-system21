@@ -6,3 +6,4 @@ import com.pagamento.common.response.PaymentResponse;
 public interface PaymentService {
     PaymentResponse processarPagamento(PaymentRequest request);
 }
+
