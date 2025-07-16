@@ -19,14 +19,17 @@
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
-<profiles>
-    <profile>
-        <id>dev</id>
-        <properties>
-            <skipTests>true</skipTests>
-        </properties>
-    </profile>
-</profiles>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <skipTests>true</skipTests>
+            </properties>
+        </profile>
+    </profiles>
+
+    <!-- SEÇÃO DE MÓDULOS REMOVIDA -->
 
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -90,13 +93,6 @@
             <artifactId>httpclient</artifactId>
         </dependency>
 
-        <!-- Common Interno -->
-        <dependency>
-            <groupId>com.pagamento</groupId>
-            <artifactId>common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
-
         <!-- Spring Data DynamoDB -->
         <dependency>
             <groupId>com.github.derjust</groupId>
@@ -148,19 +144,53 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
- <!-- Dependência do módulo common -->
-    <dependency>
-        <groupId>com.pagamento</groupId>
-        <artifactId>common</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </dependency>
 
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+        </dependency>
+
+        <!-- DEPENDÊNCIAS DE MÓDULOS INTERNOS REMOVIDAS -->
+        <dependency>
+        	<groupId>com.pagamento</groupId>
+        	<artifactId>asaasintegration</artifactId>
+        	<version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        
+       
+<!-- Dependências para testes -->
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>5.10.0</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <version>5.4.0</version>
+        <scope>test</scope>
+    </dependency>
+    
+   <!-- Resilience4j para Rate Limiting -->
 <dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-spring-boot2</artifactId>
+    <version>1.7.1</version>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
 </dependency>
 
-
+<!-- Spring Data Envers para Auditoria -->
+<dependency>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-envers</artifactId>
+</dependency>
+        
+        
+        
     </dependencies>
 
     <build>
@@ -185,6 +215,22 @@
         </resources>
 
         <plugins>
+            <!-- Spring Boot Maven Plugin (ADICIONADO) -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.pagamento.pixservice.PixServiceApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -228,6 +274,9 @@
                     <useModulePath>false</useModulePath>
                 </configuration>
             </plugin>
+            
+
+            
         </plugins>
     </build>
 </project>

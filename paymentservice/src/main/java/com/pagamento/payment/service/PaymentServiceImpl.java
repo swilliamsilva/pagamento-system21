@@ -8,6 +8,8 @@ import com.pagamento.payment.enums.PaymentType;
 import com.pagamento.payment.model.Payment;
 import com.pagamento.payment.port.output.PaymentRepositoryPort;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import jakarta.transaction.Transaction;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
     
     @Value("${topic.name.payment-processed}")
     private String paymentProcessedTopic;
+	public Object auditService;
 
     public PaymentServiceImpl(
         PaymentRepositoryPort repository,
@@ -129,12 +132,23 @@ public class PaymentServiceImpl implements PaymentService {
             
             // Processar pagamento (lógica existente)
             CardResponseDTO response = processInternal(request, transaction.getId());
+            /**
+             * 
+             * The method getId() is undefined for the type Transaction
+             * 
+             * **/
+            
             
             // Atualizar entidade com resposta
             CardMapper.updateEntityFromResponse(transaction, response);
             
             // Auditoria
             auditService.saveTransaction(transaction);
+            /**
+             * 
+             * Cannot make a static reference to the non-static field auditService
+             * 
+             * **/
             
             return response;
         }

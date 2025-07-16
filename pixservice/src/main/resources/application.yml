@@ -1,32 +1,141 @@
-# Spring Boot Configuration
-# ============================
-# Arquivo: application.yml
-# Serviço: pix-service
-# Projeto: pagamento-system21
-# ============================
+# =========================================================
+# CONFIGURAÇÃO SPRING BOOT - PIX SERVICE (pagamento-system21)
+# =========================================================
+# Autor: William Silva
+# Data: 2025-07-15
+# Versão: 1.1.0
+# =========================================================
 
 spring:
   application:
-    name: pix-service
+    name: pix-service       # Nome do serviço para service discovery
   main:
-    banner-mode: off
+    banner-mode: off        # Desabilita banner de inicialização
   jackson:
     serialization:
-      indent-output: true
+      indent-output: true   # Formata JSONs para melhor legibilidade
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true       # Habilita circuit breaker para chamadas Feign
+  data:
+    dynamodb:
+      repositories:
+        enabled: true       # Habilita repositórios DynamoDB
+  mvc:
+    async:
+      request-timeout: 5000 # Configuração de timeout para requisições assíncronas
+  datasource:
+    hikari:
+      connection-timeout: 2000
+      max-lifetime: 60000
 
 server:
-  port: 8083  # Ajuste conforme necessário
+  port: 8083                # Porta do serviço (ambiente local)
+  servlet:
+    context-path: /pix      # Prefixo base para todos os endpoints
 
+# ========================
+# CONFIGURAÇÃO DE LOGGING
+# ========================
 logging:
   level:
     root: INFO
+    com.pagamento: DEBUG    # Log detalhado para pacotes do projeto
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
-datasource:
-    url: jdbc:postgresql://localhost:5432/pagamento
-    username: user
-    password: pass
+# ==================================
+# INTEGRAÇÃO COM PAYMENT SERVICE
+# ==================================
+payment:
+  service:
+    url: http://paymentservice:8080  # Endpoint do serviço de orquestração
+    timeout: 5000                    # Timeout em ms para chamadas HTTP
+    retry:
+      max-attempts: 3                # Tentativas de retry
+      backoff: 500                   # Intervalo entre retries
 
+# =============================
+# CONFIGURAÇÃO AWS DYNAMODB
+# =============================
+aws:
+  dynamodb:
+    endpoint: ${AWS_DYNAMODB_ENDPOINT:http://localhost:8000}  # LocalStack para dev
+    region: ${AWS_REGION:sa-east-1}                           # Região AWS
+  credentials:
+    access-key: ${AWS_ACCESS_KEY:test}                        # Chave de acesso
+    secret-key: ${AWS_SECRET_KEY:test}                        # Chave secreta
+
+# =================================
+# RESILIÊNCIA (CIRCUIT BREAKER)
+# =================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentService:
+        registerHealthIndicator: true
+        failureRateThreshold: 50          # % de falhas para abrir o circuito
+        minimumNumberOfCalls: 10           # Núm. mínimo de chamadas para calcular estatísticas
+        slidingWindowSize: 10              # Tamanho da janela deslizante
+        waitDurationInOpenState: 10s       # Tempo em estado aberto antes de tentar semi-aberto
+        permittedNumberOfCallsInHalfOpenState: 3
+        recordExceptions:                  # Exceções consideradas como falhas
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+
+# =================================
+# CONFIGURAÇÃO JWT (SEGURANÇA)
+# =================================
 jwt:
-  secret: ${jwt.secret}
-  expiration: ${jwt.expiration}
+  secret: ${JWT_SECRET:secret-key-pix-service-123!}  # Chave secreta para validação
+  expiration: ${JWT_EXPIRATION:3600000}              # 1 hora em ms
+  issuer: pix-service                                # Emissor do token
 
+# =================================
+# CONFIGURAÇÃO FEIGN CLIENT
+# =================================
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 3000    # Timeout de conexão
+        readTimeout: 10000      # Timeout de leitura
+        loggerLevel: full        # Log completo das chamadas
+  circuitbreaker:
+    group:
+      enabled: true              # Habilita circuit breaker por grupo
+
+# =================================
+# CONFIGURAÇÃO DE HEALTH CHECK
+# =================================
+management:
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+# =================================
+# CONFIGURAÇÕES BACEN
+# =================================
+bacen:
+  api:
+    url: https://api.bacen.gov.br
+    key: SUA_CHAVE_API_AQUI
+		resilience4j:
+		  ratelimiter:
+		    instances:
+		      pixCreationRateLimit:
+		        limitForPeriod: 10
+		        limitRefreshPeriod: 60s
+		        timeoutDuration: 100ms
+		      pixRefundRateLimit:
+		        limitForPeriod: 5
+		        limitRefreshPeriod: 60s
+		        timeoutDuration: 100ms

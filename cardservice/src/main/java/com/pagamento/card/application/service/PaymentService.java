@@ -30,7 +30,7 @@ public class PaymentService {
     @Value("${payment.environment:PRODUCTION}")
     private String environment;
 
-    @Autowired
+    
     public PaymentService(ApplicationContext context,
                          BandeiraStrategy fallbackStrategy,
                          PaymentMetrics paymentMetrics,

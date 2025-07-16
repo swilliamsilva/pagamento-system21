@@ -1,0 +1,4 @@
+bacen:
+  api:
+    url: https://sandbox.bacen.gov.br
+    key: CHAVE_DEV_AQUI

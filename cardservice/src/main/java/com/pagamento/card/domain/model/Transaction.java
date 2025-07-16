@@ -21,4 +21,8 @@ public class Transaction {
     private String status;
     private String authorizationCode;
     private String message;
+	public static Object builder() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -1,19 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<configuration scan="true" scanPeriod="30 seconds">
 
-    <!-- Appender para console -->
+    <!-- ======================================================== -->
+    <!-- PROPRIEDADES GLOBAIS -->
+    <!-- ======================================================== -->
+    <property name="APP_NAME" value="${spring.application.name:-unknown-service}" />
+    <property name="LOG_PATH" value="${LOG_PATH:-logs}" />
+    <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}" />
+    
+    <!-- Padrão de formatação comum para todos os serviços -->
+    <property name="COMMON_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5level | ${APP_NAME} | %X{traceId:-} | %thread | %logger{36} | %msg%n" />
+
+    <!-- ======================================================== -->
+    <!-- APPENDERS -->
+    <!-- ======================================================== -->
+
+    <!-- Appender para console (desenvolvimento) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>${COMMON_PATTERN}</pattern>
         </encoder>
     </appender>
 
-    <!-- Log global: INFO ou DEBUG durante desenvolvimento -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE" />
+    <!-- Appender para arquivo (produção) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${APP_NAME}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${COMMON_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ======================================================== -->
+    <!-- CONFIGURAÇÃO DE NÍVEIS DE LOG -->
+    <!-- ======================================================== -->
+
+    <root level="${LOG_LEVEL}">
+        <!-- Ambiente local usa apenas console -->
+        <springProfile name="local, dev">
+            <appender-ref ref="CONSOLE" />
+        </springProfile>
+        
+        <!-- Ambientes não-locais usam arquivo -->
+        <springProfile name="prod, staging, docker">
+            <appender-ref ref="FILE" />
+            <appender-ref ref="CONSOLE" />
+        </springProfile>
     </root>
 
-    <!-- Reduz verbosidade de ByteBuddy, Mockito e outros frameworks -->
+    <!-- Logs específicos do projeto -->
+    <logger name="com.pagamento" level="DEBUG" />
+    
+    <!-- Reduz verbosidade de bibliotecas -->
+    <logger name="org.springframework" level="WARN" />
+    <logger name="org.hibernate" level="WARN" />
+    <logger name="org.apache" level="WARN" />
+    <logger name="com.netflix" level="WARN" />
+    <logger name="io.netty" level="WARN" />
+    
+    <!-- Logs de frameworks específicos -->
     <logger name="net.bytebuddy" level="WARN" />
     <logger name="org.mockito" level="WARN" />
     <logger name="org.mockito.internal.creation.bytebuddy" level="WARN" />
@@ -26,8 +76,37 @@
     <logger name="org.springframework.cloud.vault" level="ERROR" />
     <logger name="org.springframework.cloud.gateway.route.CachingRouteLocator" level="WARN" />
     <logger name="org.springframework.cloud.gateway" level="INFO" />
+    
+    <!-- AWS SDK -->
+    <logger name="com.amazonaws" level="WARN" />
+    
+    <!-- Feign Client -->
+    <logger name="feign" level="DEBUG" />
+    
+    <!-- Actuator -->
+    <logger name="org.springframework.boot.actuate" level="INFO" />
 
-    <!-- Log customizado do projeto -->
-    <logger name="com.pagamento" level="DEBUG" />
+    <!-- ======================================================== -->
+    <!-- CONFIGURAÇÃO DE CORES (OPCIONAL PARA DESENVOLVIMENTO) -->
+    <!-- ======================================================== -->
+    <if condition='"${CONSOLE_WITH_ANSI:-true}".equals("true")'>
+        <then>
+            <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+            <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+            <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+            
+            <appender name="CONSOLE_COLOR" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                    <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} | %clr(%-5level) | %clr(${APP_NAME}){cyan} | %clr(%X{traceId:-}){yellow} | %thread | %clr(%logger{36}){blue} | %msg%n</pattern>
+                </encoder>
+            </appender>
+            
+            <root level="${LOG_LEVEL}">
+                <springProfile name="local, dev">
+                    <appender-ref ref="CONSOLE_COLOR" />
+                </springProfile>
+            </root>
+        </then>
+    </if>
 
 </configuration>

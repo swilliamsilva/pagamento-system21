@@ -1,0 +1,4 @@
+bacen:
+  api:
+    url: https://api.bacen.gov.br
+    key: ${BACEN_API_KEY}  # Definida em variáveis de ambiente

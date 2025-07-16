@@ -1,6 +1,10 @@
 package com.pagamento.card.application.dto;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+
 import java.math.BigDecimal;
 
 public class CardRequestDTO {
