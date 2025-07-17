@@ -1,4 +1,4 @@
-package com.pagamento.infrastructure.integration.dto;
+package com.pagamento.pix.infrastructure.integration.dto;
 
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;

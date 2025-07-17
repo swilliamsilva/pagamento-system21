@@ -18,7 +18,7 @@ import java.util.Optional;
 @Service
 public class PixService {
 
-    private final PixValidator pixValidator;
+    private final PixValidator pixValidator; // Mantido para uso futuro
     private final PixRepositoryPort pixRepositoryPort;
     private final BacenPort bacenPort;
 
@@ -31,6 +31,11 @@ public class PixService {
     }
 
     public Pix processarPix(Pix pix) {
+        // VALIDAÇÃO ADICIONADA (uso do pixValidator)
+        if (!pixValidator.validar(pix)) {
+            throw new IllegalArgumentException("Pix inválido");
+        }
+
         // Implementação existente...
     }
 
@@ -38,8 +43,13 @@ public class PixService {
         if (!pix.permiteEstorno()) {
             throw new IllegalStateException("Estorno não permitido para status: " + pix.getStatus());
         }
-        
-        pix.iniciarEstorno();
+    	
+        if (!pix.permiteEstorno()) {
+            throw new IllegalStateException("Estorno não permitido para status: " + pix.getStatus());
+        }
+       
+        // USO DO MOTIVO ADICIONADO
+        pix.iniciarEstorno(motivo); // Método modificado para aceitar motivo
         pixRepositoryPort.salvar(pix);
         
         try {
@@ -51,6 +61,9 @@ public class PixService {
         
         pixRepositoryPort.salvar(pix);
     }
+
+        
+      
 
     public Pix obterPorId(String id) {
         return pixRepositoryPort.obterPorId(id);

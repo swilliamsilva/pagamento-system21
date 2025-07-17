@@ -1,9 +1,9 @@
-// common/src/main/java/com/pagamento/common/payment
 package com.pagamento.common.payment;
 
 import com.pagamento.pix.domain.model.Pix;
-import com.pagamento.common.payment.TransactionResponse;
+import com.pagamento.pix.infrastructure.adapters.output.TransactionResponse;
+import com.pagamento.pix.infrastructure.integration.PaymentFailedException;
 
 public interface PaymentOrchestratorPort {
-    TransactionResponse orchestrate(Pix pix);
+    TransactionResponse orchestrate(Pix pix) throws PaymentFailedException;
 }

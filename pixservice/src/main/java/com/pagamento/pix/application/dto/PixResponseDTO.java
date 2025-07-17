@@ -3,13 +3,15 @@ package com.pagamento.pix.application.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.pagamento.pix.domain.model.PixStatus;
+
 public class PixResponseDTO {
     private String id;
     private String chaveDestino;
     private String tipo;
     private BigDecimal valor;
     private LocalDateTime dataTransacao;
-    private String status;
+    private PixStatus status;
     private String bacenId;
     private String nomeRecebedor;
     private String ispbRecebedor;
@@ -57,12 +59,12 @@ public class PixResponseDTO {
         this.dataTransacao = dataTransacao;
     }
 
-    public String getStatus() {
+    public PixStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setStatus(PixStatus pixStatus) {
+        this.status = pixStatus;
     }
 
     public String getBacenId() {

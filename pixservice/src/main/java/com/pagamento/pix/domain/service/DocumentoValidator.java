@@ -4,10 +4,24 @@ import java.util.regex.Pattern;
 
 public class DocumentoValidator {
 
+    // Construtor privado para evitar instanciação
+    private DocumentoValidator() {
+        throw new AssertionError("Classe utilitária não deve ser instanciada");
+    }
+
     public static boolean validarCPF(String cpf) {
-        if (cpf == null || !Pattern.matches("\\d{11}", cpf)) return false;
+        if (cpf == null || cpf.isBlank()) return false;
         
-        int[] digits = cpf.chars().map(Character::getNumericValue).toArray();
+        // Remove formatação
+        String numeros = cpf.replaceAll("\\D", "");
+        
+        // Verifica padrão numérico
+        if (!Pattern.matches("\\d{11}", numeros)) return false;
+        
+        // Verifica dígitos repetidos
+        if (numeros.matches("(\\d)\\1{10}")) return false;
+        
+        int[] digits = numeros.chars().map(Character::getNumericValue).toArray();
         return calcDigCPF(digits, 9) == digits[9] && 
                calcDigCPF(digits, 10) == digits[10];
     }
@@ -23,9 +37,18 @@ public class DocumentoValidator {
     }
 
     public static boolean validarCNPJ(String cnpj) {
-        if (cnpj == null || !Pattern.matches("\\d{14}", cnpj)) return false;
+        if (cnpj == null || cnpj.isBlank()) return false;
         
-        int[] digits = cnpj.chars().map(Character::getNumericValue).toArray();
+        // Remove formatação
+        String numeros = cnpj.replaceAll("\\D", "");
+        
+        // Verifica padrão numérico
+        if (!Pattern.matches("\\d{14}", numeros)) return false;
+        
+        // Verifica dígitos repetidos
+        if (numeros.matches("(\\d)\\1{13}")) return false;
+        
+        int[] digits = numeros.chars().map(Character::getNumericValue).toArray();
         return calcDigCNPJ(digits, 12) == digits[12] && 
                calcDigCNPJ(digits, 13) == digits[13];
     }

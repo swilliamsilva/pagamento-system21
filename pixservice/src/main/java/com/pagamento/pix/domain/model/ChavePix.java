@@ -24,11 +24,18 @@ public class ChavePix {
         return TipoChave.DESCONHECIDA;
     }
 
+    private boolean isCPF(String chave) {
+        return chave != null && chave.matches("\\d{11}");
+    }
+
+    private boolean isCNPJ(String chave) {
+        return chave != null && chave.matches("\\d{14}");
+    }
+
     public boolean validar() {
         return tipo != TipoChave.DESCONHECIDA;
     }
 
-    // Métodos de validação (similares aos anteriores, mas sem CPF/CNPJ)
     private boolean isEmail(String key) {
         return Pattern.matches("^[\\w.-]+@([\\w-]+\\.)+[\\w-]{2,4}$", key);
     }

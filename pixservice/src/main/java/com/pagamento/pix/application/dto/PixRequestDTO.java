@@ -12,6 +12,7 @@ public class PixRequestDTO {
     private String ispbRecebedor;
     private String agenciaRecebedor;
     private String contaRecebedor;
+    private String solicitacaoId;  // Removido comentário TODO
     
     // Getters e Setters
     public String getChaveDestino() {
@@ -86,8 +87,11 @@ public class PixRequestDTO {
         this.contaRecebedor = contaRecebedor;
     }
 
-	public String getSolicitacaoId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public String getSolicitacaoId() {
+        return solicitacaoId;
+    }
+
+    public void setSolicitacaoId(String solicitacaoId) {
+        this.solicitacaoId = solicitacaoId;
+    }
 }

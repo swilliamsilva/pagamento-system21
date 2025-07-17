@@ -7,61 +7,45 @@ import com.pagamento.pix.domain.model.Participante;
 import com.pagamento.pix.domain.model.Pix;
 import com.pagamento.pix.domain.model.PixStatus;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 public class PixMapper {
 
-    /**
-     * Converte um PixRequestDTO para a entidade Pix de domínio.
-     *
-     * @param dto dados da requisição
-     * @return entidade Pix pronta para processamento
-     * @throws IllegalArgumentException se o DTO for nulo
-     */
     public static Pix toDomain(PixRequestDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("PixRequestDTO não pode ser nulo");
         }
         
-        Pix pix = new Pix();
-        
-        // Configurar chave destino
-        if (dto.getChaveDestino() != null) {
-            pix.setChaveDestino(new ChavePix(dto.getChaveDestino()));
-        }
-        
-        pix.setTipo(dto.getTipo());
-        pix.setValor(dto.getValor());
-        pix.setDataTransacao(LocalDateTime.now());
-        
-        // Configurar pagador
+        // Criar pagador
         Participante pagador = new Participante();
         pagador.setDocumento(dto.getDocumentoPagador());
         pagador.setNome(dto.getNomePagador());
-        pix.setPagador(pagador);
         
-        // Configurar recebedor, se fornecido
-        if (dto.getIspbRecebedor() != null || dto.getAgenciaRecebedor() != null || dto.getContaRecebedor() != null) {
+        // Construir Pix usando o Builder original da classe Pix
+        Pix.Builder builder = Pix.builder()
+                .chaveDestino(new ChavePix(dto.getChaveDestino()))
+                .valor(dto.getValor())
+                .pagador(pagador)
+                .tipo(dto.getTipo())
+                .dataTransacao(LocalDateTime.now());
+        
+        // Adicionar recebedor se disponível
+        if (dto.getNomeRecebedor() != null || 
+            dto.getIspbRecebedor() != null || 
+            dto.getAgenciaRecebedor() != null || 
+            dto.getContaRecebedor() != null) {
+            
             Participante recebedor = new Participante();
+            recebedor.setNome(dto.getNomeRecebedor());
             recebedor.setIspb(dto.getIspbRecebedor());
             recebedor.setAgencia(dto.getAgenciaRecebedor());
             recebedor.setConta(dto.getContaRecebedor());
-            // Nome do recebedor pode ser opcional? Vamos considerar que está no DTO
-            recebedor.setNome(dto.getNomeRecebedor());
-            pix.setRecebedor(recebedor);
+            builder.recebedor(recebedor);
         }
         
-        return pix;
+        return builder.build();
     }
 
-    /**
-     * Converte uma entidade Pix de domínio para PixResponseDTO.
-     *
-     * @param entity entidade persistida
-     * @return DTO de resposta para API
-     */
     public static PixResponseDTO toResponseDTO(Pix entity) {
         if (entity == null) {
             return null;
@@ -90,13 +74,6 @@ public class PixMapper {
         return dto;
     }
 
-    /**
-     * Converte uma entidade Pix de domínio para PixRequestDTO.
-     * (Útil para operações de atualização ou retorno parcial)
-     *
-     * @param entity entidade persistida
-     * @return DTO de requisição
-     */
     public static PixRequestDTO toRequestDTO(Pix entity) {
         if (entity == null) {
             return null;
@@ -122,40 +99,5 @@ public class PixMapper {
         }
         
         return dto;
-    }
-
-    /**
-     * Builder para construção flexível de um Pix a partir de um PixRequestDTO.
-     * Permite adicionar informações adicionais após o mapeamento básico.
-     */
-    public static class PixBuilder {
-        private final Pix pix;
-        
-        public PixBuilder(PixRequestDTO dto) {
-            this.pix = toDomain(dto);
-        }
-        
-        public PixBuilder withRecebedor(Participante recebedor) {
-            pix.setRecebedor(recebedor);
-            return this;
-        }
-        
-        public PixBuilder withStatus(PixStatus status) {
-            pix.setStatus(status.name());
-            return this;
-        }
-        
-        public PixBuilder withTaxa(double taxa) {
-            pix.setTaxa(taxa);
-            return this;
-        }
-        
-        public Pix build() {
-            return pix;
-        }
-    }
-    
-    public static PixBuilder from(PixRequestDTO dto) {
-        return new PixBuilder(dto);
     }
 }

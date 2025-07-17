@@ -1,6 +1,8 @@
 package com.pagamento.pix.domain.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class DocumentoValidatorTest {
@@ -60,5 +62,11 @@ class DocumentoValidatorTest {
     void deveRejeitarCNPJComTamanhoErrado() {
         assertFalse(DocumentoValidator.validarCNPJ("1122233300014")); // 13 dígitos
         assertFalse(DocumentoValidator.validarCNPJ("112223330001441")); // 15 dígitos
+    }
+    
+    @ParameterizedTest
+    @ValueSource(strings = {"00000000000", "11111111111", "123"})
+    void documentoInvalido_deveLancarExcecao(String documento) {
+        assertThrows(InvalidDocumentException.class, () -> validator.validar(documento));
     }
 }

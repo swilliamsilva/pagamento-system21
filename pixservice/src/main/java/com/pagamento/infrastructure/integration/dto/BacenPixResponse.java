@@ -19,5 +19,10 @@ public class BacenPixResponse {
     @JsonProperty("dataHoraProcessamento")
     private String dataHoraProcessamento;
 
+	public String getId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
     // Getters e Setters
 }

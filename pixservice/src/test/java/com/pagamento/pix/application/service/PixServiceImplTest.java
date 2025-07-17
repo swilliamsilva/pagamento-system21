@@ -52,4 +52,18 @@ class PixServiceImplTest {
         Pix invalidPix = new Pix(); // Dados inválidos
         assertThrows(PixValidationException.class, () -> pixService.processarPix(invalidPix));
     }
+    
+    @Test
+    void processarPix_deveRetornarErroQuandoBacenIndisponivel() {
+        when(bacenPort.registrarPix(any())).thenThrow(BacenIntegrationException.class);
+        
+        assertThrows(ServiceException.class, () -> service.processarPix(requestDTO));
+        verify(repositoryPort, never()).salvar(any());
+    }
+    
+    @Test
+    void processarPix_deveRejeitarTransacaoDuplicada() {
+        when(repositoryPort.buscarPorIdempotencyKey(any())).thenReturn(Optional.of(new Pix()));
+        assertThrows(DuplicateTransactionException.class, () -> service.processarPix(requestDTO));
+    }
 }

@@ -19,31 +19,43 @@ class PixValidatorTest {
     }
 
     private Pix criarPixValido() {
-        Pix pix = new Pix();
-        pix.setId("PIX-12345");
-        pix.setChaveOrigem(new ChavePix("12345678909")); // CPF
-        pix.setChaveDestino(new ChavePix("recebedor@empresa.com"));
-        pix.setValor(new BigDecimal("150.99"));
-        pix.setDataTransacao(LocalDateTime.now());
-        pix.setTaxa(0.99);
+        Participante pagador = criarParticipanteValido(
+            "João Silva", 
+            "52998224725", 
+            "12345678", 
+            "0001", 
+            "12345-6"
+        );
 
-        Participante pagador = new Participante();
-        pagador.setNome("João Silva");
-        pagador.setDocumento("52998224725"); // CPF válido
-        pagador.setIspb("12345678");
-        pagador.setAgencia("0001");
-        pagador.setConta("12345-6");
-        pix.setPagador(pagador);
+        Participante recebedor = criarParticipanteValido(
+            "Empresa XYZ", 
+            "11222333000144", 
+            "87654321", 
+            "0002", 
+            "65432-1"
+        );
 
-        Participante recebedor = new Participante();
-        recebedor.setNome("Empresa XYZ");
-        recebedor.setDocumento("11222333000144"); // CNPJ válido
-        recebedor.setIspb("87654321");
-        recebedor.setAgencia("0002");
-        recebedor.setConta("65432-1");
-        pix.setRecebedor(recebedor);
+        return Pix.builder()
+                .id("PIX-12345")
+                .chaveOrigem(new ChavePix("12345678909"))
+                .chaveDestino(new ChavePix("recebedor@empresa.com"))
+                .valor(new BigDecimal("150.99"))
+                .dataTransacao(LocalDateTime.now())
+                .taxa(0.99)
+                .pagador(pagador)
+                .recebedor(recebedor)
+                .build();
+    }
 
-        return pix;
+    private Participante criarParticipanteValido(String nome, String documento, 
+                                                String ispb, String agencia, String conta) {
+        Participante participante = new Participante();
+        participante.setNome(nome);
+        participante.setDocumento(documento);
+        participante.setIspb(ispb);
+        participante.setAgencia(agencia);
+        participante.setConta(conta);
+        return participante;
     }
 
     @Test
@@ -53,52 +65,98 @@ class PixValidatorTest {
 
     @Test
     void deveRejeitarQuandoValorInvalido() {
-        pix.setValor(BigDecimal.ZERO);
-        assertFalse(validator.validar(pix));
+        Pix pixInvalido = Pix.builder()
+                .id("PIX-56789")
+                .chaveOrigem(new ChavePix("12345678909"))
+                .chaveDestino(new ChavePix("outro@email.com"))
+                .valor(BigDecimal.ZERO)  // Valor inválido
+                .pagador(pix.getPagador())
+                .recebedor(pix.getRecebedor())
+                .build();
         
-        pix.setValor(new BigDecimal("-10"));
-        assertFalse(validator.validar(pix));
-        
-        pix.setValor(null);
-        assertFalse(validator.validar(pix));
+        assertFalse(validator.validar(pixInvalido));
     }
 
     @Test
     void deveRejeitarQuandoChavesIguais() {
-        pix.setChaveDestino(new ChavePix("12345678909"));
-        assertFalse(validator.validar(pix));
+        Pix pixInvalido = Pix.builder()
+                .from(pix)  // Copia atributos válidos
+                .chaveDestino(new ChavePix("12345678909"))  // Igual à origem
+                .build();
+        
+        assertFalse(validator.validar(pixInvalido));
     }
 
     @Test
     void deveRejeitarQuandoChaveOrigemInvalida() {
-        pix.setChaveOrigem(new ChavePix("chave-invalida@"));
-        assertFalse(validator.validar(pix));
+        Pix pixInvalido = Pix.builder()
+                .from(pix)
+                .chaveOrigem(new ChavePix("chave-invalida@"))
+                .build();
+        
+        assertFalse(validator.validar(pixInvalido));
     }
 
     @Test
     void deveRejeitarQuandoDocumentoPagadorInvalido() {
-        pix.getPagador().setDocumento("11111111111"); // CPF inválido
-        assertFalse(validator.validar(pix));
+        Participante pagadorInvalido = criarParticipanteValido(
+            "Pagador Inválido", 
+            "11111111111",  // CPF inválido
+            pix.getPagador().getIspb(),
+            pix.getPagador().getAgencia(),
+            pix.getPagador().getConta()
+        );
+
+        Pix pixInvalido = Pix.builder()
+                .from(pix)
+                .pagador(pagadorInvalido)
+                .build();
+        
+        assertFalse(validator.validar(pixInvalido));
     }
 
     @Test
     void deveRejeitarQuandoDocumentoRecebedorInvalido() {
-        pix.getRecebedor().setDocumento("99999999000199"); // CNPJ inválido
-        assertFalse(validator.validar(pix));
+        Participante recebedorInvalido = criarParticipanteValido(
+            "Recebedor Inválido", 
+            "99999999000199",  // CNPJ inválido
+            pix.getRecebedor().getIspb(),
+            pix.getRecebedor().getAgencia(),
+            pix.getRecebedor().getConta()
+        );
+
+        Pix pixInvalido = Pix.builder()
+                .from(pix)
+                .recebedor(recebedorInvalido)
+                .build();
+        
+        assertFalse(validator.validar(pixInvalido));
     }
 
     @Test
     void deveRejeitarQuandoFaltarParticipante() {
-        pix.setPagador(null);
-        assertFalse(validator.validar(pix));
+        Pix semPagador = Pix.builder()
+                .from(pix)
+                .pagador(null)
+                .build();
         
-        pix.setRecebedor(null);
-        assertFalse(validator.validar(pix));
+        assertFalse(validator.validar(semPagador));
+        
+        Pix semRecebedor = Pix.builder()
+                .from(pix)
+                .recebedor(null)
+                .build();
+        
+        assertFalse(validator.validar(semRecebedor));
     }
 
     @Test
     void deveRejeitarQuandoChaveDestinoInvalida() {
-        pix.setChaveDestino(new ChavePix("+123")); // Formato de celular inválido
-        assertFalse(validator.validar(pix));
+        Pix pixInvalido = Pix.builder()
+                .from(pix)
+                .chaveDestino(new ChavePix("+123"))  // Formato inválido
+                .build();
+        
+        assertFalse(validator.validar(pixInvalido));
     }
 }

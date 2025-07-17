@@ -1,17 +1,21 @@
 package com.pagamento.pix.infrastructure.clients;
 
-import com.pagamento.common.payment.PaymentRequest;
-import com.pagamento.common.payment.TransactionResponse;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
+import com.pagamento.pix.infrastructure.adapters.output.PaymentRequest;
+import com.pagamento.pix.infrastructure.adapters.output.TransactionResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
-@FeignClient(
-    name = "payment-service",
-    url = "${payment.service.url}",
-    configuration = PaymentServiceConfig.class
-)
-public interface PaymentServiceClient {
+@Component
+public class PaymentServiceClient {
+
+    private final RestTemplate restTemplate;
     
-    @PostMapping("/payments/orchestrate")
-    TransactionResponse processPayment(PaymentRequest request);
+    public PaymentServiceClient(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+    
+    public TransactionResponse processPayment(PaymentRequest request) {
+        // Implementação real da chamada HTTP
+        return restTemplate.postForObject("/payments", request, TransactionResponse.class);
+    }
 }

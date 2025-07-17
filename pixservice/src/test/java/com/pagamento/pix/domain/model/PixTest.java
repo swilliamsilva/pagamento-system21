@@ -34,7 +34,6 @@ class PixTest {
     @Test
     void builderDeveFalharSemCamposObrigatorios() {
         assertThrows(IllegalStateException.class, () -> Pix.builder().build());
-        
         assertThrows(IllegalStateException.class, () -> 
             Pix.builder()
                 .chaveDestino(new ChavePix("teste"))
@@ -73,7 +72,7 @@ class PixTest {
         assertEquals(5.0, pix.getTaxa());
         
         // Taxa percentual
-        pix.calcularTaxa(new TaxaPercentualStrategy(0.01)); // 1%
+        pix.calcularTaxa(new TaxaPercentualStrategy(0.01));
         assertEquals(10.0, pix.getTaxa());
         
         // Taxa progressiva
@@ -81,9 +80,14 @@ class PixTest {
         pix.calcularTaxa(progressiva);
         assertEquals(5.0, pix.getTaxa());
         
-        pix.setValor(new BigDecimal("10000"));
-        pix.calcularTaxa(progressiva);
-        assertEquals(20.0, pix.getTaxa());
+        // Novo pix com valor maior
+        Pix pixGrande = Pix.builder()
+                .chaveDestino(new ChavePix("teste2"))
+                .valor(new BigDecimal("10000"))
+                .pagador(new Participante())
+                .build();
+        pixGrande.calcularTaxa(progressiva);
+        assertEquals(20.0, pixGrande.getTaxa());
     }
 
     @Test
@@ -94,30 +98,66 @@ class PixTest {
                 .pagador(new Participante())
                 .build();
         
-        // Deve permitir estorno apenas quando processado
-        pix.setStatus(PixStatus.PROCESSADO);
+        pix.marcarComoProcessado("ID-BACEN");
         pix.iniciarEstorno();
         
-        // Não deve permitir confirmar estorno sem iniciar
-        pix.setStatus(PixStatus.PROCESSADO);
-        assertThrows(IllegalStateException.class, pix::confirmarEstorno);
+        // Tentar confirmar estorno sem iniciar
+        Pix pix2 = Pix.builder()
+                .chaveDestino(new ChavePix("teste2"))
+                .valor(BigDecimal.ONE)
+                .pagador(new Participante())
+                .build();
+        pix2.marcarComoProcessado("ID-BACEN2");
+        assertThrows(IllegalStateException.class, pix2::confirmarEstorno);
         
-        // Não deve permitir estorno de transação já estornada
-        pix.setStatus(PixStatus.ESTORNADO);
+        // Tentar estornar transação já estornada
+        pix.confirmarEstorno();
         assertThrows(IllegalStateException.class, pix::iniciarEstorno);
     }
 
     @Test
     void deveLancarExcecoesParaOperacoesInvalidas() {
-        Pix pix = new Pix();
+        // Teste via builder para validações
+        assertThrows(IllegalStateException.class, () -> 
+            Pix.builder()
+                .chaveDestino(new ChavePix("teste"))
+                .valor(BigDecimal.ZERO) // Inválido
+                .pagador(new Participante())
+                .build()
+        );
         
-        assertThrows(IllegalArgumentException.class, () -> pix.setValor(BigDecimal.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> pix.setDataTransacao(null));
-        assertThrows(IllegalArgumentException.class, () -> pix.setPagador(null));
+        assertThrows(IllegalStateException.class, () -> 
+            Pix.builder()
+                .chaveDestino(new ChavePix("teste"))
+                .valor(BigDecimal.TEN)
+                .pagador(null) // Inválido
+                .build()
+        );
+        
+        Pix pix = Pix.builder()
+                .chaveDestino(new ChavePix("teste"))
+                .valor(BigDecimal.TEN)
+                .pagador(new Participante())
+                .build();
+        
         assertThrows(IllegalArgumentException.class, () -> pix.calcularTaxa(null));
-        
-        pix.setStatus(PixStatus.PROCESSADO);
         assertThrows(IllegalArgumentException.class, () -> pix.marcarComoProcessado(null));
         assertThrows(IllegalArgumentException.class, () -> pix.marcarComoProcessado(""));
+    }
+    
+    @Test
+    void aoConfirmarEstorno_deveSetarTimestamp() {
+        Pix pix = Pix.builder()
+                .chaveDestino(new ChavePix("teste"))
+                .valor(BigDecimal.TEN)
+                .pagador(new Participante())
+                .build();
+        
+        pix.marcarComoProcessado("ID-BACEN");
+        pix.iniciarEstorno();
+        pix.confirmarEstorno();
+        
+        assertEquals(PixStatus.ESTORNADO, pix.getStatus());
+        assertNotNull(pix.getEstornadoEm());
     }
 }
