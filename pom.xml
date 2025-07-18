@@ -41,6 +41,7 @@
         <common.version>1.0.0-SNAPSHOT</common.version>
         <byte-buddy.version>1.14.13</byte-buddy.version>
         <testcontainers.version>1.19.7</testcontainers.version>
+        
         <mockito.version>5.11.0</mockito.version>
         <cds.archive.file>apigateway-cds.jsa</cds.archive.file>
         <lombok.version>1.18.30</lombok.version>

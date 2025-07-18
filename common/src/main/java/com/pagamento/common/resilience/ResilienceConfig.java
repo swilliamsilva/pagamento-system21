@@ -2,9 +2,8 @@ package com.pagamento.common.resilience;
 
 import java.time.Duration;
 
-import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
-import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.cloud.client.circuitbreaker.Customizer;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,6 +14,8 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
+import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 
 @Configuration
 public class ResilienceConfig {
@@ -31,7 +32,7 @@ public class ResilienceConfig {
             .minimumNumberOfCalls(10)
             .slowCallRateThreshold(80)
             .slowCallDurationThreshold(Duration.ofSeconds(3))
-            .ignoreExceptions( // Exceções que não devem contar como falhas
+            .ignoreExceptions(
                 IllegalArgumentException.class, 
                 IllegalStateException.class)
             .build();
@@ -59,31 +60,28 @@ public class ResilienceConfig {
 
     // Registry para Circuit Breaker
     @Bean
-    public CircuitBreakerRegistry circuitBreakerRegistry(CircuitBreakerConfig config) {
-        return CircuitBreakerRegistry.of(config);
+    public CircuitBreakerRegistry circuitBreakerRegistry() {
+        return CircuitBreakerRegistry.of(circuitBreakerConfig());
     }
 
     // Registry para Retry
     @Bean
-    public RetryRegistry retryRegistry(RetryConfig config) {
-        return RetryRegistry.of(config);
+    public RetryRegistry retryRegistry() {
+        return RetryRegistry.of(retryConfig());
     }
 
-    // Customizador para integração com Spring Cloud Circuit Breaker
+    // Configuração atualizada do Circuit Breaker Factory
     @Bean
-    public Customizer<Resilience4JCircuitBreakerFactory> resilienceCustomizer(
-            CircuitBreakerConfig circuitBreakerConfig,
-            TimeLimiterConfig timeLimiterConfig) {
-        
+    public Customizer<Resilience4JCircuitBreakerFactory> resilienceCustomizer() {
         return factory -> factory.configureDefault(id -> new Resilience4JConfigBuilder(id)
-            .timeLimiterConfig(timeLimiterConfig)
-            .circuitBreakerConfig(circuitBreakerConfig)
+            .timeLimiterConfig(timeLimiterConfig())
+            .circuitBreakerConfig(circuitBreakerConfig())
             .build());
     }
 
     // Bean de exemplo para injeção
     @Bean
-    public CircuitBreaker paymentCircuitBreaker(CircuitBreakerRegistry registry) {
-        return registry.circuitBreaker("paymentService", circuitBreakerConfig());
+    public CircuitBreaker paymentCircuitBreaker() {
+        return circuitBreakerRegistry().circuitBreaker("paymentService");
     }
 }
