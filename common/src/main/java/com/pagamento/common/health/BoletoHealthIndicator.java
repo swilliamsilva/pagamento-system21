@@ -5,7 +5,6 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -23,7 +22,7 @@ public class BoletoHealthIndicator implements HealthIndicator {
     private final DataSource dataSource;
     private final ExternalBoletoService boletoService;
 
-    @Autowired
+    
     public BoletoHealthIndicator(DataSource dataSource, ExternalBoletoService boletoService) {
         this.dataSource = dataSource;
         this.boletoService = boletoService;

@@ -8,9 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface BoletoJpaRepository extends JpaRepository<Boleto, String> {
+public interface BoletoJpaRepository extends JpaRepository<Boleto, UUID> {
     List<Boleto> findByStatus(BoletoStatus status);
     List<Boleto> findByDataVencimentoBeforeAndStatusNot(LocalDate dataAtual, BoletoStatus pago);
     List<Boleto> findByDataVencimentoBetween(LocalDate inicio, LocalDate fim);

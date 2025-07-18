@@ -16,27 +16,30 @@ public class PaymentMapper {
     public Payment toEntity(PaymentRequest request) {
         validateRequest(request);
         
-        return Payment.builder()
-            .transactionId(generateTransactionId())
-            .userId(request.userId())
-            .paymentType(request.tipoPagamento())
-            .amount(request.valor())
-            .createdAt(Instant.now())
-            .status("CREATED")
-            .build();
+        Payment payment = new Payment();
+        payment.setTransactionId(generateTransactionId());
+        payment.setUserId(request.userId());
+        payment.setPaymentType(request.tipoPagamento());
+        payment.setAmount(request.valor());
+        payment.setCreatedAt(Instant.now());
+        payment.setStatus("CREATED");
+        
+        return payment;
     }
 
+    // Método único toResponse (removido o duplicado)
     public PaymentResponse toResponse(Payment entity) {
         if (entity == null) {
             throw new IllegalArgumentException("Payment entity cannot be null");
         }
         
-        return PaymentResponse.builder()
-            .transactionId(entity.getTransactionId())
-            .status(entity.getStatus())
-            .paymentType(entity.getPaymentType())
-            .amount(entity.getAmount())
-            .build();
+        PaymentResponse response = new PaymentResponse();
+        response.setTransactionId(entity.getTransactionId());
+        response.setStatus(entity.getStatus());
+        response.setPaymentType(entity.getPaymentType());
+        response.setAmount(entity.getAmount());
+        
+        return response;
     }
 
     public PaymentResponse toProcessingResponse(Payment entity) {

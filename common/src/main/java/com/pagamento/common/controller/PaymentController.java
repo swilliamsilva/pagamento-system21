@@ -17,8 +17,12 @@ public class PaymentController {
 
     @PostMapping
     public ResponseEntity<PaymentResponse> criarPagamento(@RequestBody @Valid PaymentRequest request) {
-        Payment entity = PaymentMapper.toEntity(request);
-        PaymentResponse response = PaymentMapper.toResponse(entity);
+    
+        PaymentMapper mapper = new PaymentMapper();
+        Payment entity = mapper.toEntity(request);
+        PaymentResponse response = mapper.toResponse(entity);
         return ResponseEntity.ok(response);
+        
+        
     }
 }

@@ -1,6 +1,16 @@
 package com.pagamento.common.validation;
 
-public class CPFValidator {
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+
+public class CPFValidator implements ConstraintValidator<ValidCPF, String> {
+
+	@Override
+    public boolean isValid(String cpf, ConstraintValidatorContext context) {
+        if (cpf == null) return false;
+        return true; 
+    }
+
     public boolean isValid(String value) {
         if (value == null) {
             return false;

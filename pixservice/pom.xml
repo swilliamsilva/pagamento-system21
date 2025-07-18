@@ -162,13 +162,13 @@
     <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter</artifactId>
-        <version>5.10.0</version>
+      
         <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
-        <version>5.4.0</version>
+        
         <scope>test</scope>
     </dependency>
     
@@ -176,7 +176,7 @@
 <dependency>
     <groupId>io.github.resilience4j</groupId>
     <artifactId>resilience4j-spring-boot2</artifactId>
-    <version>1.7.1</version>
+    
 </dependency>
 
 <!-- Spring Data Envers para Auditoria -->
@@ -197,7 +197,7 @@
 <dependency>
     <groupId>org.springframework.retry</groupId>
     <artifactId>spring-retry</artifactId>
-    <version>2.0.0</version> <!-- Ou a versão mais recente -->
+    
 </dependency>
 
 
@@ -253,25 +253,7 @@
             </plugin>
 
             <!-- Jacoco -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            
 
             <!-- Surefire -->
             <plugin>

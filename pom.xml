@@ -23,35 +23,27 @@
     </modules>
 
     <properties>
-        <!-- Java e codificação -->
         <java.version>21</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       
         <spring-boot.version>3.5.3</spring-boot.version>
-
-        <!-- Plugins -->
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
         <jacoco.plugin.version>0.8.11</jacoco.plugin.version>
         <failsafe.plugin.version>3.0.0-M7</failsafe.plugin.version>
         <sonar.plugin.version>3.11.0.3922</sonar.plugin.version>
         <surefire.plugin.version>3.0.0-M8</surefire.plugin.version>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version> <!-- para manter alinhado -->
-
-        <!-- Dependências -->
-        <aws.sdk.version>2.20.99</aws.sdk.version>
+        <aws.sdk.version>2.25.0</aws.sdk.version>
         <httpclient.version>4.5.14</httpclient.version>
         <springdoc.version>2.5.0</springdoc.version>
-        <resilience4j.version>2.0.2</resilience4j.version>
+        <resilience4j.version>2.1.0</resilience4j.version> <!-- Versão definida -->
         <common.version>1.0.0-SNAPSHOT</common.version>
         <byte-buddy.version>1.14.13</byte-buddy.version>
-        <testcontainers.version>1.19.3</testcontainers.version>
+        <testcontainers.version>1.19.7</testcontainers.version>
         <mockito.version>5.11.0</mockito.version>
-
-        <!-- Outros -->
         <cds.archive.file>apigateway-cds.jsa</cds.archive.file>
-        <aws.sdk.version>2.25.0</aws.sdk.version> 
+        <lombok.version>1.18.30</lombok.version>
     </properties>
 
     <dependencyManagement>
@@ -74,20 +66,26 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- AWS SDK DynamoDB -->
+            <!-- AWS SDK -->
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>dynamodb</artifactId>
                 <version>${aws.sdk.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>s3</artifactId>
+                <version>${aws.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>sns</artifactId>
+                <version>${aws.sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>s3-presigner</artifactId>
+                <version>${aws.sdk.version}</version>
             </dependency>
 
             <!-- Apache HttpClient -->
@@ -104,11 +102,13 @@
                 <version>${springdoc.version}</version>
             </dependency>
 
-            <!-- Resilience4j -->
+            <!-- Resilience4j BOM (CORREÇÃO CHAVE) -->
             <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bom</artifactId>
                 <version>${resilience4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!-- Dependência comum interna -->
@@ -138,20 +138,13 @@
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
             </dependency>
-            <!--  dependências do AWS SDK -->
-        
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3-presigner</artifactId>
-            <version>${aws.sdk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
-        </dependency>       
-            
-            
+
+            <!-- Spring Security Test -->
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-test</artifactId>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -163,11 +156,9 @@
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>3.2.0</version>
                     <configuration>
-                    <encoding>UTF-8</encoding>
+                        <encoding>UTF-8</encoding>
                     </configuration>
                 </plugin>
-            
-                <!-- Maven Compiler -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -178,15 +169,11 @@
                         <encoding>${project.build.sourceEncoding}</encoding>
                     </configuration>
                 </plugin>
-
-                <!-- Maven Surefire -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${surefire.plugin.version}</version>
                 </plugin>
-
-                <!-- Jacoco -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
@@ -203,8 +190,6 @@
                         </execution>
                     </executions>
                 </plugin>
-
-                <!-- Maven Failsafe -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
@@ -219,8 +204,6 @@
                         </execution>
                     </executions>
                 </plugin>
-
-                <!-- SonarQube -->
                 <plugin>
                     <groupId>org.sonarsource.scanner.maven</groupId>
                     <artifactId>sonar-maven-plugin</artifactId>
@@ -229,12 +212,9 @@
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>3.2.4</version> <!-- alinhado com seu Spring Boot -->
-              </plugin>
-
-
+                    <version>${spring-boot.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
-
 </project>
