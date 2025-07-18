@@ -2,9 +2,7 @@ package com.pagamento.pix.infrastructure.adapters;
 
 import com.pagamento.pix.domain.model.ChavePix;
 import com.pagamento.pix.domain.model.Pix;
-import com.pagamento.pix.infrastructure.adapters.output.PaymentRequest;
 import com.pagamento.pix.infrastructure.adapters.output.PaymentServiceAdapter;
-import com.pagamento.pix.infrastructure.adapters.output.TransactionResponse;
 import com.pagamento.pix.infrastructure.clients.PaymentServiceClient;
 import com.pagamento.pix.infrastructure.integration.PaymentFailedException;
 import org.junit.jupiter.api.Test;
@@ -12,7 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.WebClientException;
+import org.springframework.web.client.ResourceAccessException; // Alternativa mais comum
 
 import java.math.BigDecimal;
 
@@ -31,23 +29,14 @@ class PaymentServiceAdapterTest {
 
     @Test
     void processarPagamento_deveRetornarErroAposTentativas() {
-        // Criar request válido
-        PaymentRequest request = new PaymentRequest(
-            "origem@email.com",
-            "destino@email.com",
-            new BigDecimal("100.00")
-        );
+        // Usando ResourceAccessException como alternativa
+        when(client.processPayment(any()))
+            .thenThrow(new ResourceAccessException("Erro simulado de conexão"));
         
-        // Configurar mock para lançar exceção
-        when(client.processPayment(any(PaymentRequest.class)))
-            .thenThrow(WebClientException.class);
-        
-        // Executar e verificar exceção
         assertThrows(PaymentFailedException.class, 
             () -> adapter.orchestrate(criarPix()));
         
-        // Verificar que foi chamado 1 vez (com retry configurado seria mais)
-        verify(client, times(1)).processPayment(any(PaymentRequest.class));
+        verify(client, times(3)).processPayment(any());
     }
     
     private Pix criarPix() {

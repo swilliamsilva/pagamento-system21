@@ -1,4 +1,4 @@
-package com.pagamento.pix.infrastructure.integration;
+package com.pagamento.pix.infrastructure.integration.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

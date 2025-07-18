@@ -21,16 +21,16 @@ public class SecurityLoggingAspect {
         
         // Mascarar dados sensíveis nos argumentos
         for (int i = 0; i < args.length; i++) {
-            if (args[i] instanceof String) {
-                args[i] = maskSensitiveData((String) args[i]);
+            if (args[i] instanceof String stringArg) {
+                args[i] = maskSensitiveData(stringArg);
             }
         }
         
         Object result = joinPoint.proceed(args);
         
         // Mascarar dados sensíveis no retorno
-        if (result instanceof String) {
-            return maskSensitiveData((String) result);
+        if (result instanceof String stringResult) {
+            return maskSensitiveData(stringResult);
         }
         return result;
     }

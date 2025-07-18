@@ -12,7 +12,7 @@ public class PixRequestDTO {
     private String ispbRecebedor;
     private String agenciaRecebedor;
     private String contaRecebedor;
-    private String solicitacaoId;  // Removido comentário TODO
+    private String solicitacaoId;  
     
     // Getters e Setters
     public String getChaveDestino() {

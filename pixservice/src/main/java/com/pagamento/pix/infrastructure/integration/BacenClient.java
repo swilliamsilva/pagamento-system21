@@ -1,7 +1,7 @@
 package com.pagamento.pix.infrastructure.integration;
 
-import com.pagamento.infrastructure.integration.dto.BacenPixRequest;
-import com.pagamento.infrastructure.integration.dto.BacenPixResponse;
+import com.pagamento.pix.infrastructure.integration.dto.BacenPixRequest;
+import com.pagamento.pix.infrastructure.integration.dto.BacenPixResponse;
 import com.pagamento.pix.config.BacenConfig;
 import com.pagamento.pix.core.ports.out.BacenPort;
 import com.pagamento.pix.domain.model.Participante;
@@ -56,8 +56,6 @@ public class BacenClient implements BacenPort {
             throw new BacenIntegrationException("Falha no estorno após " + context.getRetryCount() + " tentativas");
         });
     }
-    
-    
 
     private String enviarTransacaoParaBacen(Pix pix) {
         String url = construirUrl(TRANSACOES_ENDPOINT);
@@ -101,8 +99,6 @@ public class BacenClient implements BacenPort {
         }
     }
 
-    //--- Métodos auxiliares refatorados ---//
-    
     private String construirUrl(String endpoint) {
         return bacenConfig.getBacenApiUrl() + endpoint;
     }
@@ -123,8 +119,14 @@ public class BacenClient implements BacenPort {
             logger.info("PIX enviado com sucesso ao BACEN: {}", pix.getId());
             return response.getBody().getId();
         }
-        logger.warn("Resposta inesperada do BACEN: {}", response.getStatusCode());
-        throw new BacenIntegrationException("Resposta inesperada do BACEN: " + response.getStatusCode());
+        
+        String mensagemErro = "Resposta inesperada do BACEN: " + response.getStatusCode();
+        if (response.getBody() != null && response.getBody().getMensagemErro() != null) {
+            mensagemErro += " - " + response.getBody().getMensagemErro();
+        }
+        
+        logger.warn(mensagemErro);
+        throw new BacenIntegrationException(mensagemErro);
     }
 
     private void processarRespostaEstorno(ResponseEntity<Void> response, String bacenId) {
@@ -132,24 +134,24 @@ public class BacenClient implements BacenPort {
             logger.info("Estorno realizado com sucesso: {}", bacenId);
             return;
         }
-        logger.warn("Resposta inesperada do BACEN para estorno: {}", response.getStatusCode());
-        throw new BacenIntegrationException("Resposta inesperada: " + response.getStatusCode());
+        
+        String mensagemErro = "Resposta inesperada do BACEN para estorno: " + response.getStatusCode();
+        logger.warn(mensagemErro);
+        throw new BacenIntegrationException(mensagemErro);
     }
 
     private void tratarErroComunicacao(String operacao, String id, RestClientException e) {
-        String mensagem = "Erro durante {} do BACEN para {}: {}";
-        
         if (e instanceof HttpClientErrorException || e instanceof HttpServerErrorException) {
             HttpStatusCode status = ((HttpStatusCodeException) e).getStatusCode();
-            logger.error(mensagem, operacao, id, status);
+            String responseBody = ((HttpStatusCodeException) e).getResponseBodyAsString();
+            logger.error("Erro durante {} do BACEN para {}: {} - {}", operacao, id, status, responseBody);
         } else if (e instanceof ResourceAccessException) {
-            logger.error(mensagem, operacao, id, e.getMessage());
+            logger.error("Erro de conexão durante {} do BACEN para {}: {}", operacao, id, e.getMessage());
         } else {
-            logger.error("Erro inesperado no " + operacao + " BACEN para " + id, e);
+            logger.error("Erro inesperado durante {} do BACEN para {}", operacao, id, e);
         }
     }
 
-    // Mantido igual por ser específico do mapeamento
     private BacenPixRequest mapToBacenRequest(Pix pix) {
         BacenPixRequest request = new BacenPixRequest();
         request.setEndToEndId(pix.getId());
@@ -173,8 +175,34 @@ public class BacenClient implements BacenPort {
         return p;
     }
 
-	public BacenPixResponse enviarPix(Pix pix) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public BacenPixResponse enviarPix(Pix pix) {
+        String url = construirUrl(TRANSACOES_ENDPOINT);
+        HttpEntity<BacenPixRequest> entity = criarRequestEntity(pix);
+        
+        logger.info("Enviando PIX para BACEN: {}", pix.getId());
+        
+        try {
+            ResponseEntity<BacenPixResponse> response = restTemplate.exchange(
+                url, 
+                HttpMethod.POST, 
+                entity, 
+                BacenPixResponse.class
+            );
+            
+            if (response.getStatusCode() == HttpStatus.CREATED && response.getBody() != null) {
+                logger.info("PIX enviado com sucesso ao BACEN: {}", pix.getId());
+                return response.getBody();
+            }
+            
+            String mensagemErro = "Resposta inesperada do BACEN: " + response.getStatusCode();
+            if (response.getBody() != null && response.getBody().getMensagemErro() != null) {
+                mensagemErro += " - " + response.getBody().getMensagemErro();
+            }
+            throw new BacenIntegrationException(mensagemErro);
+        } catch (RestClientException e) {
+            tratarErroComunicacao("envio", pix.getId(), e);
+            throw new BacenIntegrationException("Erro na comunicação com BACEN", e);
+        }
+    }
 }

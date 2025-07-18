@@ -4,26 +4,27 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record PaymentEvent(
-    String paymentId,
+    String transactionId,  // Nome alterado para manter consistência
     String paymentType,
     BigDecimal amount,
     Instant timestamp,
     String status
 ) {
-    // Construtor compacto para validações/adicionar lógica
+    // Construtor compacto para validações
     public PaymentEvent {
+        if (transactionId == null || transactionId.isBlank()) {
+            throw new IllegalArgumentException("Transaction ID não pode ser nulo ou vazio");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Valor deve ser positivo");
+        }
         if (status == null || status.isBlank()) {
-            status = "PROCESSADO"; // Valor padrão
+            status = "PENDENTE"; // Valor padrão mais adequado
         }
     }
     
-    // Construtor alternativo
-    public PaymentEvent(String paymentId, String paymentType, BigDecimal amount, Instant timestamp) {
-        this(paymentId, paymentType, amount, timestamp, "PROCESSADO");
+    // Construtor alternativo com status padrão
+    public PaymentEvent(String transactionId, String paymentType, BigDecimal amount, Instant timestamp) {
+        this(transactionId, paymentType, amount, timestamp, "PENDENTE");
     }
-
-	public Object getTransactionId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

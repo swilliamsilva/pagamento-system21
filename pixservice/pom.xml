@@ -178,29 +178,29 @@
     <artifactId>resilience4j-spring-boot2</artifactId>
     <version>1.7.1</version>
 </dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-aop</artifactId>
-</dependency>
 
 <!-- Spring Data Envers para Auditoria -->
 <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-envers</artifactId>
 </dependency>
-   <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>     
-      <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-aop</artifactId>
-</dependency>
-<dependency>
+   
+  <dependency>
     <groupId>org.aspectj</groupId>
     <artifactId>aspectjweaver</artifactId>
 </dependency>  
-        
+        <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.retry</groupId>
+    <artifactId>spring-retry</artifactId>
+    <version>2.0.0</version> <!-- Ou a versão mais recente -->
+</dependency>
+
+
     </dependencies>
 
     <build>

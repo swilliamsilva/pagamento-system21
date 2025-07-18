@@ -11,6 +11,11 @@ import java.time.LocalDateTime;
 
 public class PixMapper {
 
+    // Construtor privado para evitar instanciação
+    private PixMapper() {
+        throw new UnsupportedOperationException("Esta é uma classe utilitária e não pode ser instanciada");
+    }
+
     public static Pix toDomain(PixRequestDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("PixRequestDTO não pode ser nulo");
