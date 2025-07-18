@@ -1,6 +1,5 @@
-// PaymentControllerTest.java
+package test.com.pagamento.common.controller;
 
-package common.src.test.java.test.com.pagamento.common.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -11,16 +10,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pagamento.common.controller.PaymentController;
 import com.pagamento.common.request.PaymentRequest;
 
 @WebMvcTest(PaymentController.class)
-public class PaymentControllerTest {
+class PaymentControllerTest {  // Removed 'public' modifier
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
     @Test
-    public void deveAceitarPagamentoValido() throws Exception {
+    void deveAceitarPagamentoValido() throws Exception {
         PaymentRequest request = new PaymentRequest("user123", "PIX", new BigDecimal("150.00"));
 
         mockMvc.perform(post("/api/pagamentos")
@@ -33,7 +33,7 @@ public class PaymentControllerTest {
     }
 
     @Test
-    public void deveRejeitarPagamentoInvalido() throws Exception {
+    void deveRejeitarPagamentoInvalido() throws Exception {
         PaymentRequest request = new PaymentRequest("user123", "PIX", null);
 
         mockMvc.perform(post("/api/pagamentos")

@@ -1,8 +1,9 @@
-import static org.junit.jupiter.api.Assertions.*;
+package com.pagamento.common.validation;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.Test;
-
-import com.pagamento.common.validation.CPFValidator;
 
 class CPFValidatorTest {
     

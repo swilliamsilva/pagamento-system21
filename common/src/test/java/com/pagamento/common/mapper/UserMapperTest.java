@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserMapperTest {
+class UserMapperTest { // Removed 'public' modifier from class
 
     @Test
-    public void deveConverterUserParaDTO() {
+    void deveConverterUserParaDTO() { // Removed 'public' modifier
         User user = new User();
         user.setId("001");
         user.setNome("Maria");
@@ -27,7 +27,7 @@ public class UserMapperTest {
     }
 
     @Test
-    public void deveConverterDTOParaUser() {
+    void deveConverterDTOParaUser() { // Removed 'public' modifier
         UserDTO dto = new UserDTO("002", "Carlos", "carlos@email.com", "12345678909");
         User user = UserMapper.toEntity(dto);
 

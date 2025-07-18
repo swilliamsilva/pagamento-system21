@@ -12,14 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @WebMvcTest(UsuarioController.class)
-public class UsuarioControllerTest {
+class UsuarioControllerTest {  // Removed 'public' modifier
 
     @Autowired
     private MockMvc mockMvc;
@@ -28,7 +26,7 @@ public class UsuarioControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    public void deveAceitarUsuarioValido() throws Exception {
+    void deveAceitarUsuarioValido() throws Exception {  // Removed 'public' modifier
         UserDTO dto = new UserDTO("321", "Ana", "ana@email.com", "12345678909");
 
         mockMvc.perform(post("/api/usuarios")
@@ -39,7 +37,7 @@ public class UsuarioControllerTest {
     }
 
     @Test
-    public void deveRejeitarUsuarioComEmailInvalido() throws Exception {
+    void deveRejeitarUsuarioComEmailInvalido() throws Exception {  // Removed 'public' modifier
         UserDTO dto = new UserDTO("321", "Ana", "email-invalido", "12345678909");
 
         mockMvc.perform(post("/api/usuarios")

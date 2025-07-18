@@ -11,25 +11,45 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
-import java.time.Duration; // Import necessário para Duration
+import java.time.Duration;
 
 @Configuration
 public class ResilienceRegistryConfig {
 
-    // Configuração do Retry (versão única)
+    // Constante para o nome da configuração padrão
+    private static final String DEFAULT_CONFIG = "default";
+
+    // Bean para customização do RetryConfig
+    @Bean
+    public RetryConfigCustomizer retryConfigCustomizer() {
+        // Configurações padrão para retry
+        return (name, builder) -> 
+            builder.maxAttempts(3)
+                   .waitDuration(Duration.ofMillis(500))
+                   .retryExceptions(Exception.class);
+    }
+
+    // Configuração do RetryRegistry
     @Bean
     public RetryRegistry retryRegistry(RetryConfigCustomizer retryConfigCustomizer) {
-        RetryConfig.Builder builder = RetryConfig.custom();
-        retryConfigCustomizer.customize("default", builder);
-        return RetryRegistry.of(builder.build());
+        RetryConfig baseConfig = RetryConfig.custom().build();
+        RetryRegistry registry = RetryRegistry.of(baseConfig);
+        
+        // Aplica customização para a configuração padrão
+        RetryConfig config = retryConfigCustomizer
+            .customize(DEFAULT_CONFIG, RetryConfig.from(baseConfig))
+            .build();
+        
+        registry.addConfiguration(DEFAULT_CONFIG, config);
+        return registry;
     }
 
     @Bean
     public Retry defaultRetry(RetryRegistry retryRegistry) {
-        return retryRegistry.retry("default");
+        return retryRegistry.retry(DEFAULT_CONFIG);
     }
     
-    // Configuração do Circuit Breaker (corrigida)
+    // Configuração do Circuit Breaker
     @Bean
     public CircuitBreakerRegistry circuitBreakerRegistry() {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
@@ -43,6 +63,6 @@ public class ResilienceRegistryConfig {
     
     @Bean
     public CircuitBreaker defaultCircuitBreaker(CircuitBreakerRegistry registry) {
-        return registry.circuitBreaker("default");
+        return registry.circuitBreaker(DEFAULT_CONFIG);
     }
 }

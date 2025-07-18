@@ -1,7 +1,4 @@
-// ==========================
-// TEST: PaymentDTOValidationTest.java
-// ==========================
-package common.src.test.java.test.com.pagamento.common.dto;
+package test.com.pagamento.common.dto;
 
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -16,34 +13,34 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PaymentDTOValidationTest {
+class PaymentDTOValidationTest {  // Removed 'public' modifier
 
     private Validator validator;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
 
     @Test
-    public void deveAceitarDTOValido() {
+    void deveAceitarDTOValido() {
         PaymentRequest dto = new PaymentRequest("user123", "PIX", new BigDecimal("100.00"));
-        Set violations = validator.validate(dto);
+        Set<?> violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
     }
 
     @Test
-    public void deveRejeitarValorNulo() {
+    void deveRejeitarValorNulo() {
         PaymentRequest dto = new PaymentRequest("user123", "PIX", null);
-        Set violations = validator.validate(dto);
+        Set<?> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
-    public void deveRejeitarTipoPagamentoVazio() {
+    void deveRejeitarTipoPagamentoVazio() {
         PaymentRequest dto = new PaymentRequest("user123", "", new BigDecimal("10.00"));
-        Set violations = validator.validate(dto);
+        Set<?> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 }

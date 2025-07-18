@@ -1,7 +1,7 @@
 package com.pagamento.common.validation;
 
 public class CPFValidator {
-    public boolean isValid(String value, Object context) {
+    public boolean isValid(String value) {
         if (value == null) {
             return false;
         }
