@@ -1,72 +1,96 @@
-# Configurações comuns a todos os perfis
+# =============================================
+# CONFIGURAÇÕES GLOBAIS - APLICAM-SE A TODOS OS PERFIS
+# =============================================
 spring:
   flyway:
-    clean-disabled: true
+    clean-disabled: true                 # Impede operações de limpeza acidentais
     placeholders:
-      prefix: '#{'
-      suffix: '}'
-    sql-migration-prefix: V
-    sql-migration-separator: '__'
-    sql-migration-suffixes: .sql
+      prefix: '#{'                       # Prefixo para placeholders nas migrations
+      suffix: '}'                        # Sufixo para placeholders nas migrations
+    sql-migration-prefix: V              # Prefixo para arquivos de migração
+    sql-migration-separator: '__'        # Separador no nome dos arquivos de migração
+    sql-migration-suffixes: .sql         # Extensão dos arquivos de migração
+  
   jpa:
-    open-in-view: false
+    open-in-view: false                  # Melhora performance e previne problemas de sessão
     properties:
       hibernate:
         jdbc:
-          time_zone: UTC
-        format_sql: true
+          time_zone: UTC                 # Garante uso consistente de timezone
+        format_sql: true                 # Formata SQL para melhor legibilidade nos logs
 
+# =============================================
+# CONFIGURAÇÃO ESPECÍFICA PARA PERFIL 'test'
+# =============================================
 ---
-# Configuração específica para ambiente de TESTE
 spring:
   config:
     activate:
-      on-profile: test
+      on-profile: test                   # Ativa estas configurações apenas no perfil 'test'
+  
+  # Configuração do banco de dados H2 em memória
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS public;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password: ''
-    driver-class-name: org.h2.Driver
+    # URL formatada corretamente em única linha
+    url: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS public;DB_CLOSE_ON_EXIT=FALSE"
+    username: sa                         # Usuário padrão do H2
+    password: ''                         # Senha vazia
+    driver-class-name: org.h2.Driver     # Driver JDBC para H2
+  
+  # Configurações do JPA/Hibernate
   jpa:
     hibernate:
-      ddl-auto: validate
-    database-platform: org.hibernate.dialect.H2Dialect
-    show-sql: true
+      ddl-auto: validate                 # Valida esquema contra entidades
+    database-platform: org.hibernate.dialect.H2Dialect  # Dialeto para H2
+    show-sql: true                       # Exibe SQL no console
     properties:
       hibernate:
-        generate_statistics: true
-        use_sql_comments: true
+        generate_statistics: true        # Habilita estatísticas de performance
+        use_sql_comments: true           # Adiciona comentários úteis nas queries
+      # Configurações de transação (RESOURCE_LOCAL para testes)
+      javax:
+        persistence:
+          transactionType: RESOURCE_LOCAL
+    # Configuração de DDL para testes
+    hibernate.ddl-auto: update           # Atualiza esquema automaticamente
+  
+  # Configurações do Flyway para migrações de banco
   flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    validate-on-migrate: true
-    clean-on-validation-error: false
+    enabled: true                        # Habilita migrações
+    locations: classpath:db/migration    # Local das migrações SQL
+    baseline-on-migrate: true            # Cria baseline automaticamente
+    validate-on-migrate: true            # Valida migrações ao aplicar
+    clean-on-validation-error: false     # Não limpa banco em erros de validação
+  
+  # Configurações do Kafka
   kafka:
-    bootstrap-servers: embedded
+    bootstrap-servers: embedded          # Usa Kafka embutido para testes
+  
+  # Desabilita módulos não usados em testes
   data:
     mongodb:
-      enabled: false
+      enabled: false                     # Desabilita MongoDB
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration
       - org.springframework.cloud.vault.config.VaultAutoConfiguration
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
+# Configurações de Health Check
 management:
   health:
     kafka:
-      enabled: false
+      enabled: false                     # Desabilita health check do Kafka
     vault:
-      enabled: false
+      enabled: false                     # Desabilita health check do Vault
 
+# Configurações de Logging
 logging:
   level:
-    root: WARN
-    com.pagamento.boleto: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type: TRACE
-    org.hibernate.stat: DEBUG
-    org.springframework: INFO
-    org.springframework.transaction: DEBUG
-    org.flywaydb: DEBUG
+    root: WARN                           # Nível padrão para todos os logs
+    com.pagamento.boleto: DEBUG          # Log detalhado para o pacote do boleto
+    org.hibernate.SQL: DEBUG             # Log de todas as queries SQL
+    org.hibernate.type: TRACE            # Log detalhado de tipos de parâmetros
+    org.hibernate.stat: DEBUG            # Log de estatísticas de performance
+    org.springframework: INFO            # Nível padrão para Spring
+    org.springframework.transaction: DEBUG # Log detalhado de transações
+    org.flywaydb: DEBUG                  # Log detalhado do Flyway

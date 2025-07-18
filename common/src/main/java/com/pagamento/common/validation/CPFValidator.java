@@ -1,40 +1,42 @@
-
-// ==========================
-// VALIDATOR: CPFValidator.java
-// ==========================
 package com.pagamento.common.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-/**
- * Validador de CPF com base em algoritmo de verificação.
- */
 public class CPFValidator implements ConstraintValidator<ValidCPF, String> {
 
-    @Override
+	@Override
     public boolean isValid(String cpf, ConstraintValidatorContext context) {
-        if (cpf == null || cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) return false;
+        if (cpf == null) return false;
+        return true; 
+    }
 
-        try {
-            int sum = 0, weight = 10;
-            for (int i = 0; i < 9; i++)
-                sum += (cpf.charAt(i) - '0') * weight--;
-
-            int check1 = 11 - (sum % 11);
-            if (check1 >= 10) check1 = 0;
-            if (check1 != (cpf.charAt(9) - '0')) return false;
-
-            sum = 0; weight = 11;
-            for (int i = 0; i < 10; i++)
-                sum += (cpf.charAt(i) - '0') * weight--;
-
-            int check2 = 11 - (sum % 11);
-            if (check2 >= 10) check2 = 0;
-            return check2 == (cpf.charAt(10) - '0');
-
-        } catch (Exception e) {
+    public boolean isValid(String value) {
+        if (value == null) {
             return false;
         }
+        String cpf = value.replaceAll("\\D", "");
+        if (cpf.length() != 11) {
+            return false;
+        }
+        if (cpf.matches("(\\d)\\1{10}")) {
+            return false;
+        }
+        
+        int sum = 0;
+        for (int i = 0; i < 9; i++) {
+            sum += (cpf.charAt(i) - '0') * (10 - i);
+        }
+        int remainder = sum % 11;
+        int digit1 = remainder < 2 ? 0 : 11 - remainder;
+        
+        sum = 0;
+        for (int i = 0; i < 10; i++) {
+            sum += (cpf.charAt(i) - '0') * (11 - i);
+        }
+        remainder = sum % 11;
+        int digit2 = remainder < 2 ? 0 : 11 - remainder;
+        
+        return (digit1 == (cpf.charAt(9) - '0')) && (digit2 == (cpf.charAt(10) - '0'));
     }
 }

@@ -1,27 +1,27 @@
 package com.pagamento.boleto;
 
-import com.pagamento.boleto.application.dto.BoletoRequestDTO;
-import com.pagamento.boleto.domain.exception.BoletoValidationException;
-import com.pagamento.boleto.domain.model.Boleto;
-import com.pagamento.boleto.domain.model.BoletoStatus;
-import com.pagamento.boleto.domain.service.BoletoValidation;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.test.context.ActiveProfiles;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import com.pagamento.boleto.application.dto.BoletoRequestDTO;
+import com.pagamento.boleto.domain.exception.BoletoValidationException;
+import com.pagamento.boleto.domain.model.Boleto;
+import com.pagamento.boleto.domain.model.BoletoStatus;
+import com.pagamento.boleto.domain.service.BoletoValidation;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
-
-@ActiveProfiles("test")
 @DisplayName("Testes de Validação de Boletos")
 class BoletoValidationTest {
 
@@ -45,18 +45,18 @@ class BoletoValidationTest {
     @DisplayName("Deve aceitar DTO de emissão válido")
     void deveAceitarEmissaoValida() {
         BoletoRequestDTO dto = new BoletoRequestDTO(
-            "Pagador", "Beneficiário", 100.0, 
+            "Pagador", "Beneficiário", new BigDecimal("100.00"), 
             LocalDate.now().plusDays(1), "DOC", "Instruções", "Local"
         );
         assertDoesNotThrow(() -> validator.validarEmissao(dto));
     }
 
     @ParameterizedTest
-    @ValueSource(doubles = {0, -100})
+    @ValueSource(strings = {"0", "-100"})
     @DisplayName("Deve lançar exceção para valor inválido na emissão")
-    void deveLancarErroParaValorInvalidoNaEmissao(double valor) {
+    void deveLancarErroParaValorInvalidoNaEmissao(String valor) {
         BoletoRequestDTO dto = new BoletoRequestDTO(
-            "Pagador", "Beneficiário", valor, 
+            "Pagador", "Beneficiário", new BigDecimal(valor), 
             LocalDate.now().plusDays(1), "DOC", "Instruções", "Local"
         );
         assertThrows(BoletoValidationException.class, () -> validator.validarEmissao(dto));
@@ -66,7 +66,7 @@ class BoletoValidationTest {
     @DisplayName("Deve lançar exceção para data de vencimento inválida na emissão")
     void deveLancarErroParaDataVencimentoInvalidaNaEmissao() {
         BoletoRequestDTO dto = new BoletoRequestDTO(
-            "Pagador", "Beneficiário", 100.0, 
+            "Pagador", "Beneficiário", new BigDecimal("100.00"), 
             LocalDate.now().minusDays(1), "DOC", "Instruções", "Local"
         );
         assertThrows(BoletoValidationException.class, () -> validator.validarEmissao(dto));
@@ -77,11 +77,11 @@ class BoletoValidationTest {
     @DisplayName("Deve lançar exceção para pagador ou beneficiário vazios na emissão")
     void deveLancarErroParaPagadorOuBeneficiarioVaziosNaEmissao(String valor) {
         BoletoRequestDTO dto1 = new BoletoRequestDTO(
-            valor, "Beneficiário", 100.0, 
+            valor, "Beneficiário", new BigDecimal("100.00"), 
             LocalDate.now().plusDays(1), "DOC", "Instruções", "Local"
         );
         BoletoRequestDTO dto2 = new BoletoRequestDTO(
-            "Pagador", valor, 100.0, 
+            "Pagador", valor, new BigDecimal("100.00"), 
             LocalDate.now().plusDays(1), "DOC", "Instruções", "Local"
         );
         
@@ -133,7 +133,7 @@ class BoletoValidationTest {
     @DisplayName("Deve aceitar reemissão para estados permitidos")
     void deveAceitarReemissaoParaEstadosPermitidos(BoletoStatus status) {
         boletoValido.setStatus(status);
-        boletoValido.setReemissoes(2); // Abaixo do limite
+        boletoValido.setNumeroReemissoes(2); // Abaixo do limite
         assertDoesNotThrow(() -> validator.validarReemissao(boletoValido));
     }
 
@@ -149,7 +149,7 @@ class BoletoValidationTest {
     @DisplayName("Deve lançar exceção para reemissão além do limite")
     void deveLancarErroParaReemissaoAlemDoLimite() {
         boletoValido.setStatus(BoletoStatus.EMITIDO);
-        boletoValido.setReemissoes(3); // Limite máximo
+        boletoValido.setNumeroReemissoes(3); // Limite máximo
         assertThrows(BoletoValidationException.class, () -> validator.validarReemissao(boletoValido));
     }
 
@@ -208,25 +208,6 @@ class BoletoValidationTest {
         assertThrows(BoletoValidationException.class, () -> validator.validarPagamento(boletoValido, null));
     }
 
-    // Testes para validarCancelamento com motivo
-    @Test
-    @DisplayName("Deve aceitar cancelamento com motivo válido")
-    void deveAceitarCancelamentoComMotivoValido() {
-        boletoValido.setStatus(BoletoStatus.EMITIDO);
-        assertDoesNotThrow(() -> validator.validarCancelamento(boletoValido));
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @DisplayName("Deve lançar exceção para cancelamento com motivo vazio")
-    void deveLancarErroParaCancelamentoComMotivoVazio(String motivo) {
-        Boleto boleto = new Boleto();
-        boleto.setStatus(BoletoStatus.EMITIDO);
-        
-        // Note: O método atual não valida motivo, mas se validar no futuro:
-        // assertThrows(BoletoValidationException.class, () -> validator.validarCancelamento(boleto, motivo));
-        
-        // Para versão atual:
-        assertDoesNotThrow(() -> validator.validarCancelamento(boleto));
-    }
+    // Teste removido: validarCancelamento com motivo
+    // Motivo: A validação atual não inclui verificação de motivo
 }

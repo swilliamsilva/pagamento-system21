@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.server.ServerWebExchange;
@@ -60,7 +61,7 @@ class LoggingFilterTest {
         when(cadeiaFiltros.filter(any(ServerWebExchange.class)))
             .thenAnswer(invocacao -> {
                 ServerWebExchange ex = invocacao.getArgument(0);
-                ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.OK);
+                ex.getResponse().setStatusCode(HttpStatus.OK);
                 return Mono.empty();
             });
     }
@@ -127,7 +128,7 @@ class LoggingFilterTest {
         when(cadeiaFiltros.filter(any(ServerWebExchange.class)))
             .thenAnswer(invocacao -> {
                 ServerWebExchange ex = invocacao.getArgument(0);
-                ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.OK);
+                ex.getResponse().setStatusCode(HttpStatus.OK);
                 return Mono.delay(java.time.Duration.ofMillis(50)).then();
             });
 
@@ -172,7 +173,7 @@ class LoggingFilterTest {
     void deveRegistrarLogDeRespostaMesmoComErro() {
         when(cadeiaFiltros.filter(any())).thenAnswer(invocacao -> {
             ServerWebExchange ex = invocacao.getArgument(0);
-            ex.getResponse().setStatusCode(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+            ex.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
             return Mono.error(new RuntimeException("Erro simulado"));
         });
 

@@ -1,5 +1,7 @@
 package com.pagamento.boleto.domain.ports;
 
+import org.springframework.data.domain.Pageable;
+
 import com.pagamento.boleto.application.dto.BoletoRequestDTO;
 
 
@@ -13,4 +15,6 @@ public interface BoletoServicePort {
     String gerarCodigoBarras(String id);
     String gerarQRCode(String id);
 	void cancelarBoleto(String id, String motivo);
+	Object listarBoletos(Pageable any);
+	String gerarBoleto(com.pagamento.common.dto.BoletoRequestDTO request);
 }

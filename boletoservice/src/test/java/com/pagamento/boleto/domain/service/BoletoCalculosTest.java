@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -15,12 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Testes de Cálculos de Boleto")
@@ -55,9 +54,9 @@ class BoletoCalculosTest {
         
         // Verificar estrutura básica
         assertEquals(44, dados.codigoBarras().length());
-        assertTrue(dados.linhaDigitavel().length() > 40);
-        assertTrue(dados.qrCode().startsWith("000201"));
-        assertTrue(dados.nossoNumero().contains("-"));
+        assertTrue(dados.linhaDigitavel().matches("^\\d{5}\\.\\d{5} \\d{5}\\.\\d{6} \\d{5}\\.\\d{6} \\d \\d{14}$"));
+        assertTrue(dados.qrCode().matches("000201.*6304[0-9A-F]{4}$"));
+        assertTrue(dados.nossoNumero().matches("^\\d+-\\d{4}$"));
     }
 
     @ParameterizedTest
@@ -83,8 +82,8 @@ class BoletoCalculosTest {
     }
 
     @Test
-    @DisplayName("Deve calcular fator de vencimento para data nula")
-    void deveCalcularFatorVencimentoDataNula() {
+    @DisplayName("Deve lançar exceção para data de vencimento nula")
+    void deveLancarExcecaoParaDataVencimentoNula() {
         // Act & Assert
         assertThrows(NullPointerException.class, () -> calculos.calcularFatorVencimento(null));
     }
@@ -95,7 +94,8 @@ class BoletoCalculosTest {
         "123.45, 12345",
         "0.99, 99",
         "999999.99, 99999999",
-        "0.01, 1"
+        "0.01, 1",
+        "9999999.99, 999999999"  // Valor máximo
     })
     @DisplayName("Deve formatar valor do boleto corretamente")
     void deveFormatarValorBoleto(String valorStr, String expected) {
@@ -111,13 +111,10 @@ class BoletoCalculosTest {
     }
 
     @Test
-    @DisplayName("Deve formatar valor zero corretamente")
-    void deveFormatarValorZero() {
-        // Act
-        String resultado = calculos.formatarValorBoleto(BigDecimal.ZERO);
-        
-        // Assert
-        assertEquals("0", resultado);
+    @DisplayName("Deve lançar exceção para valor nulo")
+    void deveLancarExcecaoParaValorNulo() {
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> calculos.formatarValorBoleto(null));
     }
 
     @Test
@@ -136,8 +133,8 @@ class BoletoCalculosTest {
     }
 
     @Test
-    @DisplayName("Deve gerar linha digitável válida")
-    void deveGerarLinhaDigitavelValida() {
+    @DisplayName("Deve gerar linha digitável no padrão FEBRABAN")
+    void deveGerarLinhaDigitavelNoPadraoFebraban() {
         // Arrange
         String codigoBarras = "34191031800001000001123456789012345678901234";
         
@@ -146,14 +143,13 @@ class BoletoCalculosTest {
         
         // Assert
         assertNotNull(linha);
-        assertTrue(linha.length() > 40);
-        assertTrue(linha.matches("[0-9. ]+"));
-        assertEquals(5, linha.split("\\.").length);
+        assertEquals(54, linha.length());
+        assertTrue(linha.matches("^\\d{5}\\.\\d{5} \\d{5}\\.\\d{6} \\d{5}\\.\\d{6} \\d \\d{14}$"));
     }
 
     @Test
-    @DisplayName("Deve gerar QR Code válido")
-    void deveGerarQRCodeValido() {
+    @DisplayName("Deve gerar QR Code válido com CRC calculado")
+    void deveGerarQRCodeValidoComCRC() {
         // Act
         String qrCode = calculos.gerarQRCode(boleto);
         
@@ -165,19 +161,21 @@ class BoletoCalculosTest {
         assertTrue(qrCode.contains("5303986")); // Código moeda
         assertTrue(qrCode.contains("5802BR"));
         assertTrue(qrCode.contains("6008BRASILIA"));
-        assertTrue(qrCode.endsWith("6304ABCD")); // CRC fixo
+        assertTrue(qrCode.matches(".*6304[0-9A-F]{4}$")); // CRC calculado
         assertTrue(qrCode.contains("Empresa Benef")); // Beneficiário limitado
     }
 
     @Test
-    @DisplayName("Deve limitar beneficiário no QR Code")
+    @DisplayName("Deve limitar beneficiário no QR Code para 13 caracteres")
     void deveLimitarBeneficiarioQRCode() {
         // Arrange
         boleto.setBeneficiario("Nome Muito Longo Que Deve Ser Truncado Para Caber no Campo");
         
         // Act
         String qrCode = calculos.gerarQRCode(boleto);
-        String beneficiarioPart = qrCode.split("5913")[1].substring(0, 13);
+        int index = qrCode.indexOf("5913");
+        assertTrue(index > 0, "Deve conter o campo do beneficiário");
+        String beneficiarioPart = qrCode.substring(index + 4, index + 4 + 13);
         
         // Assert
         assertEquals("Nome Muito Lo", beneficiarioPart);
@@ -185,8 +183,8 @@ class BoletoCalculosTest {
     }
 
     @Test
-    @DisplayName("Deve gerar nosso número válido")
-    void deveGerarNossoNumeroValido() {
+    @DisplayName("Deve gerar nosso número com timestamp e random")
+    void deveGerarNossoNumeroComTimestampERandom() {
         try (MockedStatic<System> systemMock = mockStatic(System.class);
              MockedStatic<ThreadLocalRandom> randomMock = mockStatic(ThreadLocalRandom.class)) {
             
@@ -198,7 +196,6 @@ class BoletoCalculosTest {
             String nossoNumero = calculos.gerarNossoNumero();
             
             // Assert
-            assertNotNull(nossoNumero);
             assertEquals("1700000000000-5678", nossoNumero);
         }
     }
@@ -214,26 +211,53 @@ class BoletoCalculosTest {
         assertTrue(nossoNumero.matches("^\\d+-\\d{4}$"));
         String[] partes = nossoNumero.split("-");
         assertEquals(2, partes.length);
-        assertTrue(partes[0].length() >= 10); // Timestamp
-        assertEquals(4, partes[1].length()); // Random
+        assertTrue(partes[0].length() >= 10);
+        assertEquals(4, partes[1].length());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "abc, 5, abc",
+        "abcde, 5, abcde",
+        "abcdefg, 5, abcde",
+        "'', 5, ''",
+        "abc, 0, ''"
+    })
+    @DisplayName("Deve limitar string corretamente")
+    void deveLimitarStringCorretamente(String input, int limite, String expected) {
+        // Act & Assert
+        assertEquals(expected, calculos.limitarString(input, limite));
     }
 
     @Test
-    @DisplayName("Deve limitar string corretamente")
-    void deveLimitarStringCorretamente() {
-        // Caso 1: String menor que limite
-        assertEquals("abc", calculos.limitarString("abc", 5));
-        
-        // Caso 2: String igual ao limite
-        assertEquals("abcde", calculos.limitarString("abcde", 5));
-        
-        // Caso 3: String maior que limite
-        assertEquals("abcde", calculos.limitarString("abcdefg", 5));
-        
-        // Caso 4: String nula
+    @DisplayName("Deve retornar nulo para string nula")
+    void deveRetornarNuloParaStringNula() {
         assertNull(calculos.limitarString(null, 5));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "12345", "PIX", "00020126580014BR.GOV.BCB.PIX"})
+    @DisplayName("Deve calcular CRC16 corretamente para diferentes payloads")
+    void deveCalcularCRC16Corretamente(String payload) {
+        // Act
+        String crc = calculos.calcularCRC16(payload);
         
-        // Caso 5: Limite zero
-        assertEquals("", calculos.limitarString("abc", 0));
+        // Assert
+        assertNotNull(crc);
+        assertEquals(4, crc.length());
+        assertTrue(crc.matches("[0-9A-F]{4}"));
+    }
+
+    @Test
+    @DisplayName("Deve calcular CRC16 conhecido para payload específico")
+    void deveCalcularCRC16Conhecido() {
+        // Arrange
+        String payload = "00020126580014BR.GOV.BCB.PIX";
+        
+        // Act
+        String crc = calculos.calcularCRC16(payload);
+        
+        // Assert
+        assertEquals("1D0F", crc); // Valor conhecido para este payload
     }
 }

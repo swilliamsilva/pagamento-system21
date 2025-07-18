@@ -11,31 +11,32 @@ public record BoletoRequestDTO(
     @NotBlank(message = "Beneficiário é obrigatório")
     String beneficiario,
     
+    @NotNull(message = "Valor é obrigatório")
     @Positive(message = "Valor deve ser positivo")
     BigDecimal valor,
     
-    @Future(message = "Data de vencimento deve ser futura")
     @NotNull(message = "Data de vencimento é obrigatória")
+    @Future(message = "Data de vencimento deve ser futura")
     LocalDate dataVencimento,
     
-    LocalDate dataEmissao, // Opcional: default é data atual
-    
-    String documento,       // CPF/CNPJ do pagador
-    String instrucoes,      // Instruções de pagamento
-    String localPagamento   // Local preferencial de pagamento
+    String documento,
+    String instrucoes,
+    String localPagamento
 ) {
-    // Construtor auxiliar para campos obrigatórios
-    public BoletoRequestDTO(String pagador, String beneficiario, BigDecimal valor, LocalDate dataVencimento) {
-        this(pagador, beneficiario, valor, dataVencimento, null, null, null, null);
+    // Construtor compacto para validações adicionais
+    public BoletoRequestDTO {
+        if (valor != null && valor.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Valor deve ser positivo");
+        }
     }
     
-    // Construtor auxiliar para teste simplificado
-    public BoletoRequestDTO(String pagador, LocalDate dataVencimento) {
-        this(pagador, "Beneficiário Padrão", BigDecimal.valueOf(100.0), dataVencimento);
+    // Construtor auxiliar simplificado
+    public BoletoRequestDTO(String pagador, String beneficiario, BigDecimal valor, LocalDate dataVencimento) {
+        this(pagador, beneficiario, valor, dataVencimento, null, null, null);
     }
-
+    
     // Método para obter data de emissão com padrão
     public LocalDate getDataEmissaoOrDefault() {
-        return dataEmissao != null ? dataEmissao : LocalDate.now();
+        return LocalDate.now();
     }
 }

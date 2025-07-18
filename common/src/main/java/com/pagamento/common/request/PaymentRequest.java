@@ -1,13 +1,5 @@
 package com.pagamento.common.request;
 
-
-/***
- * Orquestrador do pagamento
- * 
- */
-
-
-
 import java.math.BigDecimal;
 
 /**
@@ -15,11 +7,6 @@ import java.math.BigDecimal;
  */
 public record PaymentRequest(
     String userId,
-    String tipoPagamento,
+    String tipoPagamento,  // Mantido o nome original do campo
     BigDecimal valor
-) {
-
-	public Object tipo() {
-		// TODO Auto-generated method stub
-		return null;
-	}}
+) {}

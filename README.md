@@ -1,5 +1,26 @@
 # Sistema de Pagamentos com Arquitetura Hexagonal
 
+![build-all](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/build-all.yml/badge.svg)
+![ci](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/ci.yml/badge.svg)
+
+## Status dos Módulos
+
+| Serviço              | Status |
+|----------------------|--------|
+| API Gateway          | ![apigateway](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/apigateway-ci.yml/badge.svg) |
+| Auth Service         | ![authservice](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/authservice-ci.yml/badge.svg) |
+| Payment Service      | ![paymentservice](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/paymentservice-ci.yml/badge.svg) |
+| Boleto Service       | ![boletoservice](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/boletoservice-ci.yml/badge.svg) |
+| Pix Service          | ![pixservice](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/pixservice-ci.yml/badge.svg) |
+| Card Service         | ![cardservice](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/cardservice-ci.yml/badge.svg) |
+| Asaas Integration    | ![asaasintegration](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/asaasintegration-ci.yml/badge.svg) |
+| Cloud AWS Support    | ![cloudaws](https://github.com/swilliamsilva/pagamento-system21/actions/workflows/cloudaws-ci.yml/badge.svg) |
+
+---
+
+
+# Sistema de Pagamentos com Arquitetura Hexagonal
+
 ## Visão Geral
 Sistema de pagamentos distribuído com:
 - Java 21 e Spring Boot 3
@@ -144,7 +165,9 @@ http://localhost:{porta}/swagger-ui/index.html
 ##  Autor
 
 William Silva
-[Email](mailto:williamsilva.codigo@gmail.com) | [LinkedIn](https://linkedin.com/in/william-silva-20315993) | Projeto Gerado via Script Python Automatizado
+[Email](mailto:williamsilva.codigo@gmail.com) | 
+[LinkedIn](https://linkedin.com/in/william-silva-20315993) 
+|Projeto Gerado via Script Python Automatizado
 
 ---
 

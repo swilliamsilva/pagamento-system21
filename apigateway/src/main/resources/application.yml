@@ -1,14 +1,14 @@
 # =============================================================================
 # Arquivo: application.yml
-# Ambiente: Produção
-# Projeto: api-gateway (módulo do pagamento-system21)
-# Finalidade: Configuração de Gateway com Redis, Resiliência, CORS, RateLimiter,
+# Ambiente: Producao
+# Projeto: api-gateway (modulo do pagamento-system21)
+# Finalidade: Configuracao de Gateway com Redis, Resiliência, CORS, RateLimiter,
 #             Circuit Breaker, Retry e Observabilidade via Prometheus
 # Observação: Os valores com ${...} podem ser sobrescritos por variáveis de ambiente
 # =============================================================================
 
 server:
-  port: 8080  # Porta padrão do serviço gateway em produção
+  port: 8080  # Porta padrao do servico gateway em producao
 
 spring:
   application:

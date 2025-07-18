@@ -1,0 +1,5 @@
+# src/test/resources/application-test.yml
+bacen:
+  api:
+    url: "https://bacen-api-test.com"
+    key: "test-api-key-123"

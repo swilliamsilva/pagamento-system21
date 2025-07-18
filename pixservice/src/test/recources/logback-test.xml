@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <!-- ======================================================== -->
+    <!-- PROPRIEDADES GLOBAIS PARA TESTES -->
+    <!-- ======================================================== -->
+    <property name="APP_NAME" value="${spring.application.name:-test-service}" />
+    <property name="LOG_LEVEL" value="${TEST_LOG_LEVEL:-WARN}" />
+
+    <!-- Padrão simplificado para testes -->
+    <property name="TEST_PATTERN" value="%d{HH:mm:ss.SSS} | %-5level | %logger{36} | %msg%n" />
+
+    <!-- ======================================================== -->
+    <!-- APPENDER PARA TESTES -->
+    <!-- ======================================================== -->
+    <appender name="TEST_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${TEST_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ======================================================== -->
+    <!-- CONFIGURAÇÃO DE NÍVEIS DE LOG PARA TESTES -->
+    <!-- ======================================================== -->
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="TEST_CONSOLE" />
+    </root>
+
+    <!-- Logs específicos do projeto durante testes -->
+    <logger name="com.pagamento" level="DEBUG" additivity="false">
+        <appender-ref ref="TEST_CONSOLE" />
+    </logger>
+
+    <!-- Suprime logs de frameworks de teste -->
+    <logger name="org.junit" level="WARN" />
+    <logger name="org.junit.jupiter" level="WARN" />
+    <logger name="org.mockito" level="WARN" />
+    <logger name="org.springframework.test" level="WARN" />
+    <logger name="org.springframework.boot.test" level="WARN" />
+    <logger name="net.bytebuddy" level="ERROR" />
+
+    <!-- Suprime logs de inicialização do Spring durante testes -->
+    <logger name="org.springframework.boot.StartupInfoLogger" level="OFF" />
+    <logger name="org.springframework.boot.SpringApplication" level="WARN" />
+    
+    <!-- Suprime logs de conexão de banco durante testes -->
+    <logger name="org.hibernate" level="WARN" />
+    <logger name="org.jdbc" level="WARN" />
+    <logger name="com.zaxxer.hikari" level="WARN" />
+
+    <!-- Ativa logs detalhados apenas para testes falhos -->
+    <if condition='property("TEST_FAILURE").equals("true")'>
+        <then>
+            <logger name="com.pagamento" level="TRACE" />
+            <root level="DEBUG" />
+        </then>
+    </if>
+
+</configuration>

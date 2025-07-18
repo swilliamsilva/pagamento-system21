@@ -1,39 +1,59 @@
-/* ========================================================
-# Classe: PixRepositoryAdapter
-# Módulo: pix-service
-# Projeto: pagamento-system21
-# Autor: William Silva
-# Descrição: Adaptador de persistência usando DynamoDB.
-# ======================================================== */
-
 package com.pagamento.pix.infrastructure.adapters.repository;
 
-import com.pagamento.pix.domain.ports.PixRepositoryPort;
-import com.pagamento.pix.model.Pix;
+import com.pagamento.pix.domain.model.Pix;
 import com.pagamento.pix.repository.dynamo.PixDynamoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
+import com.pagamento.pix.service.CryptoService;
+import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+@Component
+public class PixRepositoryAdapter {
 
-@Repository
-public class PixRepositoryAdapter implements PixRepositoryPort {
+    private final PixDynamoRepository repository;
+    private final CryptoService cryptoService;
 
-    @Autowired
-    private PixDynamoRepository dynamoRepository;
-
-    @Override
-    public Optional<Pix> findById(String id) {
-        return dynamoRepository.findById(id);
+    public PixRepositoryAdapter(PixDynamoRepository repository, 
+                               CryptoService cryptoService) {
+        this.repository = repository;
+        this.cryptoService = cryptoService;
     }
 
-    @Override
-    public Pix save(Pix pix) {
-        return dynamoRepository.save(pix);
+    public Pix salvar(Pix pix) {
+        Pix pixCriptografado = deepCloneAndEncrypt(pix);
+        return repository.salvar(pixCriptografado);
     }
 
-    @Override
-    public void deleteById(String id) {
-        dynamoRepository.deleteById(id);
+    private Pix deepCloneAndEncrypt(Pix original) {
+        // Clonagem profunda usando builder pattern
+        Pix.PixBuilder builder = Pix.builder()
+            .id(original.getId())
+            .chaveOrigem(original.getChaveOrigem())
+            .chaveDestino(original.getChaveDestino())
+            .valor(original.getValor())
+            .dataTransacao(original.getDataTransacao())
+            .taxa(original.getTaxa())
+            .status(original.getStatus())
+            .bacenId(original.getBacenId())
+            .mensagemErro(original.getMensagemErro())
+            .tipo(original.getTipo());
+
+        // Clonar e criptografar participantes
+        if (original.getPagador() != null) {
+            builder.pagador(cloneAndEncryptParticipante(original.getPagador()));
+        }
+        if (original.getRecebedor() != null) {
+            builder.recebedor(cloneAndEncryptParticipante(original.getRecebedor()));
+        }
+
+        return builder.build();
+    }
+
+    private Participante cloneAndEncryptParticipante(Participante original) {
+        return new Participante(
+            original.getNome(),
+            cryptoService.encrypt(original.getDocumento()), // Criptografa documento
+            original.getIspb(),
+            original.getAgencia(),
+            original.getConta()
+        );
     }
 }

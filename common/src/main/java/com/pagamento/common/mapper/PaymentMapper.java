@@ -4,72 +4,73 @@ import com.pagamento.common.model.Payment;
 import com.pagamento.common.request.PaymentRequest;
 import com.pagamento.common.response.PaymentResponse;
 
-import jakarta.validation.Valid;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 @Component
 public class PaymentMapper {
 
-    public Payment toEntity(String userId, String paymentType, BigDecimal amount) {
+    public Payment toEntity(PaymentRequest request) {
+        validateRequest(request);
+        
         Payment payment = new Payment();
         payment.setTransactionId(generateTransactionId());
-        payment.setUserId(userId);
-        payment.setPaymentType(paymentType);
-        payment.setAmount(validateAmount(amount));
+        payment.setUserId(request.userId());
+        payment.setPaymentType(request.tipoPagamento());
+        payment.setAmount(request.valor());
         payment.setCreatedAt(Instant.now());
+        payment.setStatus("CREATED");
+        
         return payment;
     }
 
-    public Payment toSimpleOutput(Payment entity) {
-        if (entity == null) return null;
+    // Método único toResponse (removido o duplicado)
+    public PaymentResponse toResponse(Payment entity) {
+        if (entity == null) {
+            throw new IllegalArgumentException("Payment entity cannot be null");
+        }
         
-        Payment output = new Payment();
-        output.setTransactionId(entity.getTransactionId());
-        output.setPaymentType(entity.getPaymentType());
-        output.setAmount(entity.getAmount());
-        return output;
-    }
-
-    public Payment toApiResponse(Payment entity, String status) {
-        if (entity == null) return null;
-        
-        Payment response = new Payment();
+        PaymentResponse response = new PaymentResponse();
         response.setTransactionId(entity.getTransactionId());
-        response.setStatus(status);
-        response.setAmount(entity.getAmount());
+        response.setStatus(entity.getStatus());
         response.setPaymentType(entity.getPaymentType());
+        response.setAmount(entity.getAmount());
+        
         return response;
     }
 
-    public Payment toApiResponse(Payment entity) {
-        return toApiResponse(entity, "PROCESSANDO");
+    public PaymentResponse toProcessingResponse(Payment entity) {
+        PaymentResponse response = toResponse(entity);
+        response.setStatus("PROCESSING");
+        return response;
     }
 
     private String generateTransactionId() {
         return "TX-" + UUID.randomUUID().toString().replace("-", "").toUpperCase();
     }
 
-    private BigDecimal validateAmount(BigDecimal amount) {
-        if (amount == null) {
-            throw new IllegalArgumentException("Valor do pagamento não pode ser nulo");
+    private void validateRequest(PaymentRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("PaymentRequest cannot be null");
         }
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Valor do pagamento deve ser positivo");
+        if (request.userId() == null || request.userId().isBlank()) {
+            throw new IllegalArgumentException("User ID is required");
         }
-        return amount;
+        if (request.tipoPagamento() == null || request.tipoPagamento().isBlank()) {
+            throw new IllegalArgumentException("Payment type is required");
+        }
+        validateAmount(request.valor());
     }
 
-	public static Payment toEntity(@Valid PaymentRequest request) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public static PaymentResponse toResponse(Payment entity) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    private void validateAmount(BigDecimal amount) {
+        if (amount == null) {
+            throw new IllegalArgumentException("Payment amount cannot be null");
+        }
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Payment amount must be positive");
+        }
+    }
 }

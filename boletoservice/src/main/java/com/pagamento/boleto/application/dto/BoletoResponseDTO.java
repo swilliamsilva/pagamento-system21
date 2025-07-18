@@ -8,20 +8,13 @@ public record BoletoResponseDTO(
     String pagador,
     String beneficiario,
     BigDecimal valor,
-    LocalDate dataEmissao,
     LocalDate dataVencimento,
-    String status,
-    String codigoBarras,
-    String linhaDigitavel,
-    String qrCode,
+    LocalDate dataEmissao,
     String documento,
     String instrucoes,
     String localPagamento,
-    String boletoOriginalId,
-    int numeroReemissoes
-) {
-
-	public Object getId() {
-		// TODO Auto-generated method stub
-		return null;
-	}}
+    String status,
+    String motivoCancelamento,
+    int numeroReemissoes,
+    String boletoOriginalId
+) {}

@@ -1,0 +1,72 @@
+# ========================================================
+# Arquivo: application-test.yml
+# Serviço: card-service (Test Profile)
+# Projeto: pagamento-system21
+# Descrição: Configurações atualizadas para ambiente de testes
+# ========================================================
+
+# Configurações básicas para testes
+spring:
+  config:
+    activate:
+      on-profile: test
+  
+  # Configuração de inicialização de banco de dados (atualizada)
+  sql:
+    init:
+      mode: always  # Substitui a propriedade depreciada
+  
+  # Banco de dados em memória H2
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  
+  # Configuração JPA para H2
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+  # Configuração Cassandra de teste (embedded)
+  cassandra:
+    keyspace-name: test_pagamento
+    contact-points: localhost
+    port: 9042
+    schema-action: recreate
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
+
+# ... (restante das configurações permanece igual) ...
+
+# ========================================================
+# Configurações Específicas para Testes
+# ========================================================
+testing:
+  mock-services:
+    port: 9090
+    endpoints:
+      - /mock-visa
+      - /mock-mastercard
+      - /mock-amex
+      - /mock-hipercard
+  data:
+    sample-cards: /test-data/sample-cards.json
+    transactions-count: 100
+
+# Habilita endpoints de teste e debug
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, test-endpoints
+  endpoint:
+    health:
+      show-details: always
+    test-endpoints:
+      enabled: true

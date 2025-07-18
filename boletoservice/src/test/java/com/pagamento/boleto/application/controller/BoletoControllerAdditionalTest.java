@@ -1,9 +1,19 @@
 package com.pagamento.boleto.application.controller;
 
-import com.pagamento.boleto.application.dto.BoletoResponseDTO;
-import com.pagamento.boleto.domain.model.Boleto;
-import com.pagamento.boleto.domain.model.BoletoStatus;
-import com.pagamento.boleto.domain.ports.BoletoServicePort;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -12,24 +22,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.pagamento.boleto.application.dto.BoletoResponseDTO;
+import com.pagamento.boleto.domain.model.BoletoStatus;
+import com.pagamento.boleto.domain.ports.BoletoServicePort;
 
 @WebMvcTest(BoletoController.class)
 @ActiveProfiles("test")
@@ -42,8 +45,8 @@ class BoletoControllerAdditionalTest {
     @MockBean
     private BoletoServicePort boletoService;
 
-    private final String ID_VALIDO = UUID.randomUUID().toString();
-    
+    private final String idValido = UUID.randomUUID().toString(); // Nome corrigido para camelCase
+
     // Teste de Paginação
     @Test
     @WithMockUser
@@ -51,7 +54,13 @@ class BoletoControllerAdditionalTest {
     void listarBoletos_DeveRetornarListaPaginada() throws Exception {
         // Arrange
         BoletoResponseDTO response = new BoletoResponseDTO(
-            ID_VALIDO, "Cliente", "Beneficiário", 100.0, 
+            idValido, "Cliente", "Beneficiário", 100.0, 
+            
+            /**
+             * The constructor BoletoResponseDTO(String, String, String, double, LocalDate, LocalDate, String, String, String, BoletoStatus, null, int, null) is undefined
+             * 
+             * **/
+            
             LocalDate.now().plusDays(30), LocalDate.now(), 
             "DOC", "Inst", "Local", BoletoStatus.EMITIDO, 
             null, 0, null
@@ -65,10 +74,9 @@ class BoletoControllerAdditionalTest {
                 .param("page", "0")
                 .param("size", "10")
                 .param("sort", "dataVencimento,desc"))
-                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].id", is(ID_VALIDO)))
+                .andExpect(jsonPath("$.content[0].id", is(idValido)))
                 .andExpect(jsonPath("$.totalElements", is(1)))
                 .andExpect(jsonPath("$.pageable.pageNumber", is(0)));
     }
@@ -111,8 +119,7 @@ class BoletoControllerAdditionalTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/boletos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
-                .with(csrf())) // CSRF necessário para POST
-                .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf())) // CSRF corrigido
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0].field", is("dataVencimento")))
                 .andExpect(jsonPath("$.errors[0].message", containsString("futura")));
@@ -136,7 +143,7 @@ class BoletoControllerAdditionalTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/boletos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf())) // CSRF corrigido
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0].field", is("valor")))
                 .andExpect(jsonPath("$.errors[0].message", containsString("positivo")));
@@ -149,7 +156,7 @@ class BoletoControllerAdditionalTest {
     void listarBoletosPorStatus_DeveRetornarFiltrado() throws Exception {
         // Arrange
         BoletoResponseDTO response = new BoletoResponseDTO(
-            ID_VALIDO, "Cliente", "Beneficiário", 100.0, 
+            idValido, "Cliente", "Beneficiário", 100.0, 
             LocalDate.now().plusDays(30), LocalDate.now(), 
             "DOC", "Inst", "Local", BoletoStatus.PAGO, 
             null, 0, null
@@ -185,7 +192,7 @@ class BoletoControllerAdditionalTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/boletos/atualizar-status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
-                .with(csrf()))
+                .with(SecurityMockMvcRequestPostProcessors.csrf())) // CSRF corrigido
                 .andExpect(status().isOk());
     }
 
@@ -196,13 +203,18 @@ class BoletoControllerAdditionalTest {
     void pesquisarBoletos_DeveRetornarResultados() throws Exception {
         // Arrange
         BoletoResponseDTO response = new BoletoResponseDTO(
-            ID_VALIDO, "Cliente Especial", "Beneficiário", 500.0, 
+            idValido, "Cliente Especial", "Beneficiário", 500.0, 
             LocalDate.now().plusDays(15), LocalDate.now(), 
             "DOC-123", "Inst", "Local", BoletoStatus.EMITIDO, 
             null, 0, null
         );
         
-        Mockito.when(boletoService.pesquisarBoletos(any(), any(), any(), any(), any()))
+        Mockito.when(boletoService.pesquisarBoletos(
+                    any(String.class), 
+                    any(BigDecimal.class), 
+                    any(BigDecimal.class), 
+                    any(LocalDate.class), 
+                    any(LocalDate.class)))
                .thenReturn(List.of(response));
 
         // Act & Assert
