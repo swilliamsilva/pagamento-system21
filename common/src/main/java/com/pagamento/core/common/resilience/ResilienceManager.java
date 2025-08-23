@@ -7,11 +7,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-public final class ResilienceManager {
-
-    private ResilienceManager() {
-        throw new UnsupportedOperationException("Esta é uma classe utilitária e não pode ser instanciada");
-    }
+public class ResilienceManager {
 
     private static final CircuitBreakerRegistry registry = 
         CircuitBreakerRegistry.ofDefaults();

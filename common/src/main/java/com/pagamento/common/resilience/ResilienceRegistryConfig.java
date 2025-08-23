@@ -1,5 +1,6 @@
 package com.pagamento.common.resilience;
 
+import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -10,31 +11,25 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
-import java.time.Duration;
+import java.time.Duration; // Import necessário para Duration
 
 @Configuration
 public class ResilienceRegistryConfig {
 
-    private static final String DEFAULT_CONFIG = "default";
-
-    // Configuração simplificada sem RetryConfigCustomizer
+    // Configuração do Retry (versão única)
     @Bean
-    public RetryRegistry retryRegistry() {
-        RetryConfig config = RetryConfig.custom()
-            .maxAttempts(3)
-            .waitDuration(Duration.ofMillis(500))
-            .retryExceptions(Exception.class)
-            .build();
-            
-        return RetryRegistry.of(config);
+    public RetryRegistry retryRegistry(RetryConfigCustomizer retryConfigCustomizer) {
+        RetryConfig.Builder builder = RetryConfig.custom();
+        retryConfigCustomizer.customize(builder);
+        return RetryRegistry.of(builder.build());
     }
 
     @Bean
     public Retry defaultRetry(RetryRegistry retryRegistry) {
-        return retryRegistry.retry(DEFAULT_CONFIG);
+        return retryRegistry.retry("default");
     }
     
-    // Configuração do Circuit Breaker
+    // Configuração do Circuit Breaker (corrigida)
     @Bean
     public CircuitBreakerRegistry circuitBreakerRegistry() {
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
@@ -48,6 +43,7 @@ public class ResilienceRegistryConfig {
     
     @Bean
     public CircuitBreaker defaultCircuitBreaker(CircuitBreakerRegistry registry) {
-        return registry.circuitBreaker(DEFAULT_CONFIG);
+        return registry.circuitBreaker("default");
     }
 }
+

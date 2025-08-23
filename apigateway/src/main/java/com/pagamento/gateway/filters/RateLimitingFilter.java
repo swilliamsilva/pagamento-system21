@@ -1,10 +1,12 @@
 package com.pagamento.gateway.filters;
 
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Refill;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import io.github.bucket4j.ConsumptionProbe;
+import org.slf4j.Logger;
+
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -13,131 +15,64 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@ConditionalOnProperty(
-    value = "filters.local-rate-limit.enabled", 
-    havingValue = "true", 
-    matchIfMissing = false
-)
 public class RateLimitingFilter implements GlobalFilter, Ordered {
 
+    private static final Logger logger = LoggerFactory.getLogger(RateLimitingFilter.class);
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
-    
-    @Value("${filters.rate-limiting.capacity:5}")
-    private int capacity;
-    
-    @Value("${filters.rate-limiting.refill-tokens:5}")
-    private int refillTokens;
-    
-    @Value("${filters.rate-limiting.refill-period:60}")
-    private int refillPeriodSeconds;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        String clientKey = getClientIdentifier(exchange);
-        Bucket bucket = buckets.computeIfAbsent(clientKey, key -> createNewBucket());
-        
-        if (bucket.tryConsume(1)) {
-            addRateLimitHeaders(exchange, bucket);
+        String apiKey = exchange.getRequest().getHeaders().getFirst("X-API-Key");
+
+        if (apiKey == null || apiKey.isEmpty()) {
+            logger.warn("Requisição sem X-API-Key. Bloqueando.");
+            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+            return exchange.getResponse().setComplete();
+        }
+
+        Bucket bucket = buckets.computeIfAbsent(apiKey, this::createNewBucket);
+
+        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+
+        if (probe.isConsumed()) {
+            exchange.getResponse().getHeaders()
+                    .add("X-Rate-Limit-Remaining", String.valueOf(probe.getRemainingTokens()));
             return chain.filter(exchange);
         } else {
-            return handleRateLimitExceeded(exchange, bucket);
+            long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000;
+            logger.warn("Limite de requisições excedido para API Key: {}. Tentar novamente em {}ms", apiKey, waitForRefill);
+            exchange.getResponse().getHeaders()
+                    .add("X-Rate-Limit-Retry-After-Milliseconds", String.valueOf(waitForRefill));
+            exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
+            return exchange.getResponse().setComplete();
         }
     }
 
-    private void addRateLimitHeaders(ServerWebExchange exchange, Bucket bucket) {
-        long availableTokens = bucket.getAvailableTokens();
-        exchange.getResponse().getHeaders().add(
-            "X-Rate-Limit-Remaining", 
-            String.valueOf(availableTokens)
-        );
-        exchange.getResponse().getHeaders().add(
-            "X-Rate-Limit-Capacity", 
-            String.valueOf(capacity)
-        );
-        
-        long resetSeconds = 0;
-        if (availableTokens <= 0) {
-            resetSeconds = calculateTimeToNextToken(bucket);
-        }
-        
-        exchange.getResponse().getHeaders().add(
-            "X-Rate-Limit-Reset", 
-            String.valueOf(resetSeconds)
-        );
-    }
-
-    private long calculateTimeToNextToken(Bucket bucket) {
-        // Usando abordagem alternativa para calcular o tempo de reset
-        long consumedTokens = capacity - bucket.getAvailableTokens();
-        double tokensPerSecond = (double) refillTokens / refillPeriodSeconds;
-        return (long) Math.ceil(consumedTokens / tokensPerSecond);
-    }
-
-    private Mono<Void> handleRateLimitExceeded(ServerWebExchange exchange, Bucket bucket) {
-        exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-        long retryAfter = calculateTimeToNextToken(bucket);
-        exchange.getResponse().getHeaders().add("Retry-After", String.valueOf(retryAfter));
-        exchange.getResponse().getHeaders().add("X-Rate-Limit-Remaining", "0");
-        return exchange.getResponse().setComplete();
-    }
-
-    private Bucket createNewBucket() {
-        Refill refill = Refill.greedy(refillTokens, Duration.ofSeconds(refillPeriodSeconds));
-        Bandwidth limit = Bandwidth.classic(capacity, refill);
+    private Bucket createNewBucket(String apiKey) {
+        logger.info("Criando novo bucket para API Key: {}", apiKey);
+        Refill refill = Refill.greedy(10, Duration.ofMinutes(1));
+        Bandwidth limit = Bandwidth.classic(10, refill);
         return Bucket.builder()
-            .addLimit(limit)
-            .build();
-    }
-
-    private String getClientIdentifier(ServerWebExchange exchange) {
-        // 1. Tenta usar API Key se disponível
-        String apiKey = exchange.getRequest().getHeaders().getFirst("X-API-Key");
-        if (apiKey != null && !apiKey.isBlank()) {
-            return "api-key:" + apiKey;
-        }
-        
-        // 2. Usa IP como fallback
-        return "ip:" + getClientIp(exchange);
-    }
-
-    private String getClientIp(ServerWebExchange exchange) {
-        // 1. Verifica X-Forwarded-For header
-        String xff = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            return xff.split(",")[0].trim();
-        }
-        
-        // 2. Verificação segura para evitar NullPointerException
-        InetSocketAddress remoteAddress = exchange.getRequest().getRemoteAddress();
-        
-        if (remoteAddress != null) {
-            InetAddress address = remoteAddress.getAddress();
-            if (address != null) {
-                return address.getHostAddress();
-            }
-        }
-        
-        // 3. Fallback seguro
-        return "unknown";
+                .addLimit(limit)
+                .build();
     }
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 20;
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 
-    public void clearBuckets() {
+    // 🔽 Métodos utilitários para testes 🔽
+    void clearBuckets() {
         buckets.clear();
     }
 
-    public int getBucketCount() {
+    int getBucketCount() {
         return buckets.size();
     }
 }

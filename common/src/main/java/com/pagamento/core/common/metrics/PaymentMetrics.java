@@ -1,5 +1,6 @@
 package com.pagamento.core.common.metrics;
 
+import com.pagamento.common.model.PaymentStatus;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;

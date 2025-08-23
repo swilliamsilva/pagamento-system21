@@ -8,11 +8,25 @@
 
 package com.pagamento.pix.domain.ports;
 
-import com.pagamento.pix.model.Pix;
+import com.pagamento.pix.domain.model.Pix;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface PixRepositoryPort {
-    Optional<Pix> findById(String id);
-    Pix save(Pix pix);
-    void deleteById(String id);
+    Optional<Pix> obterPorId(String id);
+    Pix salvar(Pix pix);
+    void deletarPorId(String id);
+    Page<Pix> pesquisar(
+        String documentoPagador,
+        String chaveDestino,
+        String status,
+        LocalDateTime dataInicio,
+        LocalDateTime dataFim,
+        Pageable pageable
+    );
 }
+
+

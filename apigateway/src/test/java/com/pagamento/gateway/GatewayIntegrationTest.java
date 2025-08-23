@@ -3,16 +3,6 @@ package com.pagamento.gateway;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
-/*
- * 
- * Resource	Date	Description
-GatewayIntegrationTest.java	16 hours ago	Remove this unused import 'com.pagamento.gateway.filters.SecurityFilter'.
-
- * 
- * 
- * 
- * ***/
-
 
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -29,7 +19,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.pagamento.gateway.filters.RateLimitingFilter;
 
 @ActiveProfiles("test")
 @AutoConfigureWireMock(port = 0)
@@ -49,13 +38,9 @@ class GatewayIntegrationTest {
     @Autowired
     private WebTestClient webTestClient;
 
-    @Autowired
-    private RateLimitingFilter rateLimitingFilter;
-
     @BeforeEach
     void configurar() {
         WireMock.reset();
-        rateLimitingFilter.clearBuckets();
 
         // Configuração REALISTA do mock
         stubFor(get(urlEqualTo("/api/resource"))
@@ -186,3 +171,4 @@ class GatewayIntegrationTest {
             .jsonPath("$.message").isEqualTo("Fallback acionado");
     }
 }
+

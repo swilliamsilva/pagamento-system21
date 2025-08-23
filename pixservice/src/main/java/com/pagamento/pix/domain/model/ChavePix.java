@@ -38,6 +38,17 @@ public class ChavePix {
         }
     }
 
+    public ChavePix(String valor, TipoChave tipo) {
+        if (valor == null || valor.length() > MAX_LENGTH) {
+            throw new IllegalArgumentException("Chave PIX inválida: " + valor);
+        }
+        this.valor = valor;
+        this.tipo = tipo;
+        if (!validar()) {
+            throw new IllegalArgumentException("Chave PIX inválida: " + valor);
+        }
+    }
+
     private TipoChave identificarTipo(String chave) {
         if (isCPF(chave)) return TipoChave.CPF;
         if (isCNPJ(chave)) return TipoChave.CNPJ;
@@ -63,7 +74,7 @@ public class ChavePix {
         if (key == null) return false;
         
         // Validação em duas etapas para evitar backtracking catastrófico
-        int atIndex = key.indexOf('@');
+        int atIndex = key.indexOf("@");
         if (atIndex <= 0 || atIndex == key.length() - 1) {
             return false;
         }
@@ -133,3 +144,5 @@ public class ChavePix {
     public String getValor() { return valor; }
     public TipoChave getTipo() { return tipo; }
 }
+
+

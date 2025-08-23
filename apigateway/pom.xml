@@ -217,6 +217,14 @@
             <artifactId>junit-platform-launcher</artifactId>
             <scope>test</scope>
         </dependency>
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j_jdk17-core</artifactId>
+    <version>8.14.0</version>
+</dependency>
+
+
+        
     </dependencies>
 
     <build>
@@ -257,6 +265,7 @@
             </plugin>
 
             <!-- Exec Plugin para CDS (opcional) -->
+            <!--
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -293,6 +302,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 

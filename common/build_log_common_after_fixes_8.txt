@@ -1,0 +1,193 @@
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m------------------------< [0;36mcom.pagamento:common[0;1m >------------------------[m
+[[1;34mINFO[m] [1mBuilding common 1.0.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-clean-plugin:2.5:clean[m [1m(default-clean)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] Deleting /home/ubuntu/pagamento-system21/common/target
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mjacoco-maven-plugin:0.8.11:prepare-agent[m [1m(prepare-agent)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] argLine set to -javaagent:/home/ubuntu/.m2/repository/org/jacoco/org.jacoco.agent/0.8.11/org.jacoco.agent-0.8.11-runtime.jar=destfile=/home/ubuntu/pagamento-system21/common/target/jacoco.exec
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mjacoco-maven-plugin:0.8.11:prepare-agent[m [1m(default)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] argLine set to -javaagent:/home/ubuntu/.m2/repository/org/jacoco/org.jacoco.agent/0.8.11/org.jacoco.agent-0.8.11-runtime.jar=destfile=/home/ubuntu/pagamento-system21/common/target/jacoco.exec
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:3.2.0:resources[m [1m(default-resources)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered resources.
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered properties files.
+[[1;34mINFO[m] Copying 5 resources
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.11.0:compile[m [1m(default-compile)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] Changes detected - recompiling the module! :source
+[[1;34mINFO[m] Compiling 49 source files with javac [debug target 21] to target/classes
+[[1;34mINFO[m] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[[1;34mINFO[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/RetryConfigGlobal.java: /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/RetryConfigGlobal.java uses unchecked or unsafe operations.
+[[1;34mINFO[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/RetryConfigGlobal.java: Recompile with -Xlint:unchecked for details.
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:3.2.0:testResources[m [1m(default-testResources)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered resources.
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered properties files.
+[[1;34mINFO[m] Copying 1 resource
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.11.0:testCompile[m [1m(default-testCompile)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] Changes detected - recompiling the module! :dependency
+[[1;34mINFO[m] Compiling 13 source files with javac [debug target 21] to target/test-classes
+[[1;34mINFO[m] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[[1;34mINFO[m] -------------------------------------------------------------
+[[1;31mERROR[m] COMPILATION ERROR : 
+[[1;34mINFO[m] -------------------------------------------------------------
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[14,2] cannot find symbol
+  symbol: class Testcontainers
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[17,23] cannot find symbol
+  symbol:   class CassandraContainer
+  location: class common.src.test.java.test.java.com.pagamento.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[20,2] cannot find symbol
+  symbol: class EmbeddedKafka
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[4,38] cannot find symbol
+  symbol:   class PaymentProducer
+  location: package com.pagamento.common.messaging
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[8,46] package org.springframework.kafka.test.context does not exist
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[20,2] cannot find symbol
+  symbol: class EmbeddedKafka
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[24,13] cannot find symbol
+  symbol:   class PaymentProducer
+  location: class com.pagamento.common.mapper.KafkaMessagingIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[9,37] cannot find symbol
+  symbol:   class CassandraContainer
+  location: package org.testcontainers.containers
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[10,40] package org.testcontainers.junit.jupiter does not exist
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[11,40] package org.testcontainers.junit.jupiter does not exist
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[16,2] cannot find symbol
+  symbol: class Testcontainers
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[20,12] cannot find symbol
+  symbol:   class CassandraContainer
+  location: class com.pagamento.common.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/com/pagamento/common/controller/PaymentControllerTest.java:[16,13] cannot find symbol
+  symbol: class PaymentController
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[19,6] cannot find symbol
+  symbol:   class Container
+  location: class com.pagamento.common.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[17,5] annotation interface not applicable to this kind of declaration
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[17,61] cannot find symbol
+  symbol:   class CassandraContainer
+  location: class common.src.test.java.test.java.com.pagamento.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[30,9] cannot find symbol
+  symbol:   method assertDoesNotThrow(()->cassan[...]cal"))
+  location: class common.src.test.java.test.java.com.pagamento.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/resilience/ResilienceConfigTest.java:[17,49] method circuitBreakerRegistry in class com.pagamento.common.resilience.ResilienceConfig cannot be applied to given types;
+  required: io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
+  found:    no arguments
+  reason: actual and formal argument lists differ in length
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/resilience/ResilienceConfigTest.java:[31,40] method retryRegistry in class com.pagamento.common.resilience.ResilienceConfig cannot be applied to given types;
+  required: io.github.resilience4j.retry.RetryConfig
+  found:    no arguments
+  reason: actual and formal argument lists differ in length
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[31,30] no suitable constructor found for PaymentEvent(java.lang.String,java.lang.String)
+    constructor com.pagamento.common.messaging.PaymentEvent.PaymentEvent(java.lang.String,java.lang.String,java.math.BigDecimal,java.time.Instant,java.lang.String) is not applicable
+      (actual and formal argument lists differ in length)
+    constructor com.pagamento.common.messaging.PaymentEvent.PaymentEvent(java.lang.String,java.lang.String,java.math.BigDecimal,java.time.Instant) is not applicable
+      (actual and formal argument lists differ in length)
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[38,79] cannot find symbol
+  symbol:   method ofSeconds(int)
+  location: class ch.qos.logback.core.util.Duration
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[39,9] cannot find symbol
+  symbol:   method assertEquals(int,int)
+  location: class common.src.test.java.com.pagamento.common.mapper.KafkaMessagingIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[40,64] cannot find symbol
+  symbol:   method getTransactionId()
+  location: class com.pagamento.common.messaging.PaymentEvent
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[20,50] cannot find symbol
+  symbol:   class CassandraContainer
+  location: class com.pagamento.common.mapper.DatabaseConnectivityIT
+[[1;34mINFO[m] 24 errors 
+[[1;34mINFO[m] -------------------------------------------------------------
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;31mBUILD FAILURE[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  4.777 s
+[[1;34mINFO[m] Finished at: 2025-07-21T00:57:39-04:00
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;31mERROR[m] Failed to execute goal [32morg.apache.maven.plugins:maven-compiler-plugin:3.11.0:testCompile[m [1m(default-testCompile)[m on project [36mcommon[m: [1;31mCompilation failure[m: Compilation failure: 
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[14,2] cannot find symbol
+[[1;31mERROR[m]   symbol: class Testcontainers
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[17,23] cannot find symbol
+[[1;31mERROR[m]   symbol:   class CassandraContainer
+[[1;31mERROR[m]   location: class common.src.test.java.test.java.com.pagamento.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[20,2] cannot find symbol
+[[1;31mERROR[m]   symbol: class EmbeddedKafka
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[4,38] cannot find symbol
+[[1;31mERROR[m]   symbol:   class PaymentProducer
+[[1;31mERROR[m]   location: package com.pagamento.common.messaging
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[8,46] package org.springframework.kafka.test.context does not exist
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[20,2] cannot find symbol
+[[1;31mERROR[m]   symbol: class EmbeddedKafka
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[24,13] cannot find symbol
+[[1;31mERROR[m]   symbol:   class PaymentProducer
+[[1;31mERROR[m]   location: class com.pagamento.common.mapper.KafkaMessagingIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[9,37] cannot find symbol
+[[1;31mERROR[m]   symbol:   class CassandraContainer
+[[1;31mERROR[m]   location: package org.testcontainers.containers
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[10,40] package org.testcontainers.junit.jupiter does not exist
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[11,40] package org.testcontainers.junit.jupiter does not exist
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[16,2] cannot find symbol
+[[1;31mERROR[m]   symbol: class Testcontainers
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[20,12] cannot find symbol
+[[1;31mERROR[m]   symbol:   class CassandraContainer
+[[1;31mERROR[m]   location: class com.pagamento.common.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/com/pagamento/common/controller/PaymentControllerTest.java:[16,13] cannot find symbol
+[[1;31mERROR[m]   symbol: class PaymentController
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[19,6] cannot find symbol
+[[1;31mERROR[m]   symbol:   class Container
+[[1;31mERROR[m]   location: class com.pagamento.common.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[17,5] annotation interface not applicable to this kind of declaration
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[17,61] cannot find symbol
+[[1;31mERROR[m]   symbol:   class CassandraContainer
+[[1;31mERROR[m]   location: class common.src.test.java.test.java.com.pagamento.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/test/java/com/pagamento/mapper/DatabaseConnectivityIT.java:[30,9] cannot find symbol
+[[1;31mERROR[m]   symbol:   method assertDoesNotThrow(()->cassan[...]cal"))
+[[1;31mERROR[m]   location: class common.src.test.java.test.java.com.pagamento.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/resilience/ResilienceConfigTest.java:[17,49] method circuitBreakerRegistry in class com.pagamento.common.resilience.ResilienceConfig cannot be applied to given types;
+[[1;31mERROR[m]   required: io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
+[[1;31mERROR[m]   found:    no arguments
+[[1;31mERROR[m]   reason: actual and formal argument lists differ in length
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/resilience/ResilienceConfigTest.java:[31,40] method retryRegistry in class com.pagamento.common.resilience.ResilienceConfig cannot be applied to given types;
+[[1;31mERROR[m]   required: io.github.resilience4j.retry.RetryConfig
+[[1;31mERROR[m]   found:    no arguments
+[[1;31mERROR[m]   reason: actual and formal argument lists differ in length
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[31,30] no suitable constructor found for PaymentEvent(java.lang.String,java.lang.String)
+[[1;31mERROR[m]     constructor com.pagamento.common.messaging.PaymentEvent.PaymentEvent(java.lang.String,java.lang.String,java.math.BigDecimal,java.time.Instant,java.lang.String) is not applicable
+[[1;31mERROR[m]       (actual and formal argument lists differ in length)
+[[1;31mERROR[m]     constructor com.pagamento.common.messaging.PaymentEvent.PaymentEvent(java.lang.String,java.lang.String,java.math.BigDecimal,java.time.Instant) is not applicable
+[[1;31mERROR[m]       (actual and formal argument lists differ in length)
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[38,79] cannot find symbol
+[[1;31mERROR[m]   symbol:   method ofSeconds(int)
+[[1;31mERROR[m]   location: class ch.qos.logback.core.util.Duration
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[39,9] cannot find symbol
+[[1;31mERROR[m]   symbol:   method assertEquals(int,int)
+[[1;31mERROR[m]   location: class common.src.test.java.com.pagamento.common.mapper.KafkaMessagingIT
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/common/src/test/java/com/pagamento/common/mapper/KafkaMessagingIT.java:[40,64] cannot find symbol
+[[1;31mERROR[m]   symbol:   method getTransactionId()
+[[1;31mERROR[m]   location: class com.pagamento.common.messaging.PaymentEvent
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/test/java/com/pagamento/common/mapper/DatabaseConnectivityIT.java:[20,50] cannot find symbol
+[[1;31mERROR[m]   symbol:   class CassandraContainer
+[[1;31mERROR[m]   location: class com.pagamento.common.mapper.DatabaseConnectivityIT
+[[1;31mERROR[m] -> [1m[Help 1][m
+[[1;31mERROR[m] 
+[[1;31mERROR[m] To see the full stack trace of the errors, re-run Maven with the [1m-e[m switch.
+[[1;31mERROR[m] Re-run Maven using the [1m-X[m switch to enable full debug logging.
+[[1;31mERROR[m] 
+[[1;31mERROR[m] For more information about the errors and possible solutions, please read the following articles:
+[[1;31mERROR[m] [1m[Help 1][m http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

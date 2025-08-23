@@ -1,38 +1,35 @@
 package com.pagamento.common.validation;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CPFValidatorTest {
     
     private final CPFValidator validator = new CPFValidator();
 
     @Test
-    void validCpf() {
+    void shouldAcceptValidCPF() {
+        // CPFs válidos conhecidos
+        assertTrue(validator.isValid("111.444.777-35", null));
+        assertTrue(validator.isValid("11144477735", null));
         assertTrue(validator.isValid("529.982.247-25", null));
         assertTrue(validator.isValid("52998224725", null));
     }
 
     @Test
-    void invalidCpfs() {
-        assertFalse(validator.isValid("123.456.789-00", null));
-        assertFalse(validator.isValid("11111111111", null));
-        assertFalse(validator.isValid("00000000000", null));
+    void shouldRejectInvalidCPFs() {
+        assertFalse(validator.isValid("123.456.789-10", null)); // Dígito verificador incorreto
+        assertFalse(validator.isValid("11111111111", null)); // Sequência repetida
+        assertFalse(validator.isValid("00000000000", null)); // Sequência repetida
         assertFalse(validator.isValid("1234567890", null)); // tamanho menor
         assertFalse(validator.isValid("123456789012", null)); // tamanho maior
+        assertFalse(validator.isValid("12A.456.789-09", null)); // Caracteres inválidos
     }
 
     @Test
-    void edgeCases() {
-        // CPF válido conhecido
-        assertTrue(validator.isValid("397.080.470-00", null));
-        
-        // CPF inválido com dígitos corretos mas sequência bloqueada
-        assertFalse(validator.isValid("22222222222", null));
-        
-        // CPF com caracteres inválidos
-        assertFalse(validator.isValid("12A.456.789-09", null));
+    void shouldHandleNullCPF() {
+        // CPF nulo
+        assertFalse(validator.isValid(null, null));
     }
 }
+

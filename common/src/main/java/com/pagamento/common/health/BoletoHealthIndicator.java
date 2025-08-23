@@ -1,10 +1,10 @@
 package com.pagamento.common.health;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -20,9 +20,9 @@ import org.springframework.stereotype.Component;
 public class BoletoHealthIndicator implements HealthIndicator {
 
     private final DataSource dataSource;
-    private final ExternalBoletoService boletoService;
+    private final ExternalBoletoService boletoService; // Serviço hipotético
 
-    
+    @Autowired
     public BoletoHealthIndicator(DataSource dataSource, ExternalBoletoService boletoService) {
         this.dataSource = dataSource;
         this.boletoService = boletoService;
@@ -32,14 +32,17 @@ public class BoletoHealthIndicator implements HealthIndicator {
     public Health health() {
         Health.Builder healthBuilder = Health.up();
         
+        // 1. Verificar conexão com banco
         if (!checkDatabaseConnection()) {
             healthBuilder.down().withDetail("database", "Connection failed");
         }
 
+        // 2. Verificar serviço externo
         if (!boletoService.isHealthy()) {
             healthBuilder.down().withDetail("external_service", "Boleto API unavailable");
         }
 
+        // 3. Verificar fila de processamento (exemplo simulado)
         if (isQueueOverloaded()) {
             healthBuilder.status("WARNING").withDetail("queue", "High backlog detected");
         }
@@ -48,23 +51,26 @@ public class BoletoHealthIndicator implements HealthIndicator {
     }
 
     private boolean checkDatabaseConnection() {
-        try (Connection connection = dataSource.getConnection()) {
-            return connection.isValid(2); // Usando try-with-resources
+        try {
+            return dataSource.getConnection().isValid(2); // Timeout de 2 segundos
         } catch (SQLException e) {
             return false;
         }
     }
 
     private boolean isQueueOverloaded() {
+        // Lógica simulada: normalmente consultaria um broker de mensagens
         final int currentQueueSize = 150;
         final int warningThreshold = 100;
         return currentQueueSize > warningThreshold;
     }
 }
 
+// Serviço fictício para demonstração
 @Component
 class ExternalBoletoService {
     public boolean isHealthy() {
-        return true;
+        // Lógica real verificaria API externa
+        return true; // Simulação
     }
 }
