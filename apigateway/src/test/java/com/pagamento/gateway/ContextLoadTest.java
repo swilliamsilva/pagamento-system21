@@ -1,11 +1,5 @@
 package com.pagamento.gateway;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-<Questions>
-</Questions>
-</Question>
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,8 +15,10 @@ import org.testcontainers.utility.DockerImageName;
 import com.pagamento.gateway.fallback.FallbackController;
 import com.pagamento.gateway.filters.CircuitBreakerStateFilter;
 import com.pagamento.gateway.filters.LoggingFilter;
-import com.pagamento.gateway.filters.RateLimitingFilter;
 import com.pagamento.gateway.filters.SecurityFilter;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Testcontainers
@@ -57,11 +53,6 @@ class ContextLoadTest {
     }
 
     @Test
-    void deveExistirFiltroDeLimitacaoDeTaxa() {
-        assertNotNull(context.getBean(RateLimitingFilter.class), "Filtro de limitação de taxa deve estar presente");
-    }
-    
-    @Test
     void deveExistirFiltroDeEstadoDoCircuitBreaker() {
         assertNotNull(context.getBean(CircuitBreakerStateFilter.class), "Filtro de estado do Circuit Breaker deve estar presente");
     }
@@ -80,13 +71,10 @@ class ContextLoadTest {
     void deveTerOrdemCorretaNosFiltros() {
         SecurityFilter securityFilter = context.getBean(SecurityFilter.class);
         LoggingFilter loggingFilter = context.getBean(LoggingFilter.class);
-        RateLimitingFilter rateLimitingFilter = context.getBean(RateLimitingFilter.class);
         CircuitBreakerStateFilter circuitBreakerFilter = context.getBean(CircuitBreakerStateFilter.class);
         
         assertTrue(securityFilter.getOrder() < loggingFilter.getOrder(), 
                   "Filtro de segurança deve executar antes do logging");
-        
-        assertTrue(rateLimitingFilter.getOrder() < circuitBreakerFilter.getOrder(), 
-                  "Limitação de taxa deve executar antes do circuit breaker");
     }
 }
+

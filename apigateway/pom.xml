@@ -217,6 +217,7 @@
             <artifactId>junit-platform-launcher</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -257,6 +258,7 @@
             </plugin>
 
             <!-- Exec Plugin para CDS (opcional) -->
+            <!--
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -293,7 +295,10 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 
 </project>
+
+

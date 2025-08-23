@@ -1,0 +1,114 @@
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m------------------------< [0;36mcom.pagamento:common[0;1m >------------------------[m
+[[1;34mINFO[m] [1mBuilding common 1.0.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-clean-plugin:2.5:clean[m [1m(default-clean)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mjacoco-maven-plugin:0.8.11:prepare-agent[m [1m(prepare-agent)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] argLine set to -javaagent:/home/ubuntu/.m2/repository/org/jacoco/org.jacoco.agent/0.8.11/org.jacoco.agent-0.8.11-runtime.jar=destfile=/home/ubuntu/pagamento-system21/common/target/jacoco.exec
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mjacoco-maven-plugin:0.8.11:prepare-agent[m [1m(default)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] argLine set to -javaagent:/home/ubuntu/.m2/repository/org/jacoco/org.jacoco.agent/0.8.11/org.jacoco.agent-0.8.11-runtime.jar=destfile=/home/ubuntu/pagamento-system21/common/target/jacoco.exec
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:3.2.0:resources[m [1m(default-resources)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered resources.
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered properties files.
+[[1;34mINFO[m] Copying 5 resources
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.11.0:compile[m [1m(default-compile)[m @ [36mcommon[0;1m ---[m
+[[1;34mINFO[m] Changes detected - recompiling the module! :source
+[[1;34mINFO[m] Compiling 48 source files with javac [debug target 21] to target/classes
+[[1;34mINFO[m] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[[1;34mINFO[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/RetryConfigGlobal.java: /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/RetryConfigGlobal.java uses unchecked or unsafe operations.
+[[1;34mINFO[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/RetryConfigGlobal.java: Recompile with -Xlint:unchecked for details.
+[[1;34mINFO[m] -------------------------------------------------------------
+[[1;31mERROR[m] COMPILATION ERROR : 
+[[1;34mINFO[m] -------------------------------------------------------------
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/core/common/metrics/PaymentMetrics.java:[28,50] cannot find symbol
+  symbol:   class PaymentStatus
+  location: class com.pagamento.core.common.metrics.PaymentMetrics
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/IntervalFunction.java:[13,61] method ofExponentialRandomBackoff(java.time.Duration,double,double) is already defined in interface com.pagamento.common.resilience.IntervalFunction
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/validation/ValidCPF.java:[17,39] incompatible types: java.lang.Class<com.pagamento.common.validation.CPFValidator> cannot be converted to java.lang.Class<? extends jakarta.validation.ConstraintValidator<?,?>>
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[19,23] cannot find symbol
+  symbol:   method builder()
+  location: class com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[34,31] cannot find symbol
+  symbol:   method builder()
+  location: class com.pagamento.common.response.PaymentResponse
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[35,34] cannot find symbol
+  symbol:   method getTransactionId()
+  location: variable entity of type com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[36,27] cannot find symbol
+  symbol:   method getStatus()
+  location: variable entity of type com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[37,32] cannot find symbol
+  symbol:   method getPaymentType()
+  location: variable entity of type com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[38,27] cannot find symbol
+  symbol:   method getAmount()
+  location: variable entity of type com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[44,17] cannot find symbol
+  symbol:   method setStatus(java.lang.String)
+  location: variable response of type com.pagamento.common.response.PaymentResponse
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/controller/PaymentController.java:[20,39] non-static method toEntity(com.pagamento.common.request.PaymentRequest) cannot be referenced from a static context
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/controller/PaymentController.java:[21,49] non-static method toResponse(com.pagamento.common.model.Payment) cannot be referenced from a static context
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/ResilienceRegistryConfig.java:[23,30] method customize in interface io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer cannot be applied to given types;
+  required: io.github.resilience4j.retry.RetryConfig.Builder
+  found:    java.lang.String,io.github.resilience4j.retry.RetryConfig.Builder
+  reason: actual and formal argument lists differ in length
+[[1;34mINFO[m] 13 errors 
+[[1;34mINFO[m] -------------------------------------------------------------
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;31mBUILD FAILURE[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  2.441 s
+[[1;34mINFO[m] Finished at: 2025-07-19T00:07:37-04:00
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;31mERROR[m] Failed to execute goal [32morg.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile[m [1m(default-compile)[m on project [36mcommon[m: [1;31mCompilation failure[m: Compilation failure: 
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/core/common/metrics/PaymentMetrics.java:[28,50] cannot find symbol
+[[1;31mERROR[m]   symbol:   class PaymentStatus
+[[1;31mERROR[m]   location: class com.pagamento.core.common.metrics.PaymentMetrics
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/IntervalFunction.java:[13,61] method ofExponentialRandomBackoff(java.time.Duration,double,double) is already defined in interface com.pagamento.common.resilience.IntervalFunction
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/validation/ValidCPF.java:[17,39] incompatible types: java.lang.Class<com.pagamento.common.validation.CPFValidator> cannot be converted to java.lang.Class<? extends jakarta.validation.ConstraintValidator<?,?>>
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[19,23] cannot find symbol
+[[1;31mERROR[m]   symbol:   method builder()
+[[1;31mERROR[m]   location: class com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[34,31] cannot find symbol
+[[1;31mERROR[m]   symbol:   method builder()
+[[1;31mERROR[m]   location: class com.pagamento.common.response.PaymentResponse
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[35,34] cannot find symbol
+[[1;31mERROR[m]   symbol:   method getTransactionId()
+[[1;31mERROR[m]   location: variable entity of type com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[36,27] cannot find symbol
+[[1;31mERROR[m]   symbol:   method getStatus()
+[[1;31mERROR[m]   location: variable entity of type com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[37,32] cannot find symbol
+[[1;31mERROR[m]   symbol:   method getPaymentType()
+[[1;31mERROR[m]   location: variable entity of type com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[38,27] cannot find symbol
+[[1;31mERROR[m]   symbol:   method getAmount()
+[[1;31mERROR[m]   location: variable entity of type com.pagamento.common.model.Payment
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/mapper/PaymentMapper.java:[44,17] cannot find symbol
+[[1;31mERROR[m]   symbol:   method setStatus(java.lang.String)
+[[1;31mERROR[m]   location: variable response of type com.pagamento.common.response.PaymentResponse
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/controller/PaymentController.java:[20,39] non-static method toEntity(com.pagamento.common.request.PaymentRequest) cannot be referenced from a static context
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/controller/PaymentController.java:[21,49] non-static method toResponse(com.pagamento.common.model.Payment) cannot be referenced from a static context
+[[1;31mERROR[m] /home/ubuntu/pagamento-system21/common/src/main/java/com/pagamento/common/resilience/ResilienceRegistryConfig.java:[23,30] method customize in interface io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer cannot be applied to given types;
+[[1;31mERROR[m]   required: io.github.resilience4j.retry.RetryConfig.Builder
+[[1;31mERROR[m]   found:    java.lang.String,io.github.resilience4j.retry.RetryConfig.Builder
+[[1;31mERROR[m]   reason: actual and formal argument lists differ in length
+[[1;31mERROR[m] -> [1m[Help 1][m
+[[1;31mERROR[m] 
+[[1;31mERROR[m] To see the full stack trace of the errors, re-run Maven with the [1m-e[m switch.
+[[1;31mERROR[m] Re-run Maven using the [1m-X[m switch to enable full debug logging.
+[[1;31mERROR[m] 
+[[1;31mERROR[m] For more information about the errors and possible solutions, please read the following articles:
+[[1;31mERROR[m] [1m[Help 1][m http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

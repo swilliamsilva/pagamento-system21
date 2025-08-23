@@ -1,3 +1,6 @@
+// ==========================
+// MAPPER: UserMapper.java
+// ==========================
 package com.pagamento.common.mapper;
 
 import com.pagamento.common.dto.UserDTO;
@@ -5,13 +8,8 @@ import com.pagamento.common.model.User;
 
 /**
  * Converte entidades User ↔ DTO.
- * Classe utilitária - não deve ser instanciada.
  */
 public class UserMapper {
-
-    private UserMapper() {
-        throw new UnsupportedOperationException("Esta é uma classe utilitária e não pode ser instanciada");
-    }
 
     public static UserDTO toDTO(User user) {
         return new UserDTO(

@@ -3,7 +3,8 @@ package com.pagamento.pix.controller;
 import com.pagamento.pix.application.dto.*;
 import com.pagamento.pix.application.mapper.PixMapper;
 import com.pagamento.pix.domain.model.Pix;
-import com.pagamento.pix.service.PixService;
+import com.pagamento.pix.domain.ports.in.PixServicePort;
+import com.pagamento.pix.exception.PixNotFoundException;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -35,11 +35,11 @@ public class PixController {
 
     private static final Logger logger = LoggerFactory.getLogger(PixController.class);
     
-    private final PixService pixService;
+    private final PixServicePort pixServicePort;
     private final PixMapper pixMapper;
 
-    public PixController(PixService pixService, PixMapper pixMapper) {
-        this.pixService = pixService;
+    public PixController(PixServicePort pixServicePort, PixMapper pixMapper) {
+        this.pixServicePort = pixServicePort;
         this.pixMapper = pixMapper;
     }
 
@@ -66,8 +66,8 @@ public class PixController {
         @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     @PostMapping
-    @RateLimiter(name = "pixCreationRateLimit") // Integração com Resilience4j
-    @Audited(action = Audited.Action.CREATE) // Auditoria com Spring Data Envers
+    @RateLimiter(name = "pixCreationRateLimit")
+    @Audited
     public ResponseEntity<PixResponseDTO> createPix(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "Dados da transação PIX",
@@ -94,31 +94,17 @@ public class PixController {
         
         logger.info("[ID: {}] Recebendo solicitação PIX", transactionId);
         
-        try {
-            // Mapear para domínio e validar
-            Pix pix = pixMapper.toDomain(request);
-            pix.setId(transactionId);
-            
-            if (!pix.isValid()) {
-                logger.warn("[ID: {}] Dados do PIX inválidos", transactionId);
-                return ResponseEntity.unprocessableEntity().build();
-            }
-            
-            // Processar transação
-            Pix processedPix = pixService.processarPix(pix);
-            PixResponseDTO response = pixMapper.toResponseDTO(processedPix);
-            
-            logger.info("[ID: {}] Transação PIX processada. Status: {}", 
-                       transactionId, response.getStatus());
-            
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            logger.warn("[ID: {}] Requisição inválida: {}", transactionId, e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            logger.error("[ID: {}] Erro ao processar PIX: {}", transactionId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        // Mapear para domínio e validar
+        Pix pix = pixMapper.toDomain(request).toBuilder().id(transactionId).build();
+        
+        // Processar transação
+        Pix processedPix = pixServicePort.processarPix(pix);
+        PixResponseDTO response = PixMapper.toResponseDTO(processedPix);
+        
+        logger.info("[ID: {}] Transação PIX processada. Status: {}", 
+                   transactionId, response.getStatus());
+        
+        return ResponseEntity.ok(response);
     }
 
     // Endpoint para estornar transação
@@ -134,7 +120,7 @@ public class PixController {
     })
     @PostMapping("/estorno")
     @RateLimiter(name = "pixRefundRateLimit")
-    @Audited(action = Audited.Action.UPDATE)
+    @Audited
     public ResponseEntity<PixResponseDTO> estornarPix(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "Dados para estorno",
@@ -154,26 +140,18 @@ public class PixController {
         final String logId = "EST-" + (request.getPixId() != null ? request.getPixId() : System.currentTimeMillis());
         logger.info("[ID: {}] Recebendo solicitação de estorno", logId);
         
-        try {
-            Pix pix = pixService.obterPorId(request.getPixId());
-            
-            if (pix == null) {
-                logger.warn("[ID: {}] Transação não encontrada: {}", logId, request.getPixId());
-                return ResponseEntity.notFound().build();
-            }
-            
-            pixService.estornarPix(pix, request.getMotivo());
-            PixResponseDTO response = pixMapper.toResponseDTO(pix);
-            
-            logger.info("[ID: {}] Estorno iniciado para transação: {}", logId, request.getPixId());
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
-            logger.warn("[ID: {}] Estorno não permitido: {}", logId, e.getMessage());
-            return ResponseEntity.unprocessableEntity().build();
-        } catch (Exception e) {
-            logger.error("[ID: {}] Erro ao iniciar estorno: {}", logId, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        Pix pix = pixServicePort.obterPorId(request.getPixId());
+        
+        if (pix == null) {
+            logger.warn("[ID: {}] Transação não encontrada: {}", logId, request.getPixId());
+            throw new PixNotFoundException("Transação PIX não encontrada com ID: " + request.getPixId());
         }
+        
+        pixServicePort.estornarPix(pix, request.getMotivo());
+        PixResponseDTO response = PixMapper.toResponseDTO(pix);
+        
+        logger.info("[ID: {}] Estorno iniciado para transação: {}", logId, request.getPixId());
+        return ResponseEntity.ok(response);
     }
 
     // Endpoint para consultar transação
@@ -192,21 +170,16 @@ public class PixController {
         
         logger.info("[CONSULTA] Buscando transação: {}", id);
         
-        try {
-            Pix pix = pixService.obterPorId(id);
-            
-            if (pix == null) {
-                logger.warn("[CONSULTA] Transação não encontrada: {}", id);
-                return ResponseEntity.notFound().build();
-            }
-            
-            PixResponseDTO response = pixMapper.toResponseDTO(pix);
-            logger.info("[CONSULTA] Transação encontrada: {}", id);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("[CONSULTA] Erro ao buscar transação {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        Pix pix = pixServicePort.obterPorId(id);
+        
+        if (pix == null) {
+            logger.warn("[CONSULTA] Transação não encontrada: {}", id);
+            throw new PixNotFoundException("Transação PIX não encontrada com ID: " + id);
         }
+        
+        PixResponseDTO response = PixMapper.toResponseDTO(pix);
+        logger.info("[CONSULTA] Transação encontrada: {}", id);
+        return ResponseEntity.ok(response);
     }
 
     // Endpoint para pesquisa avançada
@@ -238,29 +211,25 @@ public class PixController {
         
         logger.info("[PESQUISA] Iniciando pesquisa com filtros");
         
-        try {
-            Page<Pix> result = pixService.pesquisar(
-                documentoPagador, 
-                chaveDestino, 
-                status, 
-                dataInicio, 
-                dataFim, 
-                pageable
-            );
-            
-            Page<PixResponseDTO> dtoPage = result.map(pixMapper::toResponseDTO);
-            PixSearchResponseDTO response = new PixSearchResponseDTO(
-                dtoPage.getContent(),
-                dtoPage.getNumber(),
-                dtoPage.getSize(),
-                dtoPage.getTotalElements()
-            );
-            
-            logger.info("[PESQUISA] {} transações encontradas", response.getTotalElements());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("[PESQUISA] Erro na pesquisa: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Page<Pix> result = pixServicePort.pesquisar(
+            documentoPagador, 
+            chaveDestino, 
+            status, 
+            dataInicio, 
+            dataFim, 
+            pageable
+        );
+        
+        PixSearchResponseDTO response = new PixSearchResponseDTO(
+            result.getContent().stream().map(PixMapper::toResponseDTO).toList(),
+            result.getNumber(),
+            result.getSize(),
+            result.getTotalElements()
+        );
+        
+        logger.info("[PESQUISA] {} transações encontradas", response.getTotalElements());
+        return ResponseEntity.ok(response);
     }
 }
+
+

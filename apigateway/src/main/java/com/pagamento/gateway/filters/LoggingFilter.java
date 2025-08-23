@@ -1,6 +1,7 @@
 package com.pagamento.gateway.filters;
 
 import java.util.UUID;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,3 +146,4 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         return Ordered.HIGHEST_PRECEDENCE + 1000;
     }
 }
+

@@ -3,6 +3,7 @@ package com.pagamento.pix.infrastructure.adapters;
 import com.pagamento.pix.core.ports.out.BacenPort;
 import com.pagamento.pix.domain.model.Pix;
 import com.pagamento.pix.infrastructure.integration.BacenClient;
+import com.pagamento.pix.infrastructure.integration.dto.BacenPixResponse;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,4 +24,11 @@ public class BacenAdapter implements BacenPort {
     public void estornarTransacao(String bacenId) {
         bacenClient.estornarTransacao(bacenId);
     }
+
+    @Override
+    public BacenPixResponse enviarPix(Pix pix) {
+        return bacenClient.enviarPix(pix);
+    }
 }
+
+

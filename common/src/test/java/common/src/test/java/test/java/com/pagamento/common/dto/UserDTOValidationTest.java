@@ -1,4 +1,9 @@
-package test.com.pagamento.common.dto;
+// ==========================
+// 
+// TEST: UserDTOValidationTest.java
+// ==========================
+
+package common.src.test.java.test.java.com.pagamento.common.dto;
 
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -12,34 +17,34 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserDTOValidationTest {  // Removed 'public' modifier
+public class UserDTOValidationTest {
 
     private Validator validator;
 
     @BeforeEach
-    void setup() {
+    public void setup() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
 
     @Test
-    void deveValidarDTOCorretamente() {
+    public void deveValidarDTOCorretamente() {
         UserDTO dto = new UserDTO("123", "João", "joao@email.com", "12345678909");
-        Set<?> violations = validator.validate(dto);
+        Set violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
     }
 
     @Test
-    void deveInvalidarEmail() {
+    public void deveInvalidarEmail() {
         UserDTO dto = new UserDTO("123", "João", "email-invalido", "12345678909");
-        Set<?> violations = validator.validate(dto);
+        Set violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
-    void deveInvalidarCPF() {
+    public void deveInvalidarCPF() {
         UserDTO dto = new UserDTO("123", "João", "joao@email.com", "00000000000");
-        Set<?> violations = validator.validate(dto);
+        Set violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 }

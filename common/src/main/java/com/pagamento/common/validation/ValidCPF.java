@@ -3,24 +3,18 @@
 // ==========================
 package com.pagamento.common.validation;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Documented
-
-@Constraint(validatedBy = {CPFValidator.class})
-/**
- * Type mismatch: cannot convert from Class<CPFValidator> to Class<? extends ConstraintValidator<?,?>>[]
- * 
- * ***/
-
+@Constraint(validatedBy = CPFValidator.class)
 @Target({FIELD})
 @Retention(RUNTIME)
 public @interface ValidCPF {

@@ -22,9 +22,7 @@ public class PixMapper {
         }
         
         // Criar pagador
-        Participante pagador = new Participante();
-        pagador.setDocumento(dto.getDocumentoPagador());
-        pagador.setNome(dto.getNomePagador());
+        Participante pagador = new Participante(dto.getNomePagador(), dto.getDocumentoPagador(), null, null, null);
         
         // Construir Pix usando o Builder original da classe Pix
         Pix.Builder builder = Pix.builder()
@@ -40,11 +38,7 @@ public class PixMapper {
             dto.getAgenciaRecebedor() != null || 
             dto.getContaRecebedor() != null) {
             
-            Participante recebedor = new Participante();
-            recebedor.setNome(dto.getNomeRecebedor());
-            recebedor.setIspb(dto.getIspbRecebedor());
-            recebedor.setAgencia(dto.getAgenciaRecebedor());
-            recebedor.setConta(dto.getContaRecebedor());
+            Participante recebedor = new Participante(dto.getNomeRecebedor(), null, dto.getIspbRecebedor(), dto.getAgenciaRecebedor(), dto.getContaRecebedor());
             builder.recebedor(recebedor);
         }
         
@@ -106,3 +100,4 @@ public class PixMapper {
         return dto;
     }
 }
+

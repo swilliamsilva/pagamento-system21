@@ -121,6 +121,10 @@ public class Pix {
         return new Builder();
     }
 
+    public Builder toBuilder() {
+        return new Builder().from(this);
+    }
+
     public static class Builder {
         private final Pix pix;
 
@@ -143,6 +147,7 @@ public class Pix {
                 this.pix.bacenId = source.bacenId;
                 this.pix.mensagemErro = source.mensagemErro;
                 this.pix.tipo = source.tipo;
+                this.pix.estornadoEm = source.estornadoEm; // Adicionado
                 // Não copiamos o histórico de estados e estornadoEm pois são específicos de cada instância
             }
             return this;
@@ -220,6 +225,11 @@ public class Pix {
             return this;
         }
 
+        public Builder estornadoEm(LocalDateTime estornadoEm) {
+            pix.estornadoEm = estornadoEm;
+            return this;
+        }
+
         public Pix build() {
             // Validações obrigatórias
             if (pix.valor == null) {
@@ -241,3 +251,4 @@ public class Pix {
         
     }
 }
+

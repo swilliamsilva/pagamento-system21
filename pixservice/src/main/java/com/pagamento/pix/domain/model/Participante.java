@@ -7,6 +7,14 @@ public class Participante {
     private String agencia;
     private String conta;
 
+    public Participante(String nome, String documento, String ispb, String agencia, String conta) {
+        this.nome = nome;
+        this.documento = documento;
+        this.ispb = ispb;
+        this.agencia = agencia;
+        this.conta = conta;
+    }
+
     // Getters e Setters
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
@@ -23,3 +31,5 @@ public class Participante {
     public String getConta() { return conta; }
     public void setConta(String conta) { this.conta = conta; }
 }
+
+

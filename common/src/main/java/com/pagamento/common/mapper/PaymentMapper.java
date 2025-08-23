@@ -13,46 +13,43 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentMapper {
 
-    public Payment toEntity(PaymentRequest request) {
+    public static Payment toEntity(PaymentRequest request) {
         validateRequest(request);
         
-        Payment payment = new Payment();
-        payment.setTransactionId(generateTransactionId());
-        payment.setUserId(request.userId());
-        payment.setPaymentType(request.tipoPagamento());
-        payment.setAmount(request.valor());
-        payment.setCreatedAt(Instant.now());
-        payment.setStatus("CREATED");
-        
-        return payment;
+        return Payment.builder()
+            .transactionId(generateTransactionId())
+            .userId(request.userId())
+            .paymentType(request.tipoPagamento())
+            .amount(request.valor())
+            .createdAt(Instant.now())
+            .status("CREATED")
+            .build();
     }
 
-    // Método único toResponse (removido o duplicado)
-    public PaymentResponse toResponse(Payment entity) {
+    public static PaymentResponse toResponse(Payment entity) {
         if (entity == null) {
             throw new IllegalArgumentException("Payment entity cannot be null");
         }
         
-        PaymentResponse response = new PaymentResponse();
-        response.setTransactionId(entity.getTransactionId());
-        response.setStatus(entity.getStatus());
-        response.setPaymentType(entity.getPaymentType());
-        response.setAmount(entity.getAmount());
-        
-        return response;
+        return PaymentResponse.builder()
+            .transactionId(entity.getTransactionId())
+            .status(entity.getStatus())
+            .paymentType(entity.getPaymentType())
+            .amount(entity.getAmount())
+            .build();
     }
 
-    public PaymentResponse toProcessingResponse(Payment entity) {
+    public static PaymentResponse toProcessingResponse(Payment entity) {
         PaymentResponse response = toResponse(entity);
         response.setStatus("PROCESSING");
         return response;
     }
 
-    private String generateTransactionId() {
+    private static String generateTransactionId() {
         return "TX-" + UUID.randomUUID().toString().replace("-", "").toUpperCase();
     }
 
-    private void validateRequest(PaymentRequest request) {
+    private static void validateRequest(PaymentRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("PaymentRequest cannot be null");
         }
@@ -65,7 +62,7 @@ public class PaymentMapper {
         validateAmount(request.valor());
     }
 
-    private void validateAmount(BigDecimal amount) {
+    private static void validateAmount(BigDecimal amount) {
         if (amount == null) {
             throw new IllegalArgumentException("Payment amount cannot be null");
         }
@@ -74,3 +71,4 @@ public class PaymentMapper {
         }
     }
 }
+
