@@ -18,8 +18,11 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldReturnJwtForValidLogin() {
+        // Usando o construtor do record diretamente
         AuthRequestDTO login = new AuthRequestDTO("admin", "admin123");
-        ResponseEntity<AuthResponseDTO> response = restTemplate.postForEntity("/auth/login", login, AuthResponseDTO.class);
+
+        ResponseEntity<AuthResponseDTO> response =
+                restTemplate.postForEntity("/auth/login", login, AuthResponseDTO.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());

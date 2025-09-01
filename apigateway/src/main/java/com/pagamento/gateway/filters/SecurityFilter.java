@@ -18,8 +18,11 @@ public class SecurityFilter implements GlobalFilter, Ordered {
         "/actuator", "/internal", "/admin"
     );
     
-    @Value("${security.admin-key}")
-    private String adminKey;
+    private final String adminKey;
+
+    public SecurityFilter(@Value("${security.admin-key}") String adminKey) {
+        this.adminKey = adminKey;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -54,7 +57,7 @@ public class SecurityFilter implements GlobalFilter, Ordered {
     // Adicionado chain como parâmetro
     private Mono<Void> validateAdminAccess(ServerWebExchange exchange, GatewayFilterChain chain) {
         String apiKey = exchange.getRequest().getHeaders().getFirst("X-Admin-Key");
-        if (adminKey.equals(apiKey)) {
+        if (adminKey != null && adminKey.equals(apiKey)) {
             return chain.filter(exchange); // Agora chain está disponível
         }
         return handleBlockedRequest(exchange, "Acesso administrativo não autorizado");
@@ -71,7 +74,7 @@ public class SecurityFilter implements GlobalFilter, Ordered {
                     value.toLowerCase().contains("update ") ||
                     value.toLowerCase().contains("truncate ") ||
                     value.toLowerCase().contains("--") ||
-                    value.toLowerCase().contains("' or ")
+                    value.toLowerCase().contains("\" or ")
                 )
             );
     }
@@ -87,3 +90,5 @@ public class SecurityFilter implements GlobalFilter, Ordered {
         return Ordered.HIGHEST_PRECEDENCE + 10;
     }
 }
+
+

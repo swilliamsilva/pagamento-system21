@@ -1,6 +1,3 @@
-// ==========================
-// TEST: UserMapperTest.java
-// ==========================
 package com.pagamento.common.mapper;
 
 import com.pagamento.common.dto.UserDTO;
@@ -20,15 +17,20 @@ public class UserMapperTest {
         user.setDocumento("12345678909");
 
         UserDTO dto = UserMapper.toDTO(user);
-        assertEquals("001", dto.id());
-        assertEquals("Maria", dto.nome());
-        assertEquals("maria@email.com", dto.email());
-        assertEquals("12345678909", dto.documento());
+        assertEquals("001", dto.getId());
+        assertEquals("Maria", dto.getNome());
+        assertEquals("maria@email.com", dto.getEmail());
+        assertEquals("12345678909", dto.getDocumento());
     }
 
     @Test
     public void deveConverterDTOParaUser() {
-        UserDTO dto = new UserDTO("002", "Carlos", "carlos@email.com", "12345678909");
+        UserDTO dto = UserDTO.builder()
+                .id("002")
+                .nome("Carlos")
+                .email("carlos@email.com")
+                .documento("12345678909")
+                .build();
         User user = UserMapper.toEntity(dto);
 
         assertEquals("002", user.getId());
@@ -37,3 +39,5 @@ public class UserMapperTest {
         assertEquals("12345678909", user.getDocumento());
     }
 }
+
+

@@ -15,14 +15,32 @@
 
     <artifactId>apigateway</artifactId>
     <packaging>jar</packaging>
-<profiles>
-    <profile>
-        <id>dev</id>
-        <properties>
-            <skipTests>true</skipTests>
-        </properties>
-    </profile>
-</profiles>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <skipTests>true</skipTests>
+            </properties>
+        </profile>
+        <profile>
+            <id>skip-docker-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/RedisConfigTest.java</exclude>
+                                <exclude>**/EnvironmentSanityTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <!-- Core Spring -->
@@ -307,3 +325,5 @@
     </build>
 
 </project>
+
+

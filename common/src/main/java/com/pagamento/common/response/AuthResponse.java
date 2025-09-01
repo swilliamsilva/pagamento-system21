@@ -1,16 +1,44 @@
-
-// ==========================
-// DTO: AuthResponse.java
-// ==========================
 package com.pagamento.common.response;
 
-/**
- * Resposta da API de autenticação com token e perfil de acesso.
- *
- * @param token Token JWT no formato "Bearer ..."
- * @param role Perfil do usuário autenticado
- */
-public record AuthResponse(
-    String token,
-    String role
-) {}
+public class AuthResponse {
+    private String token;
+    private String role;
+
+    private AuthResponse(Builder builder) {
+        this.token = builder.token;
+        this.role = builder.role;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public static class Builder {
+        private String token;
+        private String role;
+
+        public Builder token(String token) {
+            this.token = token;
+            return this;
+        }
+
+        public Builder role(String role) {
+            this.role = role;
+            return this;
+        }
+
+        public AuthResponse build() {
+            return new AuthResponse(this);
+        }
+    }
+}
+
+

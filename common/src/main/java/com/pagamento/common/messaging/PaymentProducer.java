@@ -13,7 +13,7 @@ public class PaymentProducer {
     }
 
     public void sendMessage(PaymentEvent event) {
-        kafkaTemplate.send("payment-events-topic", event.transactionId(), event);
+        kafkaTemplate.send("payment-events-topic", event.getTransactionId(), event);
     }
 }
 

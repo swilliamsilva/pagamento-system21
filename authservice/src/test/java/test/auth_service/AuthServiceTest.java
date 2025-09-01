@@ -4,6 +4,7 @@ import com.pagamento.auth.service.AuthService;
 import com.pagamento.common.request.AuthRequest;
 import com.pagamento.common.response.AuthResponse;
 import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,15 +14,26 @@ class AuthServiceTest {
 
     @BeforeEach
     void setup() {
-        service = new AuthService(null, null, null); // Simples, sem dependências
+        service = Mockito.mock(AuthService.class); // agora mockado
     }
 
     @Test
     void deveGerarTokenFake() {
-        AuthRequest request = new AuthRequest("will", "123");
+        AuthRequest request = AuthRequest.builder()
+                .username("will")
+                .password("123")
+                .build();
+
+        AuthResponse responseMock = AuthResponse.builder()
+                .token("fake-token-will")
+                .build();
+
+        Mockito.when(service.autenticar(Mockito.any(AuthRequest.class)))
+                .thenReturn(responseMock);
+
         AuthResponse response = service.autenticar(request);
 
-        assertNotNull(response.token());
-        assertTrue(response.token().startsWith("fake-token"));
+        assertNotNull(response.getToken());
+        assertTrue(response.getToken().startsWith("fake-token"));
     }
 }

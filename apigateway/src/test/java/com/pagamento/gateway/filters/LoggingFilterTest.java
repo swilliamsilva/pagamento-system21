@@ -47,9 +47,6 @@ class LoggingFilterTest {
     void configurar() {
         filtroLogging = new LoggingFilter(logger);
 
-        when(logger.isInfoEnabled()).thenReturn(true);
-        when(logger.isDebugEnabled()).thenReturn(true);
-
         MockServerHttpRequest request = MockServerHttpRequest
             .get("/teste")
             .header("X-Correlation-Id", "teste-correlation-id")
@@ -92,6 +89,7 @@ class LoggingFilterTest {
 
     @Test
     void deveRegistrarLogDeRequisicao() {
+        when(logger.isInfoEnabled()).thenReturn(true);
         filtroLogging.filter(exchange, cadeiaFiltros).block();
 
         verify(logger).info(argThat(msg ->
@@ -101,6 +99,7 @@ class LoggingFilterTest {
 
     @Test
     void deveRegistrarLogDeResposta() {
+        when(logger.isInfoEnabled()).thenReturn(true);
         filtroLogging.filter(exchange, cadeiaFiltros).block();
 
         verify(logger).info(eq("Response [{}]: Status {} | Duration {}ms | Path: {}"),
@@ -131,7 +130,7 @@ class LoggingFilterTest {
                 ex.getResponse().setStatusCode(HttpStatus.OK);
                 return Mono.delay(java.time.Duration.ofMillis(50)).then();
             });
-
+        when(logger.isInfoEnabled()).thenReturn(true);
         filtroLogging.filter(exchange, cadeiaFiltros).block();
 
         verify(logger).info(eq("Response [{}]: Status {} | Duration {}ms | Path: {}"),
@@ -145,6 +144,7 @@ class LoggingFilterTest {
 
     @Test
     void devePropagarCorrelationIdNoContexto() {
+        when(logger.isInfoEnabled()).thenReturn(true);
         when(cadeiaFiltros.filter(any())).thenAnswer(invocacao -> {
             // Renomeado para evitar conflito com o campo da classe
             ServerWebExchange ex = invocacao.getArgument(0);
@@ -171,6 +171,7 @@ class LoggingFilterTest {
 
     @Test
     void deveRegistrarLogDeRespostaMesmoComErro() {
+        when(logger.isInfoEnabled()).thenReturn(true);
         when(cadeiaFiltros.filter(any())).thenAnswer(invocacao -> {
             ServerWebExchange ex = invocacao.getArgument(0);
             ex.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -183,3 +184,5 @@ class LoggingFilterTest {
             eq("teste-correlation-id"), eq(500), anyLong(), eq("/teste"));
     }
 }
+
+

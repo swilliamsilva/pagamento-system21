@@ -5,7 +5,7 @@ public enum BoletoStatus {
     REEMITIDO(true, true, true, true),
     VENCIDO(true, true, true, false),
     PAGO(false, false, false, false),
-    CANCELADO(false, false, false, false);
+    CANCELADO(false, false, false, false),
 	PENDING(false, false, false, false);
     private final boolean operacaoPermitida;
     private final boolean permiteReemissao;

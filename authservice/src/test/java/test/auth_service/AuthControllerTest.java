@@ -23,14 +23,22 @@ class AuthControllerTest {
 
     @Test
     void deveAutenticarComSucesso() {
-        AuthRequest request = new AuthRequest("will", "123");
-        AuthResponse responseMock = new AuthResponse("token.jwt", null);
+        AuthRequest request = AuthRequest.builder()
+                .username("will")
+                .password("123")
+                .build();
 
-        Mockito.when(service.autenticar(request)).thenReturn(responseMock);
+        AuthResponse responseMock = AuthResponse.builder()
+                .token("token.jwt")
+                .build();
+
+        Mockito.when(service.autenticar(Mockito.any(AuthRequest.class)))
+                .thenReturn(responseMock);
 
         ResponseEntity<AuthResponse> response = controller.autenticar(request);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals("token.jwt", response.getBody().token());
+        assertNotNull(response.getBody());
+        assertEquals("token.jwt", response.getBody().getToken());
     }
 }

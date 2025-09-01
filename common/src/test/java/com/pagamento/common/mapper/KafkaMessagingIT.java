@@ -25,13 +25,13 @@ class KafkaMessagingIT {
 
     @Test
     void testSendMessage() {
-        PaymentEvent paymentEvent = new PaymentEvent(
-                "test-payment-id",
-                "PIX", // Alterado para um tipo de pagamento válido
-                BigDecimal.valueOf(100.00),
-                Instant.now(),
-                "PENDING"
-        );
+        PaymentEvent paymentEvent = PaymentEvent.builder()
+                .transactionId("test-payment-id")
+                .paymentType("PIX")
+                .amount(BigDecimal.valueOf(100.00))
+                .timestamp(Instant.now())
+                .status("PENDING")
+                .build();
 
         paymentProducer.sendMessage(paymentEvent);
 

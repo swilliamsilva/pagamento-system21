@@ -1,8 +1,8 @@
 package com.pagamento.gateway.filters;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -21,11 +21,17 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SecurityFilterTest {
 
-    @InjectMocks
     private SecurityFilter filtroSeguranca;
 
     @Mock
     private GatewayFilterChain cadeiaFiltros;
+
+    private final String ADMIN_KEY = "ADMIN_SECRET_123";
+
+    @BeforeEach
+    void setUp() {
+        filtroSeguranca = new SecurityFilter(ADMIN_KEY);
+    }
 
     private MockServerWebExchange criarExchange(String path) {
         return MockServerWebExchange.from(MockServerHttpRequest.get(path).build());
@@ -38,7 +44,7 @@ class SecurityFilterTest {
         Mono<Void> resultado = filtroSeguranca.filter(exchange, cadeiaFiltros);
         
         StepVerifier.create(resultado).verifyComplete();
-        assertEquals(HttpStatus.BAD_REQUEST, exchange.getResponse().getStatusCode(),
+        assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode(),
             "Deveria bloquear URLs com ponto-e-vírgula (possível ataque)");
     }
 
@@ -56,7 +62,7 @@ class SecurityFilterTest {
     @Test
     void devePermitirAcessoAEndpointsRestritosComChaveAdminValida() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/actuator/health")
-            .header("X-Admin-Key", "ADMIN_SECRET_123")
+            .header("X-Admin-Key", ADMIN_KEY)
             .build();
 
         ServerWebExchange exchange = MockServerWebExchange.from(request);
@@ -84,7 +90,7 @@ class SecurityFilterTest {
             Mono<Void> resultado = filtroSeguranca.filter(exchange, cadeiaFiltros);
             
             StepVerifier.create(resultado).verifyComplete();
-            assertEquals(HttpStatus.BAD_REQUEST, exchange.getResponse().getStatusCode(),
+            assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode(),
                 "Deveria bloquear URL com possível injeção SQL: " + url);
         }
     }
@@ -139,8 +145,10 @@ class SecurityFilterTest {
             Mono<Void> resultado = filtroSeguranca.filter(exchange, cadeiaFiltros);
             
             StepVerifier.create(resultado).verifyComplete();
-            assertEquals(HttpStatus.BAD_REQUEST, exchange.getResponse().getStatusCode(),
+            assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode(),
                 "Deveria bloquear tentativa de path traversal: " + path);
         }
     }
 }
+
+

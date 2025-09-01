@@ -18,9 +18,9 @@ public class PaymentMapper {
         
         return Payment.builder()
             .transactionId(generateTransactionId())
-            .userId(request.userId())
-            .paymentType(request.tipoPagamento())
-            .amount(request.valor())
+            .userId(request.getUserId())
+            .paymentType(request.getTipoPagamento())
+            .amount(request.getValor())
             .createdAt(Instant.now())
             .status("CREATED")
             .build();
@@ -53,13 +53,13 @@ public class PaymentMapper {
         if (request == null) {
             throw new IllegalArgumentException("PaymentRequest cannot be null");
         }
-        if (request.userId() == null || request.userId().isBlank()) {
+        if (request.getUserId() == null || request.getUserId().isBlank()) {
             throw new IllegalArgumentException("User ID is required");
         }
-        if (request.tipoPagamento() == null || request.tipoPagamento().isBlank()) {
+        if (request.getTipoPagamento() == null || request.getTipoPagamento().isBlank()) {
             throw new IllegalArgumentException("Payment type is required");
         }
-        validateAmount(request.valor());
+        validateAmount(request.getValor());
     }
 
     private static void validateAmount(BigDecimal amount) {
@@ -71,4 +71,5 @@ public class PaymentMapper {
         }
     }
 }
+
 
